@@ -28,6 +28,7 @@ defmodule Beethoven.Tracker do
       # Create indexes - speeds up searches for data that does not regularly change
       Logger.debug("Creating Indexes in 'BeethovenTracker'")
       :mnesia.add_table_index(BeethovenTracker, :node)
+      :mnesia.add_table_index(BeethovenTracker, :role)
       # Add self to tracker
       :ok = add_self()
       # Subscribe to tracker

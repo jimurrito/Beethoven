@@ -74,13 +74,26 @@ defmodule Beethoven.Core do
     Logger.info("[start_seek] Starting Seek attempt (#{attemptNum |> Integer.to_string()}).")
     # Get IPs in the host's network
     hostIPs = Ipv4.get_host_network_addresses()
+    # get Listener port
+    port =
+      Application.fetch_env(:beethoven, :listener_port)
+      |> case do
+        {:ok, value} ->
+          value
+
+        :error ->
+          Logger.notice(":listener_port is not set in config/*.exs. defaulting to (33000).")
+          33000
+      end
+
     # attempt join on all nodes in list
     # stops at first response from a socket
-    Locator.try_join_iter(hostIPs, 33000)
+    Locator.try_join_iter(hostIPs, port)
     |> case do
       # successfully joined Mnesia cluster => Cluster state => need to make ram copies
       :ok ->
         Logger.info("[start_seek] Seeking completed successfully.")
+        GenServer.cast(__MODULE__, :mon_all_node)
         GenServer.cast(__MODULE__, :start_servers)
         {:noreply, :clustered}
 
@@ -132,19 +145,48 @@ defmodule Beethoven.Core do
   #
   #
   #
+  #
+  #
+  #
+  #
   # Start servers in an initial state
   @impl true
   def handle_cast(:start_servers, state) when is_atom(state) do
     #
     Logger.info("Starting Listener")
-    {:ok, listener_pid} = Listener.start_link([])
-    listener_ref = Process.monitor(listener_pid)
+
+    listener =
+      Listener.start_link([])
+      |> case do
+        {:ok, listener_pid} ->
+          listener_ref = Process.monitor(listener_pid)
+          {listener_pid, listener_ref}
+
+        {:error, _error} ->
+          Logger.error("Beethoven Listener failed to start. This is not a crash.")
+          # failed to open socket
+          :failed
+      end
+
     #
     Logger.info("Starting RoleServer")
-    {:ok, role_pid} = RoleServer.start_link([])
-    role_ref = Process.monitor(role_pid)
+
+    RoleServer.start_link([])
+    |> case do
+      {:ok, role_pid} ->
+        role_ref = Process.monitor(role_pid)
+        {:noreply, {state, %{listener: listener, role: {role_pid, role_ref}}}}
+
+      {:error, _error} ->
+        # failed to start RoleServer. This is fatal!
+        Logger.critical(
+          "Beethoven RoleServer failed to start. This Beethoven will now go into a failed state."
+        )
+
+        {:noreply, {:failed, :role_server_failed}}
+    end
+
     #
-    {:noreply, {state, %{listener: {listener_pid, listener_ref}, role: {role_pid, role_ref}}}}
   end
 
   #
@@ -213,7 +255,6 @@ defmodule Beethoven.Core do
       "[standalone_to_clustered] Beethoven transitioned modes: [:standalone] => [:clustered]"
     )
 
-    # GenServer.cast(__MODULE__, :mon_all_node)
     {:noreply, {:clustered, server_data}}
   end
 

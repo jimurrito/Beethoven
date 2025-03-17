@@ -12,12 +12,19 @@ defmodule Beethoven.TestRole do
   @doc """
   Entry point for RolServer/Supervisor
   """
-  def start_link(_args) do
-    GenServer.start(__MODULE__, name: __MODULE__)
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   @impl true
-  def init(_args) do
-    {:ok, []}
+  def init(args) do
+    Logger.info("Test GenServer Started!")
+    IO.inspect({TestRole, :params, args})
+    {:ok, args}
+  end
+
+  @impl true
+  def handle_call(_, _from, state) do
+    {:reply, :hello, state}
   end
 end
