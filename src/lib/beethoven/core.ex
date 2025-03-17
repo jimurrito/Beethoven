@@ -81,8 +81,8 @@ defmodule Beethoven.Core do
       # successfully joined Mnesia cluster => Cluster state => need to make ram copies
       :ok ->
         Logger.info("[start_seek] Seeking completed successfully.")
-        GenServer.cast(__MODULE__, :to_clustered)
-        {:noreply, :transitioning}
+        GenServer.cast(__MODULE__, :start_servers)
+        {:noreply, :clustered}
 
       # connected, but failed to join => Failed state
       :cluster_join_error ->
@@ -106,9 +106,17 @@ defmodule Beethoven.Core do
         if attemptNum == 3 do
           # Standalone mode
           Logger.info("[start_seek] No nodes found. Defaulting to ':standalone' mode.")
-          # Cast to start standalone mode
-          GenServer.cast(__MODULE__, :to_standalone)
-          {:noreply, :transitioning}
+          # Start Mnesia
+          Tracker.start()
+          |> case do
+            :ok ->
+              # Cast to start standalone mode
+              GenServer.cast(__MODULE__, :start_servers)
+              {:noreply, :standalone}
+
+            :already_exists ->
+              {:noreply, {:failed, :mnesia_already_started}}
+          end
         else
           # Retry
           # backoff in milliseconds
@@ -124,56 +132,19 @@ defmodule Beethoven.Core do
   #
   #
   #
-  #
-  #
-  #
-  #
-  # Triggers clustering mode
+  # Start servers in an initial state
   @impl true
-  def handle_cast(:to_clustered, :transitioning) do
-    Logger.info("[to_clustered] Entering ':clustered' mode.")
-
-    Listener.start_link([])
-    |> case do
-      {:ok, pid} ->
-        # Link PID
-        true = Process.link(pid)
-        # Starts monitoring of Socket Server
-        ref = Process.monitor(pid)
-        # Append everything to the data struct
-        # Start monitoring all nodes
-        GenServer.cast(__MODULE__, :mon_all_node)
-        #
-        {:noreply, {:clustered, %{listen: {pid, ref}}}}
-
-      {:error, error} ->
-        {:noreply, {:clustered, {:listener_failed, error}}}
-    end
-  end
-
-  #
-  #
-  # Triggers standalone mode
-  @impl true
-  def handle_cast(:to_standalone, :transitioning) do
-    Logger.info("[to_standalone] Entering ':standalone' mode.")
-    # Starts tracker Mnesia table
-    _result = Tracker.start()
-
-    # Starts listener
-    Listener.start_link([])
-    |> case do
-      {:ok, pid} ->
-        # Link PID
-        true = Process.link(pid)
-        # Starts monitoring of Socket Server
-        ref = Process.monitor(pid)
-        {:noreply, {:standalone, %{listen: {pid, ref}}}}
-
-      {:error, error} ->
-        # Fail service as standalone server with no listener is pointless
-        {:noreply, {:failed, {:standalone_listener_start_failure, error}}}
-    end
+  def handle_cast(:start_servers, state) when is_atom(state) do
+    #
+    Logger.info("Starting Listener")
+    {:ok, listener_pid} = Listener.start_link([])
+    listener_ref = Process.monitor(listener_pid)
+    #
+    Logger.info("Starting RoleServer")
+    {:ok, role_pid} = RoleServer.start_link([])
+    role_ref = Process.monitor(role_pid)
+    #
+    {:noreply, {state, %{listener: {listener_pid, listener_ref}, role: {role_pid, role_ref}}}}
   end
 
   #
@@ -237,86 +208,40 @@ defmodule Beethoven.Core do
   #
   # Converts a standalone coordinator to a clustered one.
   @impl true
-  def handle_cast(:standalone_to_clustered, {:standalone, socket}) do
+  def handle_cast(:standalone_to_clustered, {:standalone, server_data}) do
     Logger.info(
       "[standalone_to_clustered] Beethoven transitioned modes: [:standalone] => [:clustered]"
     )
 
     # GenServer.cast(__MODULE__, :mon_all_node)
-    {:noreply, {:clustered, socket}}
+    {:noreply, {:clustered, server_data}}
   end
 
   #
   #
-  # Converts a clustered coordinator to a standalone one (Socket is a PID)
+  #
+  #
+  # Converts a clustered coordinator to a standalone one (One of the Servers are down)
   @impl true
-  def handle_cast(:clustered_to_standalone, {:clustered, socket}) when is_pid(socket) do
+  def handle_cast(
+        :clustered_to_standalone,
+        {:clustered, %{listener: listener_pids, role: role_pids}}
+      )
+      when listener_pids == :failed or role_pids == :failed do
+    Logger.info("[clustered_to_standalone] transitioned modes: [:clustered] => [:standalone]")
+    GenServer.cast(__MODULE__, :start_servers)
+    {:noreply, :standalone}
+  end
+
+  #
+  #
+  # Converts a clustered coordinator to a standalone one
+  @impl true
+  def handle_cast(:clustered_to_standalone, {:clustered, server_data}) do
     Logger.info("[clustered_to_standalone]  transitioned modes: [:clustered] => [:standalone]")
-    {:noreply, {:standalone, socket}}
+    {:noreply, {:standalone, server_data}}
   end
 
-  #
-  # Converts a clustered coordinator to a standalone one, but the socket is shutdown
-  # :clustered_to_standalone, {:clustered, {:listener_failed, :shutdown}}
-  @impl true
-  def handle_cast(:clustered_to_standalone, {:clustered, {:listener_failed, _error}}) do
-    Logger.info(
-      "[clustered_to_standalone] Beethoven transitioning modes: [:clustered] => [:standalone]"
-    )
-
-    GenServer.cast(__MODULE__, :to_standalone)
-    {:noreply, :transitioning}
-  end
-
-  #
-  #
-  #
-  #
-  #
-  #
-  #
-  #
-  #
-  # Converts a clustered coordinator to a standalone one (Socket is a PID)
-  @impl true
-  def handle_cast(:start_role_server, state) do
-    Logger.info("Starting RoleServer.")
-    # Check if alive already
-    Process.whereis(RoleServer)
-    |> Process.alive?()
-    |> if do
-      Logger.debug("RoleServer is already running. Nothing to do.")
-    else
-      _pid_data = Process.spawn(RoleServer, [:monitor])
-    end
-
-    {:noreply, state}
-  end
-
-  #
-  #
-  # Converts a clustered coordinator to a standalone one (Socket is a PID)
-  @impl true
-  def handle_cast(:stop_role_server, state) do
-    Logger.info("Stopping RoleServer.")
-    # Check if alive already
-    pid = Process.whereis(RoleServer)
-
-    pid
-    |> Process.alive?()
-    |> if do
-      #Process.demonitor()
-      Process.exit(pid, "#{__MODULE__}")
-    else
-      Logger.debug("RoleServer is already stopped. Nothing to do.")
-    end
-
-    {:noreply, state}
-  end
-
-  #
-  #
-  #
   #
   #
   #
@@ -328,11 +253,11 @@ defmodule Beethoven.Core do
   #
   # Triggers coping mnesia table to memory
   @impl true
-  def handle_call({:make_copy, table}, _from, {:clustered, socket}) do
+  def handle_call({:make_copy, table}, _from, {:clustered, server_data}) do
     Tracker.copy_table(table)
     |> case do
       # copy was successful or already existed
-      :ok -> {:noreply, {:clustered, socket}}
+      :ok -> {:noreply, {:clustered, server_data}}
       # Copy failed => coordinator goes into failed state.
       {:error, _error} -> {:reply, {:failed, :copy_failed}}
     end
@@ -340,11 +265,15 @@ defmodule Beethoven.Core do
 
   #
   #
+  #
+  #
+  #
+  #
   # gets coordinator mode - when existing mode is not a tuple
   # ONLY CALLED EXTERNALLY
   @impl true
-  def handle_call(:get_mode, _from, {mode, socket}) do
-    {:reply, mode, {mode, socket}}
+  def handle_call(:get_mode, _from, {mode, server_data}) do
+    {:reply, mode, {mode, server_data}}
   end
 
   #
@@ -361,13 +290,34 @@ defmodule Beethoven.Core do
   #
   #
   #
-  # Used to handle PID monitoring messages.
+  # Used to handle PID monitoring messages. (Listener)
   @impl true
-  def handle_info({:DOWN, _ref, :process, pid, :shutdown}, {mode, socket}) when pid == socket do
+  def handle_info(
+        {:DOWN, p_ref, :process, p_pid, :shutdown},
+        {mode, %{listener: {pid, ref}, role: role_pids}}
+      )
+      when p_pid == pid and p_ref == ref do
     Logger.critical("[listener_down] Beethoven Listener service has shutdown.")
-    {:noreply, {mode, {:listener_failed, :shutdown}}}
+    {:noreply, {mode, %{listener: :failed, role: role_pids}}}
   end
 
+  #
+  #
+  #
+  # Used to handle PID monitoring messages. (RoleServer)
+  @impl true
+  def handle_info(
+        {:DOWN, p_ref, :process, p_pid, :shutdown},
+        {mode, %{listener: listener_pids, role: {pid, ref}}}
+      )
+      when p_pid == pid and p_ref == ref do
+    Logger.critical("[roleserver_down] Beethoven RoleServer has shutdown.")
+    {:noreply, {mode, %{listener: listener_pids, role: :failed}}}
+  end
+
+  #
+  #
+  #
   #
   #
   # Used to handle :nodedown monitoring messages.
