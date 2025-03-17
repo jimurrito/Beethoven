@@ -19,7 +19,7 @@ defmodule Beethoven.Ipv4 do
 
         :error ->
           Logger.notice(":cluster_net not set in config/*.exs. Using default value '127.0.0.1'.")
-          "127.0.0.1"
+          "127.0.0.0"
       end
 
       clusterNetMask =

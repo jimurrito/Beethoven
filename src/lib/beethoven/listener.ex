@@ -30,8 +30,8 @@ defmodule Beethoven.Listener do
           value
 
         :error ->
-          Logger.notice(":listener_port not set in config/*.exs. Using default value '3000'.")
-          3000
+          Logger.notice(":listener_port not set in config/*.exs. Using default value '33000'.")
+          33000
       end
 
     #
