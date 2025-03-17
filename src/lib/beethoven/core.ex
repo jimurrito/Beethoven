@@ -6,10 +6,12 @@ defmodule Beethoven.Core do
   use GenServer
   require Logger
 
+  alias Beethoven.Utils
   alias Beethoven.Ipv4
   alias Beethoven.Listener
   alias Beethoven.Tracker
   alias Beethoven.Locator
+  alias Beethoven.Role, as: RoleServer
 
   @doc """
   Entrypoint for supervisors or other PIDs that are starting this service.
@@ -18,6 +20,10 @@ defmodule Beethoven.Core do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
+  #
+  #
+  #
+  #
   #
   #
   # Callback when server is started by another PID.
@@ -32,6 +38,12 @@ defmodule Beethoven.Core do
     {:ok, :seeking}
   end
 
+  #
+  #
+  #
+  #
+  #
+  #
   #
   #
   # Attempts recovery when coordinator is in failed state.
@@ -100,14 +112,8 @@ defmodule Beethoven.Core do
         else
           # Retry
           # backoff in milliseconds
-          backoff = :rand.uniform(20) * 100
+          Utils.backoff(20, 0, 100)
 
-          Logger.debug(
-            "[start_seek] Retry backoff (#{backoff |> Integer.to_string()}) milliseconds."
-          )
-
-          # Sleep
-          Process.sleep(backoff)
           # Cast seeking
           GenServer.cast(__MODULE__, {:start_seek, attemptNum + 1})
           {:noreply, :seeking}
@@ -115,6 +121,11 @@ defmodule Beethoven.Core do
     end
   end
 
+  #
+  #
+  #
+  #
+  #
   #
   #
   # Triggers clustering mode
@@ -125,12 +136,15 @@ defmodule Beethoven.Core do
     Listener.start_link([])
     |> case do
       {:ok, pid} ->
+        # Link PID
+        true = Process.link(pid)
         # Starts monitoring of Socket Server
-        _ref = Process.monitor(pid)
+        ref = Process.monitor(pid)
+        # Append everything to the data struct
         # Start monitoring all nodes
         GenServer.cast(__MODULE__, :mon_all_node)
         #
-        {:noreply, {:clustered, pid}}
+        {:noreply, {:clustered, %{listen: {pid, ref}}}}
 
       {:error, error} ->
         {:noreply, {:clustered, {:listener_failed, error}}}
@@ -150,9 +164,11 @@ defmodule Beethoven.Core do
     Listener.start_link([])
     |> case do
       {:ok, pid} ->
+        # Link PID
+        true = Process.link(pid)
         # Starts monitoring of Socket Server
-        _ref = Process.monitor(pid)
-        {:noreply, {:standalone, pid}}
+        ref = Process.monitor(pid)
+        {:noreply, {:standalone, %{listen: {pid, ref}}}}
 
       {:error, error} ->
         # Fail service as standalone server with no listener is pointless
@@ -160,6 +176,12 @@ defmodule Beethoven.Core do
     end
   end
 
+  #
+  #
+  #
+  #
+  #
+  #
   #
   #
   # Start/Stop Monitoring a node
@@ -180,6 +202,8 @@ defmodule Beethoven.Core do
     end
   end
 
+  #
+  #
   #
   #
   # Start Monitoring all nodes
@@ -203,6 +227,12 @@ defmodule Beethoven.Core do
     {:noreply, mode}
   end
 
+  #
+  #
+  #
+  #
+  #
+  #
   #
   #
   # Converts a standalone coordinator to a clustered one.
@@ -242,6 +272,11 @@ defmodule Beethoven.Core do
   #
   #
   #
+  #
+  #
+  #
+  #
+  #
   # Converts a clustered coordinator to a standalone one (Socket is a PID)
   @impl true
   def handle_cast(:start_role_server, state) do
@@ -270,6 +305,7 @@ defmodule Beethoven.Core do
     pid
     |> Process.alive?()
     |> if do
+      #Process.demonitor()
       Process.exit(pid, "#{__MODULE__}")
     else
       Logger.debug("RoleServer is already stopped. Nothing to do.")
@@ -278,6 +314,12 @@ defmodule Beethoven.Core do
     {:noreply, state}
   end
 
+  #
+  #
+  #
+  #
+  #
+  #
   #
   #
   #
@@ -336,13 +378,7 @@ defmodule Beethoven.Core do
     # Job to handle state change for the node - avoids holding genserver
     job = fn ->
       # backoff in milliseconds (random number between 10-19 seconds)
-      backoff = (:rand.uniform(10) + 9) * 1_000
-
-      Logger.debug(
-        "[nodedown] Backing off for #{(backoff / 1_000) |> Float.to_string()} seconds prior to moving node (#{nodeName}) to failed state in the table."
-      )
-
-      Process.sleep(backoff)
+      Utils.backoff(10, 9, 1_000)
 
       # attempt ping
       Node.ping(nodeName)

@@ -101,6 +101,25 @@ defmodule Beethoven.Listener do
 
   #
   #
+  #
+  #
+  #
+  #
+  # Only PID it would be monitoring is the supervisor
+  @impl true
+  def handle_info({:DOWN, _ref, :process, _pid, :shutdown}, socket)  do
+    Logger.critical("[listener_TaskSupervisor_down] Beethoven Listener task Supervisor has shutdown.")
+    {:noreply, socket}
+  end
+
+  #
+  #
+  #
+  #
+  #
+  #
+  #
+  #
   # Fnc that runs in each request task.
   defp serve(client_socket) do
     #
@@ -162,6 +181,10 @@ defmodule Beethoven.Listener do
     end
   end
 
+  #
+  #
+  #
+  #
   #
   #
   # Catch All handle_info

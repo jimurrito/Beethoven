@@ -1,6 +1,6 @@
 defmodule Beethoven.Tracker do
   @moduledoc """
-  State tracking for the Coordination services. Uses Mnesia.
+  State tracking for the Beethoven services. Uses Mnesia.
   Tabled named 'BeethovenTracker'
   """
 
@@ -111,23 +111,23 @@ defmodule Beethoven.Tracker do
   end
 
   @doc """
-  Adds self to CoordinationTracking Mnesia table.
+  Adds self to BeethovenTracking Mnesia table.
   """
   @spec add_self() :: :ok
-  def add_self() do
+  def add_self(role \\ :member) do
     # Add self to tracker
     Logger.debug("Adding self to 'BeethovenTracker' Mnesia table.")
 
     {:atomic, :ok} =
       :mnesia.transaction(fn ->
-        :mnesia.write({BeethovenTracker, node(), :member, :online, DateTime.now!("Etc/UTC")})
+        :mnesia.write({BeethovenTracker, node(), role, :online, DateTime.now!("Etc/UTC")})
       end)
 
     :ok
   end
 
   @doc """
-  Subscribe to changes to the CoordinationTracking Mnesia table
+  Subscribe to changes to the BeethovenTracking Mnesia table
   """
   @spec subscribe() :: {:ok, node()} | {:error, reason :: term()}
   def subscribe() do

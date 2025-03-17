@@ -1,6 +1,6 @@
 defmodule Beethoven.Locator do
   @moduledoc """
-  Module for finding a coordination listener.
+  Module for finding a Beethoven listener.
   """
 
   require Logger
@@ -8,7 +8,7 @@ defmodule Beethoven.Locator do
   alias Beethoven.Tracker
 
   @doc """
-  Attempts join to a Coordination Listener Socket server hosted on another Elixir node.
+  Attempts join to a Beethoven Listener Socket server hosted on another Elixir node.
   Using the provided socket info, the client will attempt to connect to the socket and deliver its node uri as a payload.
 
   NOTE: this will not set if this client will hold ram_copies of the Mnesia data. Please use `copy_mnesia_table/2` to achieve this once joined.
@@ -19,12 +19,12 @@ defmodule Beethoven.Locator do
   def try_join(ipAddr, port) do
     # Convert ipaddress tuple to string for logging
     ipString = :inet.ntoa(ipAddr)
-    Logger.info("Attempting connection to Coordination Listener @ '#{ipString}'.")
+    Logger.info("Attempting connection to Beethoven Listener @ '#{ipString}'.")
     # attempt connection to listener
     case :gen_tcp.connect(ipAddr, port, [:binary, packet: 0, active: false]) do
       # Connected to listener
       {:ok, server_socket} ->
-        Logger.info("Successfully connected to Coordination Listener socket  @ '#{ipString}'.")
+        Logger.info("Successfully connected to Beethoven Listener socket  @ '#{ipString}'.")
         Logger.debug("Sending node URI '#{node()}' to the listener socket.")
         :ok = :gen_tcp.send(server_socket, Atom.to_string(node()))
 
@@ -81,7 +81,7 @@ defmodule Beethoven.Locator do
   end
 
   @doc """
-  Iterates through a list of IPs and tries to find one running a Coordination Listener.
+  Iterates through a list of IPs and tries to find one running a Beethoven Listener.
   Same returns as `try_join/2`.
   """
   @spec try_join_iter([{integer(), integer(), integer(), integer()}], integer()) ::
