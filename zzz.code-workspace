@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {},
+	"extensions": {
+		"recommendations": [
+			"mechatroner.rainbow-csv",
+			"oderwat.indent-rainbow",
+			"pinage404.nix-extension-pack",
+			"yzhang.markdown-all-in-one",
+			"redhat.vscode-yaml",
+			"JakeBecker.elixir-ls",
+			"pgourlain.erlang",
+			"ecmel.vscode-html-css",
+			"ritvyk.heex-html",
+			"phoenixframework.phoenix",
+			"timonwong.shellcheck",
+			"iceworks-team.iceworks-time-master"
+		]		  
+	}
+}
