@@ -12,6 +12,7 @@ defmodule Beethoven.Core do
   alias Beethoven.Tracker
   alias Beethoven.Locator
   alias Beethoven.Role, as: RoleServer
+  alias Beethoven.RootSupervisor, as: RS
 
   @doc """
   Entrypoint for supervisors or other PIDs that are starting this service.
@@ -120,16 +121,10 @@ defmodule Beethoven.Core do
           # Standalone mode
           Logger.info("[start_seek] No nodes found. Defaulting to ':standalone' mode.")
           # Start Mnesia
-          Tracker.start()
-          |> case do
-            :ok ->
-              # Cast to start standalone mode
-              GenServer.cast(__MODULE__, :start_servers)
-              {:noreply, :standalone}
-
-            :already_exists ->
-              {:noreply, {:failed, :mnesia_already_started}}
-          end
+          _ = Tracker.start()
+          # Cast to start servers
+          GenServer.cast(__MODULE__, :start_servers)
+          {:noreply, :standalone}
         else
           # Retry
           # backoff in milliseconds
@@ -149,18 +144,19 @@ defmodule Beethoven.Core do
   #
   #
   #
-  # Start servers in an initial state
+  # Start servers in an initial state - Assumes servers are not running already.
   @impl true
   def handle_cast(:start_servers, state) when is_atom(state) do
     #
     Logger.info("Starting Listener")
 
+    # Supervisor.start_child(RS, Listener)
     listener =
-      Listener.start_link([])
+      Listener.start([])
       |> case do
         {:ok, listener_pid} ->
-          listener_ref = Process.monitor(listener_pid)
-          {listener_pid, listener_ref}
+          # {pid, ref}
+          {listener_pid, Process.monitor(listener_pid)}
 
         {:error, _error} ->
           Logger.error("Beethoven Listener failed to start. This is not a crash.")
@@ -171,7 +167,7 @@ defmodule Beethoven.Core do
     #
     Logger.info("Starting RoleServer")
 
-    RoleServer.start_link([])
+    Supervisor.start_child(RS, RoleServer)
     |> case do
       {:ok, role_pid} ->
         role_ref = Process.monitor(role_pid)
@@ -179,14 +175,93 @@ defmodule Beethoven.Core do
 
       {:error, _error} ->
         # failed to start RoleServer. This is fatal!
-        Logger.critical(
+        Logger.emergency(
           "Beethoven RoleServer failed to start. This Beethoven will now go into a failed state."
         )
 
-        {:noreply, {:failed, :role_server_failed}}
+        {:noreply, {:failed, :start_role_servers_failed}}
     end
 
     #
+  end
+
+  #
+  #
+  #
+  #
+  # %{listener: listener_pids, role: role_pids}
+  @impl true
+  def handle_cast(:restart_listener, {mode, %{listener: listener_pids, role: role_pids}}) do
+    listener_pids
+    |> case do
+      # In failed state -> start
+      :failed ->
+        # Pid has failed - try and reboot
+        Logger.info("Starting Listener.")
+
+        Listener.start_link([])
+        |> case do
+          {:ok, listener_pid} ->
+            listener_ref = Process.monitor(listener_pid)
+            {:noreply, {mode, %{listener: {listener_pid, listener_ref}, role: role_pids}}}
+
+          {:error, _error} ->
+            Logger.error("Beethoven Listener failed to start. This is not a crash.")
+            # failed to open socket
+            {:noreply, {mode, %{listener: :failed, role: role_pids}}}
+        end
+
+      # data saved -> check and reboot
+      {l_pid, l_ref} ->
+        # PID alive => restart service
+        Logger.info("Restarting Listener.")
+        # Stop monitoring
+        true = Process.demonitor(l_ref)
+        # Kill process
+        Process.exit(l_pid, "Beethoven.Core -> :restart_listener")
+        # Start process
+        {:ok, pid} = Listener.start_link([])
+        # Monitor
+        ref = Process.monitor(pid)
+        #
+        {:noreply, {mode, %{listener: {pid, ref}, role: role_pids}}}
+    end
+  end
+
+  #
+  #
+  #
+  #
+  # %{listener: listener_pids, role: role_pids}
+  @impl true
+  def handle_cast(:start_role_server, {mode, %{listener: listener_pids, role: {r_pid, r_ref}}}) do
+    Process.alive?(r_pid)
+    |> if do
+      # PID alive => do nothing
+      Logger.debug(
+        "Role Server start was requested, but the server is already running. Doing nothing."
+      )
+
+      {:noreply, {mode, %{listener: listener_pids, role: {r_pid, r_ref}}}}
+    else
+      # Pid has failed - try and reboot
+      Logger.info("Restarting RoleServer.")
+
+      RoleServer.start_link([])
+      |> case do
+        {:ok, pid} ->
+          ref = Process.monitor(pid)
+          {:noreply, {mode, %{listener: listener_pids, role: {pid, ref}}}}
+
+        {:error, _error} ->
+          # failed to start RoleServer. This is fatal!
+          Logger.critical(
+            "Beethoven RoleServer failed to start. This Beethoven will now go into a failed state."
+          )
+
+          {:noreply, {:failed, :role_server_failed}}
+      end
+    end
   end
 
   #
@@ -262,25 +337,16 @@ defmodule Beethoven.Core do
   #
   #
   #
-  # Converts a clustered coordinator to a standalone one (One of the Servers are down)
+  # Converts a clustered coordinator to a standalone one
   @impl true
   def handle_cast(
         :clustered_to_standalone,
         {:clustered, %{listener: listener_pids, role: role_pids}}
-      )
-      when listener_pids == :failed or role_pids == :failed do
+      ) do
     Logger.info("[clustered_to_standalone] transitioned modes: [:clustered] => [:standalone]")
-    GenServer.cast(__MODULE__, :start_servers)
-    {:noreply, :standalone}
-  end
-
-  #
-  #
-  # Converts a clustered coordinator to a standalone one
-  @impl true
-  def handle_cast(:clustered_to_standalone, {:clustered, server_data}) do
-    Logger.info("[clustered_to_standalone]  transitioned modes: [:clustered] => [:standalone]")
-    {:noreply, {:standalone, server_data}}
+    GenServer.cast(__MODULE__, :restart_listener)
+    GenServer.cast(__MODULE__, :start_role_server)
+    {:noreply, {:standalone, %{listener: listener_pids, role: role_pids}}}
   end
 
   #
@@ -368,8 +434,8 @@ defmodule Beethoven.Core do
 
     # Job to handle state change for the node - avoids holding genserver
     job = fn ->
-      # backoff in milliseconds (random number between 10-19 seconds)
-      Utils.backoff(10, 9, 1_000)
+      # backoff in milliseconds (random number between 5-8.5 seconds)
+      Utils.backoff(10, 9, 500)
 
       # attempt ping
       Node.ping(nodeName)

@@ -10,10 +10,12 @@ defmodule Beethoven.Listener do
 
   # Entry point for Supervisors
   def start_link(_args) do
-    # Start Task manager for requests
-    {:ok, pid} = Task.Supervisor.start_link(name: Beethoven.Listener.TaskSupervisor)
-    # Create Monitor for the TaskSupervisor
-    _ref = Process.monitor(pid)
+    # Start GenServer that runs TCP
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  end
+
+  # Entry point for Non-linking starters
+  def start(_args) do
     # Start GenServer that runs TCP
     GenServer.start(__MODULE__, [], name: __MODULE__)
   end
@@ -21,6 +23,10 @@ defmodule Beethoven.Listener do
   # Callback for genserver start calls.
   @impl true
   def init(_args) do
+    # Start Task manager for requests
+    {:ok, task_pid} = Task.Supervisor.start_link(name: Beethoven.Listener.TaskSupervisor)
+    # Create Monitor for the TaskSupervisor
+    _ref = Process.monitor(task_pid)
     #
     # pull port from env file
     listener_port =
@@ -36,6 +42,9 @@ defmodule Beethoven.Listener do
 
     #
     # Open Socket
+    #
+    port_string = Integer.to_string(listener_port)
+    #
     socket =
       :gen_tcp.listen(
         listener_port,
@@ -44,30 +53,46 @@ defmodule Beethoven.Listener do
       |> case do
         # successfully opened socket
         {:ok, socket} ->
-          Logger.debug("Now listening on port (#{Integer.to_string(listener_port)}).")
+          Logger.debug("Now listening on port (#{port_string}).")
+          #
+          #
+          # Start accepting requests
+          GenServer.cast(__MODULE__, :accept)
           socket
 
         # Failed -> IP already in use
         {:error, :eaddrinuse} ->
           Logger.error(
-            "Failed to bind listener socket to port [#{Integer.to_string(listener_port)}] as the port is already in-use."
+            "Failed to bind listener socket to port [#{port_string}] as the port is already in-use. This is not an issue in ':clustered' mode."
           )
 
-          raise "Failed to bind listener socket to port [#{Integer.to_string(listener_port)}] as the port is already in-use."
+          #
+          # Kill supervisor
+          Process.whereis(Beethoven.Listener.TaskSupervisor)
+          |> Process.exit("Beethoven.Listener -> :eaddrinuse | port: (#{port_string})")
+
+          #
+          throw(
+            "Failed to bind listener socket to port [#{port_string}] as the port is already in-use. This is not an issue in ':clustered' mode."
+          )
 
         # Failed -> Unmapped
         {:error, _error} ->
           Logger.error(
-            "Unexpected error occurred while binding listener socket to port [#{Integer.to_string(listener_port)}]."
+            "Unexpected error occurred while binding listener socket to port [#{port_string}]."
           )
 
-          raise "Unexpected error occurred while binding listener socket to port [#{Integer.to_string(listener_port)}]."
+          #
+          # Kill supervisor
+          Process.whereis(Beethoven.Listener.TaskSupervisor)
+          |> Process.exit("Beethoven.Listener -> :unexpected | port: (#{port_string})")
+
+          #
+          throw(
+            "Unexpected error occurred while binding listener socket to port [#{port_string}]."
+          )
       end
 
-    #
-    #
-    # Start accepting requests
-    GenServer.cast(__MODULE__, :accept)
     #
     # return to caller
     {:ok, socket}

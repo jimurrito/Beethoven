@@ -15,4 +15,24 @@ defmodule Beethoven.Utils do
     Logger.debug("Backoff for (#{backoff |> Integer.to_string()}) milliseconds started.")
     Process.sleep(backoff)
   end
+
+  @doc """
+  Merges an existing map, and a list of maps into a single level map.
+  """
+  def bulk_put(map, list_o_maps) when is_map(map) do
+    bulk_put(map, list_o_maps, map)
+  end
+
+  # Exit
+  defp bulk_put(_map, [], state) do
+    state
+  end
+
+  # worker
+  defp bulk_put(map, [head | list_o_maps], state) when is_list(list_o_maps) do
+    [key] = head |> Map.keys()
+    value = head |> Map.get(key)
+    state = state |> Map.put(key, value)
+    bulk_put(map, list_o_maps, state)
+  end
 end

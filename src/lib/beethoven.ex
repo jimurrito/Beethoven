@@ -1,26 +1,5 @@
 defmodule Beethoven do
   @moduledoc """
-  Documentation for `Beethoven`.
+  A Decentralized failover and peer-to-peer node finder for Elixir. Allows Elixir nodes to find each other automatically. Once connected, they can coordinate to delegate roles and tasks between the nodes in the cluster. Written using only the Elixir and Erlang standard library.
   """
-
-  
-  def child_spec(opts) do
-    %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, [opts]},
-      type: :worker,
-      restart: :permanent,
-      shutdown: 500
-    }
-  end
-
-  def start_link(_args) do
-    children = [
-      # Core GenServer
-      Beethoven.Core
-    ]
-
-    opts = [strategy: :one_for_one, name: Beethoven.Supervisor]
-    Supervisor.start_link(children, opts)
-  end
 end

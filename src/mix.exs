@@ -5,7 +5,7 @@ defmodule Beethoven.MixProject do
     [
       name: "Beethoven",
       app: :beethoven,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -32,6 +32,7 @@ defmodule Beethoven.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {Beethoven.Application, []},
       extra_applications: [:logger, :runtime_tools, :wx, :observer, :mnesia]
     ]
   end
