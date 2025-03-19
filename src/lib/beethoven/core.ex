@@ -242,6 +242,9 @@ defmodule Beethoven.Core do
         "Role Server start was requested, but the server is already running. Doing nothing."
       )
 
+      # Tell role server to check roles
+      GenServer.cast(RoleServer, :check)
+
       {:noreply, {mode, %{listener: listener_pids, role: {r_pid, r_ref}}}}
     else
       # Pid has failed - try and reboot

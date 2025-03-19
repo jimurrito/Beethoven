@@ -8,10 +8,7 @@ defmodule Beethoven.Role do
 
   alias Beethoven.Core, as: BeeServer
   alias Beethoven.Tracker
-  alias Beethoven.RootSupervisor, as: RS
   alias Beethoven.Utils
-  alias Beethoven.Role.Lib
-
   #
   #
   #
@@ -21,10 +18,10 @@ defmodule Beethoven.Role do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-    # Entry point for Supervisors
-    def start(_args) do
-      GenServer.start(__MODULE__, [], name: __MODULE__)
-    end
+  # Entry point for Supervisors
+  def start(_args) do
+    GenServer.start(__MODULE__, [], name: __MODULE__)
+  end
 
   #
   #
@@ -209,7 +206,7 @@ defmodule Beethoven.Role do
             # Randomly pick (1) role and deploy it. Check will run again after the deployment, and this process will repeat.
             # the reason for this repetition is to ensure other nodes in the custer have a chance to take on one of the other roles.
             role_to_deploy = Enum.random(roles_to_deploy)
-            Logger.info("Deploying role (:#{role_to_deploy}) to node (#{node()}).")
+            Logger.info("Deploying role (:#{role_to_deploy |> elem(0)}) to node (#{node()}).")
             :ok = GenServer.cast(__MODULE__, {:add_role, role_to_deploy})
             #
             {:noreply, %{roles: roles, super_pid: super_pid, role_pids: role_pids}}
