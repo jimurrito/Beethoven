@@ -297,7 +297,21 @@ defmodule Beethoven.Role do
   #
   #
   #
-  # Ignore Mnesia updates the same node.
+  #
+  #@impl true
+  #def handle_info({:nodedown, node}, %{
+  #      roles: roles,
+  #      super_pid: super_pid,
+  #      role_pids: role_pids
+  #    }) do
+  #end
+
+  #
+  #
+  #
+  #
+  #
+  # Ignore Mnesia updates from the same node.
   @impl true
   def handle_info(
         {:mnesia_table_event, {:write, BeethovenTracker, {_, node, _, _, _}, _, {:tid, _, pid}}},

@@ -6,7 +6,7 @@ defmodule Beethoven.Listener do
   use GenServer
   require Logger
 
-  alias Beethoven.Core, as: BeeServer
+  alias Beethoven.Core, as: CoreServer
 
   # Entry point for Supervisors
   def start_link(_args) do
@@ -135,7 +135,7 @@ defmodule Beethoven.Listener do
   # Fnc that runs in each request task.
   defp serve(client_socket) do
     #
-    Logger.info("Coordination request received.")
+    Logger.info("Beethoven received a coordination.")
     #
     # Read data in socket
     {:ok, payload} = :gen_tcp.recv(client_socket, 0)
@@ -148,44 +148,57 @@ defmodule Beethoven.Listener do
       # Convert to atom
       |> String.to_atom()
 
-    Logger.debug("Client payload: [#{nodeName}]")
+    Logger.debug("Node (#{nodeName}) has requested to join the Beethoven Cluster.")
 
     # test node asking to join
     case Node.ping(nodeName) do
+      #
+      #
       # Failed to connect to node
       :pang ->
-        Logger.error("Failed to ping: [#{nodeName}].")
+        Logger.error("Failed to ping node (#{nodeName}).")
         :gen_tcp.send(client_socket, "pang_error")
 
+      #
+      #
       # Success -> connected to node
       :pong ->
         # add requester to Mnesia cluster
         :mnesia.change_config(:extra_db_nodes, [nodeName])
         |> case do
+          #
+          #
           # Joined successfully.
           {:ok, _} ->
-            Logger.info("Client (#{nodeName}) joined Mnesia Cluster.")
+            Logger.info("Node (#{nodeName}) joined the Beethoven Cluster.")
             # Ensure Coordinator is in ':clustered' mode now
-            if GenServer.call(BeeServer, :get_mode) == :standalone do
+            if GenServer.call(CoreServer, :get_mode) == :standalone do
               # Service is standalone
-              GenServer.cast(BeeServer, :standalone_to_clustered)
+              GenServer.cast(CoreServer, :standalone_to_clustered)
             end
 
             # Send response to caller
             :gen_tcp.send(client_socket, "joined")
 
+          #
+          #
           # Failed to join - merge_schema_failed
           {:error, {:merge_schema_failed, msg}} ->
             Logger.error(
-              "Client (#{nodeName}) failed to join Mnesia cluster 'merge_schema_failed': '#{msg}' "
+              "Node (#{nodeName}) failed to join Beethoven cluster 'merge_schema_failed': '#{msg}' "
             )
 
             # Send response to caller
             :gen_tcp.send(client_socket, "merge_schema_failed")
 
+          #
+          #
           # Failed - unexpected_error
           {:error, error} ->
-            Logger.error("Client (#{nodeName}) failed to join Mnesia cluster 'unexpected_error':")
+            Logger.error(
+              "Node (#{nodeName}) failed to join Beethoven cluster 'unexpected_error':"
+            )
+
             IO.inspect({:unexpected_error, error})
             # Send response to caller
             :gen_tcp.send(client_socket, "unexpected_error")
@@ -203,7 +216,7 @@ defmodule Beethoven.Listener do
   @impl true
   def handle_info({:DOWN, _ref, :process, _pid, :shutdown}, socket) do
     Logger.critical(
-      "[listener_TaskSupervisor_down] Beethoven Listener task Supervisor has shutdown."
+      "Beethoven.Listener's task Supervisor has shutdown."
     )
 
     {:noreply, socket}
@@ -219,7 +232,7 @@ defmodule Beethoven.Listener do
   # MUST BE AT BOTTOM OF MODULE FILE **WITHOUT THIS, COORDINATOR GENSERVER WILL CRASH ON UNMAPPED MSG!!**
   @impl true
   def handle_info(msg, state) do
-    Logger.warning("[unexpected] Beethoven.Listener received an un-mapped message.")
+    Logger.warning("Beethoven.Listener received an un-mapped message.")
     IO.inspect({:unmapped_msg, msg})
     {:noreply, state}
   end
