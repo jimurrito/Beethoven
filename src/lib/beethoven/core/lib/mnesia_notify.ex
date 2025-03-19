@@ -8,6 +8,7 @@ defmodule Beethoven.Core.Lib.MnesiaNotify do
 
   require Logger
   alias Beethoven.Core, as: CoreServer
+  alias Beethoven.Role, as: RoleServer
 
   @doc """
   Entry function to decide what is done when the Mnesia Event occurs.
@@ -60,7 +61,9 @@ defmodule Beethoven.Core.Lib.MnesiaNotify do
   def offline_node(nodeName) do
     Logger.debug("Node (#{nodeName}) has changed availability: [:online] => [:offline].")
     # Sending cast ensure we stop monitoring the offline node
-    GenServer.cast(CoreServer, {:mon_node, {:stop, nodeName}})
+    :ok = GenServer.cast(CoreServer, {:mon_node, {:stop, nodeName}})
+    # Run :check on RoleServer
+    GenServer.cast(RoleServer, :check)
   end
 
   #

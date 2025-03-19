@@ -7,6 +7,7 @@ defmodule Beethoven.Core.Lib.Node do
   require Logger
   alias Beethoven.Utils
   alias Beethoven.Core, as: CoreServer
+  alias Beethoven.Role, as: RoleServer
 
   @doc """
   Handles what happens when a node goes down.
@@ -31,8 +32,6 @@ defmodule Beethoven.Core.Lib.Node do
       #
       # Server is still unreachable -> attempt status change.
       :pang ->
-        :ok = GenServer.cast(__MODULE__, :mon_all_node)
-
         # update node state from :online to :offline
         {:atomic, :ok} =
           :mnesia.transaction(fn ->
@@ -40,7 +39,7 @@ defmodule Beethoven.Core.Lib.Node do
             :mnesia.read(BeethovenTracker, nodeName)
             |> case do
               # Node still marked as online on the table -> update
-              [{BeethovenTracker, ^nodeName, role, :online, _}] ->
+              [{BeethovenTracker, ^nodeName, _role, :online, _}] ->
                 Logger.debug(
                   "Node (#{nodeName}) unreachable via ping, but the status still shows ':online' in Mnesia. Updating Mnesia."
                 )
@@ -48,7 +47,7 @@ defmodule Beethoven.Core.Lib.Node do
                 # Write updated state to table
                 :ok =
                   :mnesia.write(
-                    {BeethovenTracker, nodeName, role, :offline, DateTime.now!("Etc/UTC")}
+                    {BeethovenTracker, nodeName, :down, :offline, DateTime.now!("Etc/UTC")}
                   )
 
                 # Check if there are any other nodes
@@ -56,8 +55,9 @@ defmodule Beethoven.Core.Lib.Node do
                   # Standalone is now needed. All others are offline.
                   GenServer.cast(CoreServer, :clustered_to_standalone)
                 else
-                  # Other nodes exist in cluster. no further action needed
-                  :ok
+                  # Other nodes exist in cluster.
+                  # Run :check on RoleServer
+                  GenServer.cast(RoleServer, :check)
                 end
 
               # Node was deleted -> do nothing

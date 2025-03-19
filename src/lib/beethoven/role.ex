@@ -30,16 +30,9 @@ defmodule Beethoven.Role do
   #
   @impl true
   def init(_args) do
-    # Track all nodes
-    Node.list()
-    |> Enum.each(fn nodeName ->
-      # Start monitoring the calling node
-      Logger.info("Started monitoring Node (#{nodeName}).")
-      true = Node.monitor(nodeName, true)
-    end)
-
+    #
     # Subscribe to Mnesia - Monitor for new node
-    {:ok, _node} = Tracker.subscribe()
+    #{:ok, _node} = Tracker.subscribe()
     # Get application config for roles
     roles =
       Application.fetch_env(:beethoven, :roles)
@@ -291,20 +284,6 @@ defmodule Beethoven.Role do
         {:noreply, %{roles: roles, super_pid: super_pid, role_pids: role_pids}}
     end
   end
-
-  #
-  #
-  #
-  #
-  #
-  #
-  #@impl true
-  #def handle_info({:nodedown, node}, %{
-  #      roles: roles,
-  #      super_pid: super_pid,
-  #      role_pids: role_pids
-  #    }) do
-  #end
 
   #
   #
