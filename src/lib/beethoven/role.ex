@@ -32,7 +32,7 @@ defmodule Beethoven.Role do
   def init(_args) do
     #
     # Subscribe to Mnesia - Monitor for new node
-    #{:ok, _node} = Tracker.subscribe()
+    # {:ok, _node} = Tracker.subscribe()
     # Get application config for roles
     roles =
       Application.fetch_env(:beethoven, :roles)
@@ -75,6 +75,15 @@ defmodule Beethoven.Role do
   end
 
   #
+  # TODO:
+  # 04:19:48.511 pid=<0.404.0> module=gen_server [error] GenServer Beethoven.Role terminating
+  # ** (MatchError) no match of right hand side value: {:error, {:already_started, #PID<0.406.0>}}
+  #  (beethoven 0.2.0) lib/beethoven/role.ex:226: Beethoven.Role.handle_cast/2
+  #  (stdlib 6.2.1) gen_server.erl:2371: :gen_server.try_handle_cast/3
+  #  (stdlib 6.2.1) gen_server.erl:2433: :gen_server.handle_msg/6
+  #  (stdlib 6.2.1) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+  # Last message: {:"$gen_cast", {:add_role, {:test, Beethoven.TestRole, [arg1: "arg1"], 2}}}
+  # State: %{roles: [{:test, Beethoven.TestRole, [arg1: "arg1"], 2}], super_pid: {#PID<0.405.0>, #Reference<0.4087010521.2338062337.89194>}, role_pids: %{test: {#PID<0.406.0>, #Reference<0.4087010521.2338062337.89246>}}}
   #
   #
   #
@@ -104,31 +113,53 @@ defmodule Beethoven.Role do
             )
 
             # Spawn role in Dynamic supervisor
-            {:ok, role_pid} =
-              DynamicSupervisor.start_child(Beethoven.Role.RoleSupervisor, {module, args})
+            DynamicSupervisor.start_child(Beethoven.Role.RoleSupervisor, {module, args})
+            |> case do
+              # Role was created
+              {:ok, role_pid} ->
+                Logger.debug("Monitoring Role (:#{name}) on node (#{node()}).")
+                role_ref = Process.monitor(role_pid)
+                #
+                %{} |> Map.put(name, {role_pid, role_ref})
 
-            Logger.debug("Monitoring Role (:#{name}) on node (#{node()}).")
-            role_ref = Process.monitor(role_pid)
-            #
-            %{} |> Map.put(name, {role_pid, role_ref})
-            #
+              #
+              # Role already exists
+              {:error, {:already_started, _role_pid}} ->
+                Logger.warning(
+                  "Role (:#{name}) is already hosted on this node (:#{node()}). Moving to the next role."
+                )
+
+                %{}
+            end
           end)
 
-        # Merge maps
-        role_pids = role_pids |> Utils.bulk_put(new_role_pids)
-        node_roles = role_pids |> Map.keys()
+        IO.inspect({:new_role_pids, new_role_pids})
 
-        # Update Mnesia
-        Logger.debug("Writing the roles for node (#{node()}) to BeethovenTracker.")
+        # Check how many roles were successfully applied
+        case new_role_pids do
+          # no roles applied
+          [] ->
+            Logger.debug("0 roles applied out of (#{length(roles) |> Integer.to_string()}).")
+            {:noreply, %{roles: roles, super_pid: super_pid, role_pids: role_pids}}
 
-        {:atomic, :ok} =
-          :mnesia.transaction(fn ->
-            :mnesia.write(
-              {BeethovenTracker, node(), node_roles, :online, DateTime.now!("Etc/UTC")}
-            )
-          end)
+          # Some applied => [%{},...]
+          new_role_pids ->
+            # Merge maps
+            role_pids = role_pids |> Utils.bulk_put(new_role_pids)
+            node_roles = role_pids |> Map.keys()
 
-        {:noreply, %{roles: roles, super_pid: super_pid, role_pids: role_pids}}
+            # Update Mnesia
+            Logger.debug("Writing the roles for node (#{node()}) to BeethovenTracker.")
+
+            {:atomic, :ok} =
+              :mnesia.transaction(fn ->
+                :mnesia.write(
+                  {BeethovenTracker, node(), node_roles, :online, DateTime.now!("Etc/UTC")}
+                )
+              end)
+
+            {:noreply, %{roles: roles, super_pid: super_pid, role_pids: role_pids}}
+        end
 
       #
       #

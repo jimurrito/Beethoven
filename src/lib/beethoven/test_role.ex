@@ -24,7 +24,19 @@ defmodule Beethoven.TestRole do
   end
 
   @impl true
-  def handle_call(_, _from, state) do
-    {:reply, :hello, state}
+  def handle_call({:echo, pid, payload}, _from, state) do
+    Logger.notice("Echo call!")
+    IO.inspect(%{pid: pid, data: payload})
+    send(pid, {:echo, payload})
+    {:reply, nil, state}
   end
+
+
+  @impl true
+  def handle_call({:echo, payload}, from, state) do
+    Logger.notice("Echo call - local!")
+    IO.inspect(%{pid: from, data: payload})
+    {:reply, payload, state}
+  end
+
 end
