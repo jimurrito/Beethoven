@@ -75,17 +75,6 @@ defmodule Beethoven.Role do
   end
 
   #
-  # TODO:
-  # 04:19:48.511 pid=<0.404.0> module=gen_server [error] GenServer Beethoven.Role terminating
-  # ** (MatchError) no match of right hand side value: {:error, {:already_started, #PID<0.406.0>}}
-  #  (beethoven 0.2.0) lib/beethoven/role.ex:226: Beethoven.Role.handle_cast/2
-  #  (stdlib 6.2.1) gen_server.erl:2371: :gen_server.try_handle_cast/3
-  #  (stdlib 6.2.1) gen_server.erl:2433: :gen_server.handle_msg/6
-  #  (stdlib 6.2.1) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
-  # Last message: {:"$gen_cast", {:add_role, {:test, Beethoven.TestRole, [arg1: "arg1"], 2}}}
-  # State: %{roles: [{:test, Beethoven.TestRole, [arg1: "arg1"], 2}], super_pid: {#PID<0.405.0>, #Reference<0.4087010521.2338062337.89194>}, role_pids: %{test: {#PID<0.406.0>, #Reference<0.4087010521.2338062337.89246>}}}
-  #
-  #
   #
   #
   # Check roles
