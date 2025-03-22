@@ -2,7 +2,7 @@ defmodule Beethoven.Az do
   @moduledoc """
   Azure Platform awareness for the cluster. If not in Azure, a local environment global group will be used.
   """
-alias ElixirSense.Log
+  alias ElixirSense.Log
 
   require Logger
 
@@ -34,11 +34,9 @@ alias ElixirSense.Log
         ip_address =
           network_config
           |> Map.fetch!("address")
-
-          IO.inspect({:ip, ip_address})
-
-        # deserialize Ipaddress string into 4 elem tuple
-        ip_address = :inet.ntoa(ip_address)
+          |> to_charlist() # erlang expects strings to be charlist sometimes.
+          # deserialize Ipaddress string into 4 elem tuple
+          |> :inet.parse_address()
 
         # Netmask
         netmask =
