@@ -33,9 +33,9 @@ defmodule Beethoven.Az do
         ip_address =
           network_config
           |> Map.fetch!("address")
-          # deserialize Ipaddress string into 4 elem tuple
-          |> to_charlist()
-          |> :inet.ntoa()
+
+        # deserialize Ipaddress string into 4 elem tuple
+        ip_address = :inet.ntoa(~c"#{ip_address}")
 
         # Netmask
         netmask =
