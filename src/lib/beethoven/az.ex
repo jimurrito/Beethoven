@@ -2,7 +2,6 @@ defmodule Beethoven.Az do
   @moduledoc """
   Azure Platform awareness for the cluster. If not in Azure, a local environment global group will be used.
   """
-  alias ElixirSense.Log
 
   require Logger
 
@@ -34,9 +33,12 @@ defmodule Beethoven.Az do
         ip_address =
           network_config
           |> Map.fetch!("address")
-          |> to_charlist() # erlang expects strings to be charlist sometimes.
+          # erlang expects strings to be charlist sometimes.
+          |> to_charlist()
           # deserialize Ipaddress string into 4 elem tuple
           |> :inet.parse_address()
+          # unwraps  {:ok, {172, 19, 0, 16}}
+          |> elem(1)
 
         # Netmask
         netmask =
@@ -59,7 +61,7 @@ defmodule Beethoven.Az do
 
   Calls IMDS to get the region this machine is in.
   """
-  @spec get_AzRegion() :: binary() | :no_azure
+  @spec get_AzRegion() :: atom() | :no_azure
   def get_AzRegion() do
     call_IMDS()
     |> case do
@@ -67,6 +69,7 @@ defmodule Beethoven.Az do
         metadata
         |> Map.fetch!("compute")
         |> Map.fetch!("location")
+        |> String.to_atom()
 
       {:error, :timeout} ->
         :no_azure

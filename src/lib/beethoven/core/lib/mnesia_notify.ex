@@ -7,7 +7,6 @@ defmodule Beethoven.Core.Lib.MnesiaNotify do
   """
 
   require Logger
-  alias Beethoven.Core, as: CoreServer
   alias Beethoven.Role, as: RoleServer
 
   @doc """
@@ -48,8 +47,10 @@ defmodule Beethoven.Core.Lib.MnesiaNotify do
   @spec new_node(atom()) :: :ok
   def new_node(nodeName) do
     Logger.debug("Node (#{nodeName}) as been added to 'BeethovenTracker' table.")
-    # Sending cast ensure we are monitoring the new node
-    GenServer.cast(CoreServer, {:mon_node, {:start, nodeName}})
+    # Monitor new node
+    true = Node.monitor(nodeName, true)
+    #
+    :ok
   end
 
   #
@@ -60,10 +61,12 @@ defmodule Beethoven.Core.Lib.MnesiaNotify do
   @spec offline_node(atom()) :: :ok
   def offline_node(nodeName) do
     Logger.debug("Node (#{nodeName}) has changed availability: [:online] => [:offline].")
-    # Sending cast ensure we stop monitoring the offline node
-    :ok = GenServer.cast(CoreServer, {:mon_node, {:stop, nodeName}})
+    # Sending cast ensure we start monitoring the offline node again
+    true = Node.monitor(nodeName, false)
     # Run :check on RoleServer
     GenServer.cast(RoleServer, :check)
+    #
+    :ok
   end
 
   #
@@ -75,7 +78,9 @@ defmodule Beethoven.Core.Lib.MnesiaNotify do
   def online_node(nodeName) do
     Logger.debug("Node (#{nodeName}) has changed availability: [:offline] => [:online].")
     # Sending cast ensure we start monitoring the offline node again
-    GenServer.cast(CoreServer, {:mon_node, {:start, nodeName}})
+    true = Node.monitor(nodeName, true)
+    #
+    :ok
   end
 
   #

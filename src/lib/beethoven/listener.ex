@@ -53,7 +53,7 @@ defmodule Beethoven.Listener do
       |> case do
         # successfully opened socket
         {:ok, socket} ->
-          Logger.debug("Now listening on port (#{port_string}).")
+          Logger.info("Now listening on port (#{port_string}).")
           #
           #
           # Start accepting requests
@@ -172,10 +172,7 @@ defmodule Beethoven.Listener do
           {:ok, _} ->
             Logger.info("Node (#{nodeName}) joined the Beethoven Cluster.")
             # Ensure Coordinator is in ':clustered' mode now
-            if GenServer.call(CoreServer, :get_mode) == :standalone do
-              # Service is standalone
-              GenServer.cast(CoreServer, :standalone_to_clustered)
-            end
+            _ = GenServer.call(CoreServer, {:transition, :clustered})
 
             # Send response to caller
             :gen_tcp.send(client_socket, "joined")
@@ -215,9 +212,7 @@ defmodule Beethoven.Listener do
   # Only PID it would be monitoring is the supervisor
   @impl true
   def handle_info({:DOWN, _ref, :process, _pid, :shutdown}, socket) do
-    Logger.critical(
-      "Beethoven.Listener's task Supervisor has shutdown."
-    )
+    Logger.critical("Beethoven.Listener's task Supervisor has shutdown.")
 
     {:noreply, socket}
   end

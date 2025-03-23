@@ -9,6 +9,9 @@ defmodule Beethoven.Core.Lib.Node do
   alias Beethoven.Core, as: CoreServer
   alias Beethoven.Role, as: RoleServer
 
+  #
+  #
+  #
   @doc """
   Handles what happens when a node goes down.
   """

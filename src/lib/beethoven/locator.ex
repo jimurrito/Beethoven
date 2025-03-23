@@ -10,9 +10,6 @@ defmodule Beethoven.Locator do
   @doc """
   Attempts join to a Beethoven Listener Socket server hosted on another Elixir node.
   Using the provided socket info, the client will attempt to connect to the socket and deliver its node uri as a payload.
-
-  NOTE: this will not set if this client will hold ram_copies of the Mnesia data. Please use `copy_mnesia_table/2` to achieve this once joined.
-
   """
   @spec try_join({integer(), integer(), integer(), integer()}, integer()) ::
           :ok | :cluster_join_error | :copy_error | :coord_listener_conn_error

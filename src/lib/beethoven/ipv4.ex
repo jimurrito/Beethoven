@@ -22,16 +22,16 @@ defmodule Beethoven.Ipv4 do
           "127.0.0.0"
       end
 
-      clusterNetMask =
-        Application.fetch_env(:beethoven, :cluster_net_mask)
-        |> case do
-          {:ok, value} ->
-            value
+    clusterNetMask =
+      Application.fetch_env(:beethoven, :cluster_net_mask)
+      |> case do
+        {:ok, value} ->
+          value
 
-          :error ->
-            Logger.notice(":cluster_net_mask not set in config/*.exs. Using default value '29'.")
-            "29"
-        end
+        :error ->
+          Logger.notice(":cluster_net_mask not set in config/*.exs. Using default value '29'.")
+          "29"
+      end
 
     # Convert to IP Type
     {:ok, clusterNetParse} = IP.parse_address(~c"#{clusterNet}")
@@ -39,6 +39,14 @@ defmodule Beethoven.Ipv4 do
     get_hosts(clusterNetParse, clusterNetMask)
   end
 
+  #
+  # Version to handle when you already have the net info
+  def get_host_network_addresses(clusterNet, clusterNetMask) do
+    get_hosts(clusterNet, clusterNetMask)
+  end
+
+  #
+  #
   @doc """
   Gets the number of IPs within a netmask.
   """
