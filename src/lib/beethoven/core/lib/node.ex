@@ -5,8 +5,9 @@ defmodule Beethoven.Core.Lib.Node do
   """
 
   require Logger
-  alias Beethoven.Utils
   alias Beethoven.Core, as: CoreServer
+  alias Beethoven.Core.Lib.Transition
+  alias Beethoven.Utils
   alias Beethoven.Role, as: RoleServer
 
   #
@@ -29,7 +30,7 @@ defmodule Beethoven.Core.Lib.Node do
       # Server is backup -> re-enable monitoring
       :pong ->
         Logger.info("Node (#{nodeName}) is back online.")
-        GenServer.cast(CoreServer, {:mon_node, {:start, nodeName}})
+        Utils.monitor_node(nodeName, true)
 
       #
       #
@@ -55,8 +56,8 @@ defmodule Beethoven.Core.Lib.Node do
 
                 # Check if there are any other nodes
                 if length(Node.list()) == 0 do
-                  # Standalone is now needed. All others are offline.
-                  GenServer.cast(CoreServer, :clustered_to_standalone)
+                  # can call CoreServer since this fun will be used by a task
+                  _ = GenServer.call(CoreServer, {:transition, :standalone})
                 else
                   # Other nodes exist in cluster.
                   # Run :check on RoleServer

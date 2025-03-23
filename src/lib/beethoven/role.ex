@@ -122,7 +122,7 @@ defmodule Beethoven.Role do
             end
           end)
 
-        IO.inspect({:new_role_pids, new_role_pids})
+        #IO.inspect({:new_role_pids, new_role_pids})
 
         # Check how many roles were successfully applied
         case new_role_pids do

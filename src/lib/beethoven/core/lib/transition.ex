@@ -36,11 +36,8 @@ defmodule Beethoven.Core.Lib.Transition do
   # Converts service from standalone to clustered
   @spec to_clustered() :: :ok
   defp to_clustered() do
-    # Monitor all nodes in cluster
-    Node.list()
-    |> Enum.each(fn node ->
-      Node.monitor(node, true)
-    end)
+    #
+    :ok
   end
 
   #

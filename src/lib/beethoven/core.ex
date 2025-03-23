@@ -6,6 +6,7 @@ defmodule Beethoven.Core do
   use GenServer
   require Logger
 
+  alias Beethoven.Utils
   alias __MODULE__.Lib.Transition, as: TransLib
   alias __MODULE__.Lib.MnesiaNotify, as: MNotify
   alias __MODULE__.Lib.Node, as: NodeLib
@@ -41,6 +42,17 @@ defmodule Beethoven.Core do
       region
       # Start seeking process
       |> Startup.start_seeking()
+      |> case do
+        # If :clustered -> monitor all active nodes
+        :clustered ->
+          :ok = Utils.monitor_all_nodes(true)
+
+          :clustered
+
+        # anything else
+        out ->
+          out
+      end
 
     # start Tracker
     m_result = Tracker.start()
@@ -96,6 +108,8 @@ defmodule Beethoven.Core do
   # Redirects all Mnesia subscription events into the Lib.MnesiaNotify module.
   @impl true
   def handle_info({:mnesia_table_event, msg}, mode) do
+    #Logger.warning("MNESIA EVENT")
+    #IO.inspect({:event, msg})
     :ok = MNotify.run(msg)
     {:noreply, mode}
   end

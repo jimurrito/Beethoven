@@ -62,8 +62,6 @@ defmodule Beethoven.Locator do
                 :copy_error
             end
 
-            :ok
-
           _error ->
             Logger.error("Failed to join Mnesia cluster: ':cluster_join_error'")
 
@@ -106,9 +104,9 @@ defmodule Beethoven.Locator do
         :ok
 
       # Failed to join cluster
-      #:copy_error ->
-      #  Logger.debug("Table copy failure occurred on attempt #(#{acc}).")
-      #  :copy_error
+      :copy_error ->
+        Logger.debug("Table copy failure occurred on attempt #(#{acc}).")
+        :copy_error
 
       # Failed to join cluster
       :cluster_join_error ->
