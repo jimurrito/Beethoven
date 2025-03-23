@@ -6,20 +6,36 @@ defmodule Beethoven.RoleAlloc do
   use GenServer
   require Logger
 
-  alias __MODULE__.State
+  alias Beethoven.Tracker
+  alias Beethoven.Utils
 
   #
   #
-  def start_link do
-    GenServer.start_link(__MODULE__, [], [])
+  def start([]) do
+    # Check if it exists globally prior
+    :global.whereis_name(__MODULE__)
+    |> case do
+      # Not in global registry
+      :undefined ->
+        GenServer.start(__MODULE__, [], [])
+
+      # Service is registered
+      _ ->
+        Logger.notice(
+          "Beethoven Role Allocator is already globally registered. Service will not run."
+        )
+
+        {:error, :already_globally_defined}
+    end
   end
 
   #
   #
   @impl true
   def init(_arg) do
-    # register self in global
-
+    Logger.info("Starting Beethoven Role Allocator.")
+    #
+    :global.register_name(__MODULE__, self())
     #
     # get roles from config.exs
     roles =
@@ -33,17 +49,39 @@ defmodule Beethoven.RoleAlloc do
           []
       end
 
-    # Initiates a role assignment check against the mnesia database
-    GenServer.call(__MODULE__, :check)
+    # get roles by key - will de duplicate if multiple instances are needed
+    # converts the list of maps from config to a list of atoms
+    role_list =
+      roles
+      |> Enum.map(fn {name, _mod, _args, inst} ->
+        # range to create multiple instances
+        1..inst
+        |> Enum.map(fn _ -> name end)
+      end)
+      # Flatten list
+      |> List.flatten()
 
-    {:ok, %State{ready?: false, roles: roles, queue: :queue.new()}}
+    # Filter what roles are needed based on what is in mnesia
+    roles_needed = Tracker.find_work(role_list)
+    # convert list to queue
+    queue = :queue.from_list(roles_needed)
+    #
+    # Trigger assign
+    :ok = GenServer.cast(__MODULE__, :assign)
+    #
+    {:ok, %{roles: roles, queue: queue}}
   end
 
   #
-  # Checks what roles are needed.
+  #
+  # Cast to trigger role assignment
   @impl true
-  def handle_cast(:check, state) do
-    {:noreply, state}
+  def handle_cast(:assign, %{roles: roles, queue: queue}) do
+    # fun to be ran on each item used in queue
+    fn role ->
+      # 
+      #
+    end
   end
 
   #
@@ -52,15 +90,4 @@ defmodule Beethoven.RoleAlloc do
   def handle_cast({:node_down, node}, state) do
     {:noreply, state}
   end
-
-  #
-  # Call to see if role allocator is ready
-  @impl true
-  def handle_call(:ready?, _from, %State{ready?: state, roles: roles, queue: queue}) do
-    {:reply, state, %State{ready?: state, roles: roles, queue: queue}}
-  end
-
-
-
-
 end

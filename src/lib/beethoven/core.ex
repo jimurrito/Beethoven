@@ -6,15 +6,16 @@ defmodule Beethoven.Core do
   use GenServer
   require Logger
 
-  alias Beethoven.Utils
   alias __MODULE__.Lib.Transition, as: TransLib
   alias __MODULE__.Lib.MnesiaNotify, as: MNotify
   alias __MODULE__.Lib.Node, as: NodeLib
   alias __MODULE__.Lib.Startup
   alias Beethoven.Listener
   alias Beethoven.Role, as: RoleServer
+  alias Beethoven.RoleAlloc
   alias Beethoven.Az
   alias Beethoven.Tracker
+  alias Beethoven.Utils
 
   #
   #
@@ -62,9 +63,9 @@ defmodule Beethoven.Core do
     # TCP Listener
     _ = Listener.start([])
     # Role Allocation Server
-    # {:ok, _ra_pid} = RoleAlloc.start_link([])
+    _ = RoleAlloc.start([])
     # Role manager
-    {:ok, _ro_pid} = RoleServer.start_link([])
+    _ = RoleServer.start_link([])
 
     {:ok, mode}
   end
@@ -108,8 +109,8 @@ defmodule Beethoven.Core do
   # Redirects all Mnesia subscription events into the Lib.MnesiaNotify module.
   @impl true
   def handle_info({:mnesia_table_event, msg}, mode) do
-    #Logger.warning("MNESIA EVENT")
-    #IO.inspect({:event, msg})
+    # Logger.warning("MNESIA EVENT")
+    # IO.inspect({:event, msg})
     :ok = MNotify.run(msg)
     {:noreply, mode}
   end

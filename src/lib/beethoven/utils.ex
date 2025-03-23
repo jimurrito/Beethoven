@@ -69,4 +69,64 @@ defmodule Beethoven.Utils do
     state = state |> Map.put(key, value)
     bulk_put(map, list_o_maps, state)
   end
+
+  #
+  #
+  @doc """
+  Check if Mnesia table exists
+  """
+  @spec mnesia_table_exists?(atom()) :: boolean()
+  def mnesia_table_exists?(table) when is_atom(table) do
+    Logger.debug("Checking if '#{table}' mnesia table exists.")
+
+    :mnesia.system_info(:tables)
+    |> Enum.member?(table)
+    |> if do
+      Logger.debug("'#{table}' table exists.")
+      true
+    else
+      Logger.debug("'#{table}' table does not exist.")
+      false
+    end
+  end
+
+  #
+  #
+  #
+  @doc """
+  Copies desired table to local node memory
+  """
+  @spec copy_mnesia_table(atom()) :: :ok | {:error, any()}
+  def copy_mnesia_table(table) do
+    Logger.info("Making in-memory copies of the Mnesia Cluster table '#{Atom.to_string(table)}'.")
+
+    :mnesia.add_table_copy(table, node(), :ram_copies)
+    |> case do
+      # Successfully copied table to memory
+      {:atomic, :ok} ->
+        Logger.info("Successfully copied table '#{Atom.to_string(table)}' to memory.")
+        :ok
+
+      # table already in memory (this is fine)
+      {:aborted, {:already_exists, _, _}} ->
+        Logger.info("Table '#{Atom.to_string(table)}' is already copied to memory.")
+        :ok
+
+      # Copy failed for some reason
+      {:aborted, error} ->
+        Logger.error("Failed to copy table '#{Atom.to_string(table)}' to memory.")
+
+        {:error, error}
+    end
+  end
+
+  #
+  #
+  @doc """
+  Runs a job within a synchronous transaction
+  """
+  @spec sync_run((-> :ok)) :: {:atomics, :ok} | {:error, any()}
+  def sync_run(fun) do
+    :mnesia.sync_transaction(fun)
+  end
 end

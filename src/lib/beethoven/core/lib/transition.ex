@@ -5,6 +5,7 @@ defmodule Beethoven.Core.Lib.Transition do
   """
 
   require Logger
+  alias Beethoven.RoleAlloc
   alias Beethoven.Listener
 
   #
@@ -27,6 +28,8 @@ defmodule Beethoven.Core.Lib.Transition do
   defp to_standalone() do
     # Ensure Listener is on
     _ = Listener.start([])
+    # Role Allocation Server
+    _ = RoleAlloc.start([])
     #
     :ok
   end

@@ -28,7 +28,7 @@ defmodule Beethoven.Core.Lib.MnesiaNotify do
         offline_node(nodeName)
 
       # Node changed from offline to online in 'BeethovenTracker' table
-      {:write, BeethovenTracker, {BeethovenTracker, nodeName, :member, :online, _},
+      {:write, BeethovenTracker, {BeethovenTracker, nodeName, _, :online, _},
        [{BeethovenTracker, nodeName, _, :offline, _}], _pid_struct} ->
         online_node(nodeName)
 

@@ -6,9 +6,8 @@ defmodule Beethoven.Core.Lib.Node do
 
   require Logger
   alias Beethoven.Core, as: CoreServer
-  alias Beethoven.Core.Lib.Transition
-  alias Beethoven.Utils
   alias Beethoven.Role, as: RoleServer
+  alias Beethoven.Utils
 
   #
   #
@@ -37,8 +36,9 @@ defmodule Beethoven.Core.Lib.Node do
       # Server is still unreachable -> attempt status change.
       :pang ->
         # update node state from :online to :offline
+        #
         {:atomic, :ok} =
-          :mnesia.transaction(fn ->
+          fn ->
             # See if the node still shows online
             :mnesia.read(BeethovenTracker, nodeName)
             |> case do
@@ -60,8 +60,6 @@ defmodule Beethoven.Core.Lib.Node do
                   _ = GenServer.call(CoreServer, {:transition, :standalone})
                 else
                   # Other nodes exist in cluster.
-                  # Run :check on RoleServer
-                  GenServer.cast(RoleServer, :check)
                 end
 
               # Node was deleted -> do nothing
@@ -74,7 +72,9 @@ defmodule Beethoven.Core.Lib.Node do
                 Logger.debug("Node (#{nodeName}) is already updated in Mnesia.")
                 :ok
             end
-          end)
+          end
+          #
+          |> :mnesia.transaction(:infinity)
     end
   end
 end
