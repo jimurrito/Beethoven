@@ -17,8 +17,8 @@ defmodule Beethoven.Locator do
     # Convert ipaddress tuple to string for logging
     ipString = :inet.ntoa(ipAddr)
     Logger.info("Attempting connection to Beethoven Listener @ '#{ipString}'.")
-    # attempt connection to listener
-    case :gen_tcp.connect(ipAddr, port, [:binary, packet: 0, active: false]) do
+    # attempt connection to listener (250 milisecond timeout)
+    case :gen_tcp.connect(ipAddr, port, [:binary, packet: 0, active: false], 250) do
       # Connected to listener
       {:ok, server_socket} ->
         Logger.info("Successfully connected to Beethoven Listener socket  @ '#{ipString}'.")
