@@ -42,6 +42,8 @@ defmodule Beethoven.Core.Lib.Startup do
     # Get network info from IMDS
     {:ok, network, netmask} = Az.get_AzSubnet()
     hostIPs = Ipv4.get_host_network_addresses(network, netmask)
+    # Due to how Azure works, will remove the first 3 addresses in the list.
+    hostIPs = hostIPs |> Enum.take(-(length(hostIPs) - 3))
     # get Listener port -> used to connect to a server
     port =
       Application.fetch_env(:beethoven, :listener_port)

@@ -105,7 +105,7 @@ defmodule Beethoven.Az do
     |> case do
       # Get body of response and deserialize
       {:ok, body} ->
-        Logger.debug("Got response from IMDS.")
+        #Logger.debug("Got response from IMDS.")
         resp_body = body |> elem(2) |> to_string() |> :json.decode()
         {:ok, resp_body}
 
