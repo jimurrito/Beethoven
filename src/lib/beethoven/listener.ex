@@ -173,6 +173,8 @@ defmodule Beethoven.Listener do
             Logger.info("Node (#{nodeName}) joined the Beethoven Cluster.")
             # Ensure Coordinator is in ':clustered' mode now
             _ = GenServer.call(CoreServer, {:transition, :clustered})
+            # Cast clean-up job trigger RoleAlloc Server
+            :global.send(Beethoven.RoleAlloc, :clean_up)
 
             # Send response to caller
             :gen_tcp.send(client_socket, "joined")

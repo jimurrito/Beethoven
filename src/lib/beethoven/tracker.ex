@@ -110,6 +110,28 @@ defmodule Beethoven.Tracker do
   #
   #
   #
+  @doc """
+  Builtin roles
+  """
+  def builtin_roles() do
+    [:been_alloc]
+  end
+
+  #
+  # DO NOT INCLUDE IN ANY FUN HERE.
+  # THIS WILL CAUSE BUGS WHEN LOOKING FOR HOSTED DEFAULT ROLES.
+  @doc """
+  Removes builtin roles from a list of roles.
+  """
+  @spec remove_builtins(list()) :: list()
+  def remove_builtins(role_list) do
+    role_list
+    |> Enum.filter(&(Enum.find(builtin_roles(), fn bir -> bir != &1 end) != nil))
+  end
+
+  #
+  #
+  #
   # https://elixirschool.com/en/lessons/storage/mnesia
   @doc """
   Gets roles hosted in the cluster. Provides list of roles - this list is **not** deduplicated.
@@ -259,6 +281,40 @@ defmodule Beethoven.Tracker do
     end
     |> :mnesia.transaction()
     |> elem(1)
+  end
+
+  #
+  #
+  @doc """
+  Clear all roles from offline nodes. Returns list of roles cleared.
+  """
+  @spec clear_offline_roles() :: list()
+  def clear_offline_roles() do
+    fn ->
+      # Create Pattern to get offline nodes
+      #
+      pattern = {Tracker, :"$1", :"$2", :offline, :_}
+      # produces list of lists
+      :mnesia.select(Tracker, [{pattern, [], [:"$$"]}])
+      # remove roles from nodes, returns list of roles
+      |> clear_offline_roles([])
+    end
+    |> :mnesia.transaction()
+    |> elem(1)
+  end
+
+  #
+  # End loop
+  defp clear_offline_roles([], out) do
+    out
+    |> List.flatten()
+  end
+
+  #
+  # Working loop
+  defp clear_offline_roles([[nodeName, roles] | records], out) do
+    :mnesia.write({Tracker, nodeName, [], :offline, DateTime.now!("Etc/UTC")})
+    clear_offline_roles(records, [roles | out])
   end
 
   #
