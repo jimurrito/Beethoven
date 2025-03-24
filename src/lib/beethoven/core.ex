@@ -16,6 +16,7 @@ defmodule Beethoven.Core do
   alias Beethoven.Az
   alias Beethoven.Tracker
   alias Beethoven.Utils
+  alias Beethoven.Core.TaskSupervisor, as: CoreSupervisor
 
   #
   #
@@ -32,6 +33,10 @@ defmodule Beethoven.Core do
   @impl true
   def init(_args) do
     Logger.info("Starting Beethoven.")
+
+    # Start Task manager for requests
+    {:ok, _task_pid} = Task.Supervisor.start_link(name: Beethoven.Core.TaskSupervisor)
+
     # Start Mnesia
     :ok = :mnesia.start()
 
@@ -60,14 +65,24 @@ defmodule Beethoven.Core do
     Logger.debug("Attempted to start Tracker. Result: (#{m_result}).")
 
     # Start servers
-    # TCP Listener
-    _ = Listener.start([])
-    # Role Allocation Server
-    _ = RoleAlloc.start([])
-    # Role manager
-    _ = RoleServer.start_link([])
+    GenServer.cast(__MODULE__, :start_servers)
 
     {:ok, mode}
+  end
+
+  #
+  #
+  # Start Servers
+  @impl true
+  def handle_cast(:start_servers, mode) do
+    # TCP Listener
+    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> Listener.start([]) end)
+    # Role manager
+    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleServer.start([]) end)
+    # Role Allocation Server
+    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleAlloc.start([]) end)
+
+    {:noreply, mode}
   end
 
   #
@@ -75,7 +90,6 @@ defmodule Beethoven.Core do
   #
   @impl true
   def handle_call({:transition, new_mode}, _from, mode) do
-    Logger.info("Transitioning server modes: [#{mode}] => [#{new_mode}]")
     result = TransLib.transition(mode, new_mode)
     {:reply, result, new_mode}
   end
@@ -94,12 +108,8 @@ defmodule Beethoven.Core do
   @impl true
   def handle_info({:nodedown, nodeName}, mode) when is_atom(nodeName) do
     # Job to handle state change for the node - avoids holding genserver
-    {:ok, _pid} =
-      fn ->
-        _result = NodeLib.down(nodeName)
-      end
-      # Spawn thread to handle job.
-      |> Task.start()
+    # Spawn thread to handle job.
+    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> NodeLib.down(nodeName) end)
 
     {:noreply, mode}
   end

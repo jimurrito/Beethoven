@@ -7,6 +7,8 @@ defmodule Beethoven.Core.Lib.Transition do
   require Logger
   alias Beethoven.RoleAlloc
   alias Beethoven.Listener
+  alias Beethoven.Role, as: RoleServer
+  alias Beethoven.Core.TaskSupervisor, as: CoreSupervisor
 
   #
   #
@@ -14,10 +16,17 @@ defmodule Beethoven.Core.Lib.Transition do
   def transition(mode, new_mode) do
     case new_mode do
       # is same mode
-      ^mode -> :noop
+      ^mode ->
+        :noop
+
       # changing modes
-      :standalone -> to_standalone()
-      :clustered -> to_clustered()
+      :standalone ->
+        Logger.info("Transitioning server modes: [#{mode}] => [#{new_mode}]")
+        to_standalone()
+
+      :clustered ->
+        Logger.info("Transitioning server modes: [#{mode}] => [#{new_mode}]")
+        to_clustered()
     end
   end
 
@@ -26,10 +35,12 @@ defmodule Beethoven.Core.Lib.Transition do
   # Converts service from clustered to standalone
   @spec to_standalone() :: :ok
   defp to_standalone() do
-    # Ensure Listener is on
-    _ = Listener.start([])
+    # TCP Listener
+    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> Listener.start([]) end)
+    # Role manager
+    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleServer.start([]) end)
     # Role Allocation Server
-    _ = RoleAlloc.start([])
+    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleAlloc.start([]) end)
     #
     :ok
   end
@@ -39,6 +50,8 @@ defmodule Beethoven.Core.Lib.Transition do
   # Converts service from standalone to clustered
   @spec to_clustered() :: :ok
   defp to_clustered() do
+    # Role Allocation Server
+    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleAlloc.start([]) end)
     #
     :ok
   end

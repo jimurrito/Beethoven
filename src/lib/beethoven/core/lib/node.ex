@@ -7,7 +7,9 @@ defmodule Beethoven.Core.Lib.Node do
   require Logger
   alias Beethoven.Core, as: CoreServer
   alias Beethoven.Role, as: RoleServer
+  alias Beethoven.RoleAlloc
   alias Beethoven.Utils
+  alias Beethoven.Core.TaskSupervisor, as: CoreSupervisor
 
   #
   #
@@ -40,18 +42,18 @@ defmodule Beethoven.Core.Lib.Node do
         {:atomic, :ok} =
           fn ->
             # See if the node still shows online
-            :mnesia.read(BeethovenTracker, nodeName)
+            :mnesia.wread({Beethoven.Tracker, nodeName})
             |> case do
               # Node still marked as online on the table -> update
-              [{BeethovenTracker, ^nodeName, _role, :online, _}] ->
+              [{Beethoven.Tracker, ^nodeName, roles, :online, _}] ->
                 Logger.debug(
-                  "Node (#{nodeName}) unreachable via ping, but the status still shows ':online' in Mnesia. Updating Mnesia."
+                  "Node (#{nodeName}) still unreachable via ping. Updating Beethoven.Tracker."
                 )
 
                 # Write updated state to table
                 :ok =
                   :mnesia.write(
-                    {BeethovenTracker, nodeName, :down, :offline, DateTime.now!("Etc/UTC")}
+                    {Beethoven.Tracker, nodeName, roles, :offline, DateTime.now!("Etc/UTC")}
                   )
 
                 # Check if there are any other nodes
@@ -60,16 +62,20 @@ defmodule Beethoven.Core.Lib.Node do
                   _ = GenServer.call(CoreServer, {:transition, :standalone})
                 else
                   # Other nodes exist in cluster.
+                  # attempt to start role alloc server incase its not running
+                  _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleAlloc.start([]) end)
                 end
+
+                :ok
 
               # Node was deleted -> do nothing
               [] ->
-                Logger.debug("Node (#{nodeName}) was already deleted from Mnesia.")
+                Logger.debug("Node (#{nodeName}) was already deleted from Beethoven.Tracker.")
                 :ok
 
               # Node was already updated to offline. -> do nothing
               _ ->
-                Logger.debug("Node (#{nodeName}) is already updated in Mnesia.")
+                Logger.debug("Node (#{nodeName}) is already updated in Beethoven.Tracker.")
                 :ok
             end
           end

@@ -38,7 +38,7 @@ defmodule Beethoven.Locator do
           # Joined Cluster
           :joined ->
             Logger.info("Successfully joined to Mnesia cluster.")
-            # Add self to BeethovenTracker
+            # Add self to Beethoven.Tracker
             Tracker.join()
             |> case do
               # Successfully added self
@@ -48,7 +48,7 @@ defmodule Beethoven.Locator do
               :not_started ->
                 # failed
                 Logger.error(
-                  "Failed to write self to 'BeethovenTracker' table. [:not_started] Going into failed state."
+                  "Failed to write self to 'Beethoven.Tracker' table. [:not_started] Going into failed state."
                 )
 
                 :cluster_join_error
@@ -56,7 +56,7 @@ defmodule Beethoven.Locator do
               :copy_error ->
                 # failed
                 Logger.error(
-                  "Failed to copy'BeethovenTracker' table to memory. Going into failed state."
+                  "Failed to copy'Beethoven.Tracker' table to memory. Going into failed state."
                 )
 
                 :copy_error

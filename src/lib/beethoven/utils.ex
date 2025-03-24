@@ -49,27 +49,62 @@ defmodule Beethoven.Utils do
   #
   #
   #
-  #
   @doc """
-  Merges an existing map, and a list of maps into a single level map.
+  Retrieves roles from config and converts to map.
   """
-  def bulk_put(map, list_o_maps) when is_map(map) do
-    bulk_put(map, list_o_maps, map)
+  @spec get_role_config() :: map()
+  def get_role_config() do
+    # get roles from config.exs
+    Application.fetch_env(:beethoven, :roles)
+    |> case do
+      {:ok, value} ->
+        value
+
+      :error ->
+        Logger.notice(":roles is not set in config/*.exs. Assuming no roles.")
+        exit(":roles is not set in config/*.exs. Assuming no roles. Killing RoleAlloc Server.")
+    end
+    # converts to map
+    |> role_list_to_map()
   end
 
-  # Exit
-  defp bulk_put(_map, [], state) do
+  #
+  #
+  #
+  @doc """
+  Creates a map from a list of maps. First element of the map needs to be an atom.
+  This same atom will be the key for the rest of the data in the map.
+  """
+  def role_list_to_map(role_list) do
+    role_list_to_map(role_list, %{})
+  end
+
+  #
+  # End loop
+  defp role_list_to_map([], state) do
     state
   end
 
-  # worker
-  defp bulk_put(map, [head | list_o_maps], state) when is_list(list_o_maps) do
-    [key] = head |> Map.keys()
-    value = head |> Map.get(key)
-    state = state |> Map.put(key, value)
-    bulk_put(map, list_o_maps, state)
+  #
+  # Working loop
+  defp role_list_to_map([{role_name, mod, args, inst} | role_list], state)
+       when is_atom(role_name) do
+    state = state |> Map.put(role_name, {mod, args, inst})
+    role_list_to_map(role_list, state)
   end
 
+  #
+  # Working loop - bad syntax for role manifest
+  defp role_list_to_map([role_bad | role_list], state) do
+    Logger.error(
+      "One of the roles provided is not in the proper syntax. This role will be ignored."
+    )
+
+    Io.inspect(%{expected: {:role_name, Module, ["arg1"], 1}, received: role_bad})
+    role_list_to_map(role_list, state)
+  end
+
+  #
   #
   #
   @doc """
