@@ -43,6 +43,8 @@ defmodule Beethoven.RoleAlloc do
     :ok = Tracker.add_role(node(), :been_alloc)
     # monitor all active nodes
     :ok = Utils.monitor_all_nodes(true)
+    # Subscribe to tracker changes
+    {:ok, _node} = Tracker.subscribe()
     #
     Logger.info("Starting Beethoven Role Allocator.")
     roles = Utils.get_role_config()
@@ -318,6 +320,81 @@ defmodule Beethoven.RoleAlloc do
     # triggers cleanup job
     :ok = GenServer.cast(__MODULE__, :clean_up)
     {:noreply, state}
+  end
+
+  #
+  #
+  # handles :assign requests from other nodes
+  def handle_info(:assign, state) do
+    # triggers cleanup job
+    :ok = GenServer.cast(__MODULE__, :assign)
+    {:noreply, state}
+  end
+
+  #
+  #
+  #
+  @impl true
+  def handle_info({:mnesia_table_event, msg}, %{
+        role: roles,
+        role_queue: role_queue,
+        host_queue: host_queue,
+        retries: retries
+      }) do
+    # Logger.warning("MNESIA EVENT")
+    # IO.inspect({:event, msg})
+    {:ok, new_host_queue} =
+      msg
+      |> case do
+        #
+        # New node was added to the 'Beethoven.Tracker' table
+        {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _}, [], _pid_struct} ->
+          #
+          Logger.info("A new node (#{nodeName}) has joined the cluster. Starting Assign job.")
+          GenServer.cast(__MODULE__, :assign)
+          # monitor node
+          Utils.monitor_node(nodeName, true)
+          # Add to queue
+          host_queue = nodeName |> :queue.in(host_queue)
+          {:ok, host_queue}
+
+        # Node changed from online to offline in 'Beethoven.Tracker' table
+        {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :offline, _},
+         [{Beethoven.Tracker, nodeName, _, :online, _}], _pid_struct} ->
+          #
+          Logger.info("A cluster node (#{nodeName}) has gone offline. Starting Clean-up job.")
+          GenServer.cast(__MODULE__, :clean_up)
+          #
+          Utils.monitor_node(nodeName, false)
+          # remove from queue
+          host_queue = nodeName |> :queue.delete(host_queue)
+          {:ok, host_queue}
+
+        # Node changed from offline to online in 'Beethoven.Tracker' table
+        {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _},
+         [{Beethoven.Tracker, nodeName, _, :offline, _}], _pid_struct} ->
+          #
+          Logger.info("A cluster node (#{nodeName}) has came back online. Starting Assign job.")
+          GenServer.cast(__MODULE__, :assign)
+          # Add to queue
+          host_queue = nodeName |> :queue.in(host_queue)
+          {:ok, host_queue}
+
+        # Catch all
+        _ ->
+          # return queue as-is
+          {:ok, host_queue}
+          #
+          #
+      end
+
+    {:noreply,
+     %{
+       role: roles,
+       role_queue: role_queue,
+       host_queue: new_host_queue,
+       retries: retries
+     }}
   end
 
   #
