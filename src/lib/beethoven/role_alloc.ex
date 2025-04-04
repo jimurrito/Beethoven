@@ -79,6 +79,8 @@ defmodule Beethoven.RoleAlloc do
       "Found (#{:queue.len(host_queue)}) nodes in cluster and (#{:queue.len(role_queue)}) roles to be assigned"
     )
 
+    Logger.debug(hosts: host_queue, roles: role_queue)
+
     # triggers cleanup job -. Ensures there are no stragglers after a failover
     # Cleanup will trigger an assignment loop
     :ok = GenServer.cast(__MODULE__, :clean_up)
@@ -248,15 +250,35 @@ defmodule Beethoven.RoleAlloc do
       }) do
     Logger.info("Beethoven Role Allocator clean-up job triggered.")
     # clean up offline nodes -> returns roles removed from the nodes.
-    # Converts roles to queue and merge the two.
-    new_role_queue =
-      Tracker.clear_offline_roles()
-      # Remove any built-in roles
-      |> Tracker.remove_builtins()
-      # Convert to queue
-      |> :queue.from_list()
-      # append to role queue
-      |> :queue.join(role_queue)
+    removed_roles = Tracker.clear_offline_roles()
+
+    Logger.info(
+      "(#{length(removed_roles)}) Roles have been cleared from the Tracker for reassignment."
+    )
+
+    Logger.debug("Creating list of roles needed for the cluster.")
+
+    #
+    # role_list represents lists that are needed according to the runtime config provided in config.exs.
+    # get roles by key - will de duplicate if multiple instances are needed
+    # converts the list of maps from config to a list of atoms
+    role_list =
+      roles
+      |> Enum.map(fn {name, {_mod, _args, inst}} ->
+        # range to create multiple instances
+        1..inst
+        |> Enum.map(fn _ -> name end)
+      end)
+      # Flatten list
+      |> List.flatten()
+
+    # Filter what roles are needed based on what is in mnesia.
+    # Essentially removes roles hosted on Mnesia from the ones needed in the config.
+    Logger.debug("Filtering roles needed to roles hosted in Tracker.")
+    roles_needed = Tracker.find_work(role_list)
+
+    # convert list to queue
+    new_role_queue = :queue.from_list(roles_needed)
 
     # Make new host_queue
     new_host_queue = make_host_queue()
@@ -268,6 +290,8 @@ defmodule Beethoven.RoleAlloc do
     Logger.info(
       "Clean up job completed. Changes: [(#{to_string(host_diff)}) Node(s)] | [(#{to_string(role_diff)}) Role(s)]"
     )
+
+    Logger.debug(new: {new_host_queue, new_role_queue}, old: {host_queue, role_queue})
 
     # triggers assignment loop
     :ok = GenServer.cast(__MODULE__, :assign)

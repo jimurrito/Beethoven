@@ -100,9 +100,22 @@ defmodule Beethoven.Utils do
       "One of the roles provided is not in the proper syntax. This role will be ignored."
     )
 
-    Io.inspect(%{expected: {:role_name, Module, ["arg1"], 1}, received: role_bad})
+    IO.inspect(%{expected: {:role_name, Module, ["args"], 1}, received: role_bad})
     role_list_to_map(role_list, state)
   end
+
+  #
+  #
+  #
+  #
+  @doc """
+  Creates role queue based on data from config.exs.
+  This queue
+  """
+  def get_role_instances() do
+    
+  end
+
 
   #
   #
