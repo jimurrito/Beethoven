@@ -6,9 +6,13 @@ defmodule Beethoven.Ipv4 do
   require Logger
   alias :inet, as: IP
 
+  #
+  #
+  #
   @doc """
-  Retrieves the hosts IP address.
+  Retrieves the hosts IP address. Pulls Network and Netmask from the config.
   """
+  @spec get_host_network_addresses() :: list()
   def get_host_network_addresses() do
     # Get Cluster network from config
     clusterNet =
@@ -40,29 +44,40 @@ defmodule Beethoven.Ipv4 do
   end
 
   #
-  # Version to handle when you already have the net info
+  #
+  #
+
+  @doc """
+  Same as get_host_network_addresses/0 but works off provided network and netmask.
+  """
+  @spec get_host_network_addresses({integer(), integer(), integer(), integer()}, integer()) ::
+          list()
   def get_host_network_addresses(clusterNet, clusterNetMask) do
     get_hosts(clusterNet, clusterNetMask)
   end
 
   #
   #
+  #
   @doc """
   Gets the number of IPs within a netmask.
   """
-  @spec get_netmask_hosts(charlist()) :: integer()
+  @spec get_netmask_hosts(binary() | integer()) :: integer()
   def get_netmask_hosts(mask) when is_binary(mask) do
     get_netmask_hosts(String.to_integer(mask))
   end
 
-  @spec get_netmask_hosts(integer()) :: integer()
   def get_netmask_hosts(mask) when is_integer(mask) do
     :math.pow(2, 32 - mask) - 2
   end
 
+  #
+  #
+  #
   @doc """
-  generates a list of hosts with network and mask provided
+  Generates a list of hosts with the network and netmask provided
   """
+  @spec get_hosts({integer(), integer(), integer(), integer()}, integer()) :: list()
   def get_hosts(address, mask) do
     # gets number of hosts within the network
     numOfHosts = get_netmask_hosts(mask)
@@ -81,9 +96,14 @@ defmodule Beethoven.Ipv4 do
     get_hosts(address, numOfHosts, [address | state], acc + 1)
   end
 
+  #
+  #
+  #
   @doc """
   Increments IP by one host.
   """
+  @spec increment_ip({integer(), integer(), integer(), integer()}) ::
+          {integer(), integer(), integer(), integer()}
   def increment_ip({255, 255, 255, 255}) do
     raise "Next IP address is not valid! 'input_ip: {254, 254, 254, 254}'"
   end

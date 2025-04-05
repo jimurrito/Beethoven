@@ -76,6 +76,12 @@ defmodule Beethoven.Core.Lib.Startup do
         Logger.info("[start_seek] Seeking completed successfully.")
         :clustered
 
+      # Got copy error from tracker table
+      # Will attempt to continue forward
+      :copy_error ->
+        Logger.info("[start_seek] Tracker table failed to copy or is already copied. Attempting to go ahead as is.")
+        :clustered
+
       # connected, but failed to join => Failed state
       :cluster_join_error ->
         Logger.alert("[start_seek] Failed to join Mnesia Cluster. Check Server logs.")

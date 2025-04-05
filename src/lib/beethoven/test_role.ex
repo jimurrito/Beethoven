@@ -16,6 +16,8 @@ defmodule Beethoven.TestRole do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
+  #
+  #
   @impl true
   def init(args) do
     Logger.info("Test GenServer Started!")
@@ -23,6 +25,8 @@ defmodule Beethoven.TestRole do
     {:ok, args}
   end
 
+  #
+  #
   @impl true
   def handle_call({:echo, pid, payload}, _from, state) do
     Logger.notice("Echo call!")
@@ -31,7 +35,8 @@ defmodule Beethoven.TestRole do
     {:reply, nil, state}
   end
 
-
+  #
+  #
   @impl true
   def handle_call({:echo, payload}, from, state) do
     Logger.notice("Echo call - local!")
@@ -39,4 +44,6 @@ defmodule Beethoven.TestRole do
     {:reply, payload, state}
   end
 
+  #
+  #
 end

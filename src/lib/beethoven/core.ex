@@ -17,19 +17,21 @@ defmodule Beethoven.Core do
   alias Beethoven.Tracker
   alias Beethoven.Utils
   alias Beethoven.Core.TaskSupervisor, as: CoreSupervisor
+  alias Beethoven.RootSupervisor
 
   #
   #
   @doc """
-  Entrypoint for supervisors or other PIDs that are starting this service.
+  Entry point for Supervisors. Links calling PID this this child pid.
   """
+  @spec start_link(any()) :: {:ok, pid()}
   def start_link(_args) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   #
   #
-  # Initializes the service
+  # Initializes the service.
   @impl true
   def init(_args) do
     Logger.info("Starting Beethoven.")
@@ -62,7 +64,7 @@ defmodule Beethoven.Core do
 
     # start Tracker
     m_result = Tracker.start()
-    Logger.debug("Attempted to start Tracker. Result: (#{m_result}).")
+    Logger.debug("Attempted to start Tracker.", result: m_result)
 
     # Start servers
     GenServer.cast(__MODULE__, :start_servers)
@@ -72,22 +74,45 @@ defmodule Beethoven.Core do
 
   #
   #
-  # Start Servers
+  # Start Servers.
+  # Servers are started within tasks to avoid holding up the server.
+  # Processes are added to the application root supervisor
   @impl true
   def handle_cast(:start_servers, mode) do
     # TCP Listener
-    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> Listener.start([]) end)
+    _ =
+      Task.Supervisor.start_child(
+        CoreSupervisor,
+        fn ->
+          Supervisor.start_child(RootSupervisor, Listener)
+        end
+      )
+
     # Role manager
-    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleServer.start([]) end)
+    _ =
+      Task.Supervisor.start_child(
+        CoreSupervisor,
+        fn ->
+          Supervisor.start_child(RootSupervisor, RoleServer)
+        end
+      )
+
     # Role Allocation Server
-    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleAlloc.start([]) end)
+    _ =
+      Task.Supervisor.start_child(
+        CoreSupervisor,
+        fn ->
+          Supervisor.start_child(RootSupervisor, RoleAlloc)
+        end
+      )
 
     {:noreply, mode}
   end
 
   #
   #
-  #
+  # Called when other Beethoven services thing the core server should transition
+  # Desired mode is provided in the call
   @impl true
   def handle_call({:transition, new_mode}, _from, mode) do
     result = TransLib.transition(mode, new_mode)
@@ -97,6 +122,7 @@ defmodule Beethoven.Core do
   #
   #
   # gets Core Server mode
+  # :clustered or :standalone
   @impl true
   def handle_call(:get_mode, _from, mode) do
     {:reply, mode, mode}
@@ -105,6 +131,7 @@ defmodule Beethoven.Core do
   #
   #
   # Handles :nodedown monitoring messages.
+  # Spawns in task supervisor to avoid blocking genserver
   @impl true
   def handle_info({:nodedown, nodeName}, mode) when is_atom(nodeName) do
     # Job to handle state change for the node - avoids holding genserver
@@ -119,8 +146,6 @@ defmodule Beethoven.Core do
   # Redirects all Mnesia subscription events into the Lib.MnesiaNotify module.
   @impl true
   def handle_info({:mnesia_table_event, msg}, mode) do
-    # Logger.warning("MNESIA EVENT")
-    # IO.inspect({:event, msg})
     :ok = MNotify.run(msg)
     {:noreply, mode}
   end
@@ -131,11 +156,10 @@ defmodule Beethoven.Core do
   #
   #
   # Catch All handle_info
-  # MUST BE AT BOTTOM OF MODULE FILE **WITHOUT THIS, COORDINATOR GENSERVER WILL CRASH ON UNMAPPED MSG!!**
+  # MUST BE AT BOTTOM OF MODULE FILE **WITHOUT THIS, GENSERVER WILL CRASH ON UNMAPPED MSG!!**
   @impl true
   def handle_info(msg, mode) do
-    Logger.warning("Beethoven received an un-mapped message.")
-    IO.inspect({:unmapped_msg, msg})
+    Logger.warning("Beethoven received an un-mapped message.", unmapped_msg: msg)
     {:noreply, mode}
   end
 

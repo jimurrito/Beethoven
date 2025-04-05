@@ -5,14 +5,18 @@ defmodule Beethoven.Utils do
 
   require Logger
 
+  #
+  #
+  #
   @doc """
   Performs a backoff wait to void race conditions in a distributed environment.
   (:rand.uniform(1 - max) + delta) * multiplier
   """
+  @spec backoff(integer(), integer(), integer()) :: :ok
   def backoff(max \\ 20, delta \\ 0, multiplier \\ 1) do
     # backoff in milliseconds
     backoff = (:rand.uniform(max) + delta) * multiplier
-    Logger.debug("Backoff for (#{backoff |> Integer.to_string()}) milliseconds started.")
+    Logger.info("Backoff for (#{backoff |> Integer.to_string()}) milliseconds started.")
     Process.sleep(backoff)
   end
 
@@ -57,12 +61,14 @@ defmodule Beethoven.Utils do
     # get roles from config.exs
     Application.fetch_env(:beethoven, :roles)
     |> case do
+      # Got roles from application env
       {:ok, value} ->
         value
 
+      # No roles found, return empty list.
       :error ->
-        Logger.notice(":roles is not set in config/*.exs. Assuming no roles.")
-        exit(":roles is not set in config/*.exs. Assuming no roles. Killing RoleAlloc Server.")
+        Logger.warning(":roles is not set in config/*.exs. Assuming no roles.")
+        []
     end
     # converts to map
     |> role_list_to_map()
@@ -79,13 +85,11 @@ defmodule Beethoven.Utils do
     role_list_to_map(role_list, %{})
   end
 
-  #
   # End loop
   defp role_list_to_map([], state) do
     state
   end
 
-  #
   # Working loop
   defp role_list_to_map([{role_name, mod, args, inst} | role_list], state)
        when is_atom(role_name) do
@@ -93,29 +97,16 @@ defmodule Beethoven.Utils do
     role_list_to_map(role_list, state)
   end
 
-  #
   # Working loop - bad syntax for role manifest
   defp role_list_to_map([role_bad | role_list], state) do
     Logger.error(
-      "One of the roles provided is not in the proper syntax. This role will be ignored."
+      "One of the roles provided is not in the proper syntax. This role will be ignored.",
+      expected: "{:role_name, Module, ['args'], 1}",
+      received: role_bad
     )
 
-    IO.inspect(%{expected: {:role_name, Module, ["args"], 1}, received: role_bad})
     role_list_to_map(role_list, state)
   end
-
-  #
-  #
-  #
-  #
-  @doc """
-  Creates role queue based on data from config.exs.
-  This queue
-  """
-  def get_role_instances() do
-    
-  end
-
 
   #
   #
@@ -142,12 +133,14 @@ defmodule Beethoven.Utils do
   #
   #
   @doc """
-  Copies desired table to local node memory
+  Copies desired table to local node memory. Table must already exist in the cluster.
+  If the table was initialized on this node, the table is already in memory.
   """
-  @spec copy_mnesia_table(atom()) :: :ok | {:error, any()}
+  @spec copy_mnesia_table(atom()) :: :ok | :already_exists | {:error, any()}
   def copy_mnesia_table(table) do
     Logger.info("Making in-memory copies of the Mnesia Cluster table '#{Atom.to_string(table)}'.")
 
+    # Copy x table to self.
     :mnesia.add_table_copy(table, node(), :ram_copies)
     |> case do
       # Successfully copied table to memory
@@ -157,13 +150,12 @@ defmodule Beethoven.Utils do
 
       # table already in memory (this is fine)
       {:aborted, {:already_exists, _, _}} ->
-        Logger.info("Table '#{Atom.to_string(table)}' is already copied to memory.")
-        :ok
+        Logger.notice("Table '#{Atom.to_string(table)}' is already copied to memory.")
+        :already_exists
 
       # Copy failed for some reason
       {:aborted, error} ->
-        Logger.error("Failed to copy table '#{Atom.to_string(table)}' to memory.")
-
+        Logger.alert("Failed to copy table '#{Atom.to_string(table)}' to memory.", error: error)
         {:error, error}
     end
   end

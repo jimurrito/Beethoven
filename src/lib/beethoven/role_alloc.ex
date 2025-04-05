@@ -1,17 +1,28 @@
 defmodule Beethoven.RoleAlloc do
   @moduledoc """
   Role Allocation Server. Works as a queue to assign roles needed by the configuration.
+
+  # TODO
+  - Fix bug where a node goes down, but comes back up before it is updated in tracker
+    ex: Node (nodeY@127.0.0.1) is back online
+    Potential solutions
+    - a task that waits and calls the role alloc server back to let it know if it needs to remove the node or not?
+
   """
 
   use GenServer
   require Logger
-
   alias Beethoven.Tracker
   alias Beethoven.Utils
 
   #
   #
-  def start([]) do
+  #
+  @doc """
+  Entry point for Supervisors. Links calling PID this this child pid.
+  """
+  @spec start_link(any()) :: {:ok, pid()}
+  def start_link([]) do
     # Check if already hosted
     Tracker.is_role_hosted?(:been_alloc)
     |> if do
@@ -102,7 +113,7 @@ defmodule Beethoven.RoleAlloc do
         host_queue: host_queue,
         retries: retries
       })
-      when retries <= 10 do
+      when retries < 11 do
     Logger.debug("Starting assignment.")
     # get host from queue
     {{:value, q_host}, new_host_queue} = :queue.out(host_queue)
@@ -144,6 +155,7 @@ defmodule Beethoven.RoleAlloc do
           #
           # generate seed for tracking (10_000-99_9999)
           seed = :rand.uniform(90_000) + 9_999
+          #
           # ownPID
           ownPid = self()
 
@@ -198,7 +210,7 @@ defmodule Beethoven.RoleAlloc do
                  retries: retries + 1
                }}
           after
-            # 1 second
+            # 1 second timeout threshold for role provisioning on target
             1_000 ->
               Logger.alert("Role assignment for role (#{q_role}) on node (#{q_host}) timed out.")
               # Add host to back of the queue
@@ -248,7 +260,7 @@ defmodule Beethoven.RoleAlloc do
         role: roles,
         role_queue: role_queue,
         host_queue: host_queue,
-        retries: _retries
+        retries: retries
       }) do
     Logger.info("Beethoven Role Allocator clean-up job triggered.")
     # clean up offline nodes -> returns roles removed from the nodes.
@@ -298,7 +310,8 @@ defmodule Beethoven.RoleAlloc do
     # triggers assignment loop
     :ok = GenServer.cast(__MODULE__, :assign)
 
-    {:noreply, %{role: roles, role_queue: new_role_queue, host_queue: new_host_queue, retries: 0}}
+    {:noreply,
+     %{role: roles, role_queue: new_role_queue, host_queue: new_host_queue, retries: retries}}
   end
 
   #
@@ -402,6 +415,7 @@ defmodule Beethoven.RoleAlloc do
   #
   #
   # Generates a new host queue based on how many roles the nodes have.
+  # Less roles == higher priority in the queue.
   defp make_host_queue() do
     Tracker.get_active_roles_by_host()
     # sort by amount of jobs held

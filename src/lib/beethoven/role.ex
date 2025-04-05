@@ -5,31 +5,35 @@ defmodule Beethoven.Role do
 
   use GenServer
   require Logger
-
-  alias ElixirSense.Log
-  alias Beethoven.Core, as: CoreServer
   alias Beethoven.Role.RoleSupervisor
   alias Beethoven.Tracker
   alias Beethoven.Utils
+
   #
   #
   #
-  #
-  # Entry point for Supervisors
+  @doc """
+  Entry point for Supervisors. Links calling PID this this child pid.
+  """
+  @spec start_link(any()) :: {:ok, pid()}
   def start_link(_args) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  # Entry point for Supervisors
+  #
+  #
+  #
+  @doc """
+  Entry point for Supervisors. Non-linking.
+  """
+  @spec start(any()) :: {:ok, pid()}
   def start(_args) do
     GenServer.start(__MODULE__, [], name: __MODULE__)
   end
 
   #
   #
-  #
-  #
-  #
+  # Callback used on start/3 and start_link/3
   @impl true
   def init(_args) do
     #
@@ -38,6 +42,7 @@ defmodule Beethoven.Role do
     roles = Utils.get_role_config()
 
     # Start Dynamic Supervisor for roles
+    # this ensures roles are able to fail without causing a cascading failure.
     {:ok, _pid} =
       DynamicSupervisor.start_link(
         strategy: :one_for_one,
@@ -45,24 +50,23 @@ defmodule Beethoven.Role do
         max_restarts: 15
       )
 
-    #
+    # return initial state
     {:ok, %{roles: roles, role_pids: %{}}}
   end
 
   #
   #
   #
-  #
-  #
-  #
   # Adds a single role to the server.
+  # This is usually triggered by the RoleAlloc Server.
+  # {seed, callerPid} is used to call back to the RoleAlloc Server globally.
   @impl true
   def handle_cast({:add_role, {seed, callerPid}, role}, %{
         roles: roles,
         role_pids: role_pids
       }) do
     # Spawn children in RoleSupervisor
-    Logger.info("Starting Role (:#{role}) on node (#{node()}).")
+    Logger.info("Role (:#{role}) was assigned to this node.")
     # get target role from state
     {module, args, _inst} = roles |> Map.get(role)
     #
@@ -80,7 +84,6 @@ defmodule Beethoven.Role do
         #
         # List of roles this node is running now
         node_role_list = role_pids |> Map.keys()
-        #
         #
         Logger.debug(
           "Writing the (#{length(node_role_list) |> Integer.to_string()}) roles for node (#{node()}) to Beethoven.Tracker."
@@ -108,7 +111,10 @@ defmodule Beethoven.Role do
   #
   #
   #
-  # Kill a role provided
+  # Kill a role that is assigned to his node.
+  # This is usually triggered by the RoleAlloc Server.
+  # {seed, callerPid} is used to call back to the RoleAlloc Server globally.
+  # Expected responses: [:removed, :role_not_hosted]
   @impl true
   def handle_cast({:kill_role, {seed, callerPid}, role}, %{
         roles: roles,

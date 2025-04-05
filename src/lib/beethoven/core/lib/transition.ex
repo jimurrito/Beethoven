@@ -9,6 +9,7 @@ defmodule Beethoven.Core.Lib.Transition do
   alias Beethoven.Listener
   alias Beethoven.Role, as: RoleServer
   alias Beethoven.Core.TaskSupervisor, as: CoreSupervisor
+  alias Beethoven.RootSupervisor
 
   #
   #
@@ -36,12 +37,32 @@ defmodule Beethoven.Core.Lib.Transition do
   @spec to_standalone() :: :ok
   defp to_standalone() do
     # TCP Listener
-    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> Listener.start([]) end)
+    _ =
+      Task.Supervisor.start_child(
+        CoreSupervisor,
+        fn ->
+          Supervisor.start_child(RootSupervisor, Listener)
+        end
+      )
+
     # Role manager
-    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleServer.start([]) end)
+    _ =
+      Task.Supervisor.start_child(
+        CoreSupervisor,
+        fn ->
+          Supervisor.start_child(RootSupervisor, RoleServer)
+        end
+      )
+
     # Role Allocation Server
-    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleAlloc.start([]) end)
-    #
+    _ =
+      Task.Supervisor.start_child(
+        CoreSupervisor,
+        fn ->
+          Supervisor.start_child(RootSupervisor, RoleAlloc)
+        end
+      )
+
     :ok
   end
 
@@ -51,7 +72,14 @@ defmodule Beethoven.Core.Lib.Transition do
   @spec to_clustered() :: :ok
   defp to_clustered() do
     # Role Allocation Server
-    _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleAlloc.start([]) end)
+    _ =
+      Task.Supervisor.start_child(
+        CoreSupervisor,
+        fn ->
+          Supervisor.start_child(RootSupervisor, RoleAlloc)
+        end
+      )
+
     #
     :ok
   end

@@ -6,7 +6,6 @@ defmodule Beethoven.Core.Lib.Node do
 
   require Logger
   alias Beethoven.Core, as: CoreServer
-  alias Beethoven.Role, as: RoleServer
   alias Beethoven.RoleAlloc
   alias Beethoven.Utils
   alias Beethoven.Core.TaskSupervisor, as: CoreSupervisor
@@ -63,7 +62,15 @@ defmodule Beethoven.Core.Lib.Node do
                 else
                   # Other nodes exist in cluster.
                   # attempt to start role alloc server incase its not running
-                  _ = Task.Supervisor.start_child(CoreSupervisor, fn -> RoleAlloc.start([]) end)
+                  _ =
+                    Task.Supervisor.start_child(
+                      CoreSupervisor,
+                      fn ->
+                        Supervisor.start_child(RootSupervisor, RoleAlloc)
+                      end
+                    )
+
+                  :ok
                 end
 
                 :ok

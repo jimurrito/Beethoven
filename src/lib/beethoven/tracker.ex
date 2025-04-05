@@ -1,7 +1,7 @@
 defmodule Beethoven.Tracker do
   @moduledoc """
-  State tracking for the Beethoven services. Uses Mnesia.
-  Tabled named 'Beethoven.Tracker'
+  Module to handle the `Beethoven.Tracker` mnesia table.
+  This table is used by beethoven to track the state and roles of nodes within the cluster.
   """
 
   require Logger
@@ -12,33 +12,42 @@ defmodule Beethoven.Tracker do
   #
   #
   @doc """
-  Starts tracker Mnesia table
+  Starts `Beethoven.Tracker` Mnesia table
   """
-  @spec start() :: :ok | :already_exists
+  @spec start() :: :ok | :copied | :already_exists
   def start() do
-    # checks if table already exists
+    #
+    # checks if table already exists in the cluster
     if Utils.mnesia_table_exists?(Tracker) do
+      # table already exists.
       # add ram copy
-      :ok = Utils.copy_mnesia_table(Tracker)
-      :already_exists
+      Utils.copy_mnesia_table(Tracker)
+      |> case do
+        # Copy was successful
+        :ok -> :copied
+        # Table already exists in memory
+        :already_exists -> :already_exists
+        # bubble up rest
+        e -> e
+      end
     else
       Logger.debug("Creating 'Beethoven.Tracker' mnesia table.")
 
       :mnesia.create_table(Tracker,
+        # Table schema
         attributes: [:node, :role, :health, :last_change],
-        # Sets ram copies for ALL existing nodes in the cluster
+        # Sets ram copies for ALL existing nodes in the cluster.
         ram_copies: [node() | Node.list()],
-        # This is so it works like a queue
+        # This setting orders the table by order the nodes joined the cluster.
         type: :ordered_set
       )
 
       # Create indexes - speeds up searches for data that does not regularly change
       Logger.debug("Creating Indexes in 'Beethoven.Tracker'")
       :mnesia.add_table_index(Tracker, :node)
-      :mnesia.add_table_index(Tracker, :role)
       # Add self to tracker
       :ok = add_self()
-      # Subscribe to tracker
+      # Subscribe to tracker changes
       {:ok, _node} = subscribe()
       #
       :ok
@@ -49,7 +58,7 @@ defmodule Beethoven.Tracker do
   #
   #
   @doc """
-  Add self to tracker
+  Joins the `Beethoven.Tracker` mnesia table as a cluster node.
   """
   @spec join() :: :ok | :not_started | :copy_error
   def join() do
@@ -63,13 +72,15 @@ defmodule Beethoven.Tracker do
       |> case do
         # Copied table to memory
         :ok ->
-          # Subscribe to tracker
+          # Subscribe to tracker changes
           {:ok, _node} = subscribe()
           #
           :ok
 
         # Failed to copy to memory
-        {:error, _error} ->
+        # ignore failure as called fn has its own error logging
+        e ->
+          Logger.emergency("Failed to copy mnesia table to memory! Error: #{e}")
           :copy_error
       end
     end
@@ -80,8 +91,13 @@ defmodule Beethoven.Tracker do
   #
   @doc """
   Adds self to BeethovenTracking Mnesia table.
+  Uses a record like this:
+
+  `
+  {Tracker, node(), roles, :online, DateTime.now!("Etc/UTC")}
+  `
   """
-  @spec add_self() :: :ok
+  @spec add_self(list()) :: :ok
   def add_self(roles \\ []) do
     # Add self to tracker
     Logger.debug("Adding self to 'Beethoven.Tracker' Mnesia table.")
@@ -99,11 +115,12 @@ defmodule Beethoven.Tracker do
   #
   #
   @doc """
-  Subscribe to changes to the BeethovenTracking Mnesia table
+  Subscribe to changes to the BeethovenTracking Mnesia table.
   """
   @spec subscribe() :: {:ok, node()} | {:error, reason :: term()}
   def subscribe() do
     # Subscribe to tracking table
+    # :detailed is used to get the previous version of the record.
     :mnesia.subscribe({:table, Tracker, :detailed})
   end
 
@@ -111,42 +128,53 @@ defmodule Beethoven.Tracker do
   #
   #
   @doc """
-  Builtin roles
+  List of builtin roles used for filtering.
   """
+  @spec builtin_roles() :: list()
   def builtin_roles() do
     [:been_alloc]
   end
 
   #
-  # DO NOT INCLUDE IN ANY FUN HERE.
-  # THIS WILL CAUSE BUGS WHEN LOOKING FOR HOSTED DEFAULT ROLES.
+  #
+  #
   @doc """
-  Removes builtin roles from a list of roles.
+  Removes builtin roles from a list of roles provided to the function.
   """
   @spec remove_builtins(list()) :: list()
   def remove_builtins(role_list) do
     role_list
-    |> Enum.filter(&(Enum.find(builtin_roles(), fn bir -> bir != &1 end) != nil))
+    # Enumerates the provided list.
+    # truthful returns from the fun are kept in the list.
+    |> Enum.filter(
+      # Checks if role is built in
+      &(Enum.find(
+          builtin_roles(),
+          fn bir -> bir == &1 end
+          # ensures built-ins are filtered out and others are kept.
+        ) == nil)
+    )
   end
 
   #
   #
   #
-  # https://elixirschool.com/en/lessons/storage/mnesia
   @doc """
   Gets roles hosted in the cluster. Provides list of roles - this list is **not** deduplicated.
   """
   @spec get_active_roles() :: list()
   def get_active_roles() do
-    #
+    # create anon for transaction
     fn ->
       #  [:node, :role, :role_num, :health, :last_change]
+      # Only gets node names from records where the node is online.
       pattern = {Tracker, :_, :"$1", :online, :_}
       :mnesia.select(Tracker, [{pattern, [], [:"$1"]}])
     end
     |> :mnesia.transaction()
     # unwraps {:atomics, result}
     |> elem(1)
+    # Flatten is used as :mnesia.select returns a list of lists.
     |> List.flatten()
   end
 
@@ -177,6 +205,7 @@ defmodule Beethoven.Tracker do
   Gets the count of roles held by each node.
   Provides a list of lists, where each nested list is data from a single record in mnesia.
   """
+  @spec get_active_roles_by_host() :: list()
   def get_active_roles_by_host() do
     #
     fn ->
@@ -191,11 +220,12 @@ defmodule Beethoven.Tracker do
 
   #
   #
-  # [{Tracker, ^node, :member, _health, _last_change}]
+  #
   @doc """
-  Gets the roles hosted on a given host.
+  Checks if a role is hosted on a given node.
   """
-  def is_host_running_role?(nodeName, role) do
+  @spec is_host_running_role?(atom(), atom()) :: boolean()
+  def is_host_running_role?(nodeName, role) when is_atom(nodeName) and is_atom(role) do
     #
     [{Tracker, ^nodeName, host_roles, _health, _last_change}] =
       fn ->
@@ -214,8 +244,10 @@ defmodule Beethoven.Tracker do
   #
   #
   @doc """
-  Checks if a role is hosted in the cluster. Does not return truthful if the hosting node is offline.
+  Checks if a role is hosted in the cluster.
+  Does not return truthful if the hosting node is offline.
   """
+  @spec is_role_hosted?(atom()) :: boolean()
   def is_role_hosted?(role) when is_atom(role) do
     f_role =
       get_active_roles()
@@ -230,7 +262,7 @@ defmodule Beethoven.Tracker do
   Add role to a node.
   """
   @spec add_role(atom(), atom()) :: :ok
-  def add_role(nodeName, role) do
+  def add_role(nodeName, role) when is_atom(nodeName) and is_atom(role) do
     fn ->
       # ReadLock record
       [{Tracker, ^nodeName, host_roles, health, _last_change}] =
@@ -249,7 +281,7 @@ defmodule Beethoven.Tracker do
   Remove role from a node.
   """
   @spec remove_role(atom(), atom()) :: :ok
-  def remove_role(nodeName, role) do
+  def remove_role(nodeName, role) when is_atom(nodeName) and is_atom(role) do
     fn ->
       # ReadLock record
       [{Tracker, ^nodeName, host_roles, health, _last_change}] =
@@ -270,7 +302,7 @@ defmodule Beethoven.Tracker do
   Clear all roles from a node.
   """
   @spec clear_roles(atom()) :: :ok
-  def clear_roles(nodeName) do
+  def clear_roles(nodeName) when is_atom(nodeName) do
     fn ->
       # ReadLock record
       [{Tracker, ^nodeName, _host_roles, health, _last_change}] =

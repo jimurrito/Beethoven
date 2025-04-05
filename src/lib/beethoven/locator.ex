@@ -1,10 +1,9 @@
 defmodule Beethoven.Locator do
   @moduledoc """
-  Module for finding a Beethoven listener.
+  Module for finding a Beethoven listener within a target network.
   """
 
   require Logger
-
   alias Beethoven.Tracker
 
   @doc """
