@@ -1,4 +1,4 @@
-defmodule Beethoven.Core.Lib.Node do
+defmodule Beethoven.Core.Node do
   @moduledoc """
   Library to reduce code length of Core server.
   Only handles `hand_info` messages about Monitored node health.
@@ -8,7 +8,6 @@ defmodule Beethoven.Core.Lib.Node do
   alias Beethoven.Core, as: CoreServer
   alias Beethoven.RoleAlloc
   alias Beethoven.Utils
-  alias Beethoven.Core.TaskSupervisor, as: CoreSupervisor
 
   #
   #
@@ -62,17 +61,10 @@ defmodule Beethoven.Core.Lib.Node do
                 else
                   # Other nodes exist in cluster.
                   # attempt to start role alloc server incase its not running
-                  _ =
-                    Task.Supervisor.start_child(
-                      CoreSupervisor,
-                      fn ->
-                        Supervisor.start_child(RootSupervisor, RoleAlloc)
-                      end
-                    )
-
-                  :ok
+                  _ = RoleAlloc.async_start()
                 end
 
+                # return atom
                 :ok
 
               # Node was deleted -> do nothing

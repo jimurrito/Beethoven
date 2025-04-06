@@ -1,16 +1,11 @@
-defmodule Beethoven.Core.Lib.MnesiaNotify do
+defmodule Beethoven.Core.MnesiaNotify do
   @moduledoc """
   Library to reduce code length of Core server.
   Only handles `hand_info` messages about Mnesia changes.
-
-  All functions have no side_effects
   """
 
   require Logger
   alias Beethoven.Utils
-  alias Beethoven.Role, as: RoleServer
-  alias Beethoven.RoleAlloc
-  alias Beethoven.Core.TaskSupervisor, as: CoreSupervisor
 
   @doc """
   Entry function to decide what is done when the Mnesia Event occurs.

@@ -5,6 +5,7 @@ defmodule Beethoven.Ipv4 do
 
   require Logger
   alias :inet, as: IP
+  alias Beethoven.Utils
 
   #
   #
@@ -15,27 +16,10 @@ defmodule Beethoven.Ipv4 do
   @spec get_host_network_addresses() :: list()
   def get_host_network_addresses() do
     # Get Cluster network from config
-    clusterNet =
-      Application.fetch_env(:beethoven, :cluster_net)
-      |> case do
-        {:ok, value} ->
-          value
+    clusterNet = Utils.get_app_env(:cluster_net, "127.0.0.0")
 
-        :error ->
-          Logger.notice(":cluster_net not set in config/*.exs. Using default value '127.0.0.1'.")
-          "127.0.0.0"
-      end
-
-    clusterNetMask =
-      Application.fetch_env(:beethoven, :cluster_net_mask)
-      |> case do
-        {:ok, value} ->
-          value
-
-        :error ->
-          Logger.notice(":cluster_net_mask not set in config/*.exs. Using default value '29'.")
-          "29"
-      end
+    # Gets cluster netmask
+    clusterNetMask = Utils.get_app_env(:cluster_net_mask, "29")
 
     # Convert to IP Type
     {:ok, clusterNetParse} = IP.parse_address(~c"#{clusterNet}")

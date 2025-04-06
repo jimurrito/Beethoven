@@ -8,6 +8,24 @@ defmodule Beethoven.Role do
   alias Beethoven.Role.RoleSupervisor
   alias Beethoven.Tracker
   alias Beethoven.Utils
+  alias Beethoven.RootSupervisor
+
+  #
+  #
+  #
+  @doc """
+  Starts server as a child of the root supervisor.
+  Operation runs from a task to avoid hanging the caller waiting for init.
+  """
+  @spec async_start() :: :ok
+  def async_start() do
+    {:ok, _pid} =
+      Task.start(fn ->
+        Supervisor.start_child(RootSupervisor, __MODULE__)
+      end)
+
+    :ok
+  end
 
   #
   #
@@ -18,17 +36,6 @@ defmodule Beethoven.Role do
   @spec start_link(any()) :: {:ok, pid()}
   def start_link(_args) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
-  end
-
-  #
-  #
-  #
-  @doc """
-  Entry point for Supervisors. Non-linking.
-  """
-  @spec start(any()) :: {:ok, pid()}
-  def start(_args) do
-    GenServer.start(__MODULE__, [], name: __MODULE__)
   end
 
   #

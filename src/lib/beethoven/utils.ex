@@ -9,6 +9,29 @@ defmodule Beethoven.Utils do
   #
   #
   @doc """
+  Gets an environmental variable from beethoven's application config
+  """
+  def get_app_env(envVar, default \\ nil) do
+    Application.fetch_env(:beethoven, envVar)
+    |> case do
+      # Got roles from application env
+      {:ok, value} ->
+        value
+
+      # No roles found, return empty list.
+      :error ->
+        Logger.warning("{:#{envVar}} is not set in config/*.exs. Using:",
+          default_value: default
+        )
+
+        default
+    end
+  end
+
+  #
+  #
+  #
+  @doc """
   Performs a backoff wait to void race conditions in a distributed environment.
   (:rand.uniform(1 - max) + delta) * multiplier
   """
@@ -59,17 +82,7 @@ defmodule Beethoven.Utils do
   @spec get_role_config() :: map()
   def get_role_config() do
     # get roles from config.exs
-    Application.fetch_env(:beethoven, :roles)
-    |> case do
-      # Got roles from application env
-      {:ok, value} ->
-        value
-
-      # No roles found, return empty list.
-      :error ->
-        Logger.warning(":roles is not set in config/*.exs. Assuming no roles.")
-        []
-    end
+    get_app_env(:roles, [])
     # converts to map
     |> role_list_to_map()
   end

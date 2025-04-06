@@ -14,6 +14,24 @@ defmodule Beethoven.RoleAlloc do
   require Logger
   alias Beethoven.Tracker
   alias Beethoven.Utils
+  alias Beethoven.RootSupervisor
+
+  #
+  #
+  #
+  @doc """
+  Starts server as a child of the root supervisor.
+  Operation runs from a task to avoid hanging the caller waiting for init.
+  """
+  @spec async_start() :: :ok
+  def async_start() do
+    {:ok, _pid} =
+      Task.start(fn ->
+        Supervisor.start_child(RootSupervisor, __MODULE__)
+      end)
+
+    :ok
+  end
 
   #
   #

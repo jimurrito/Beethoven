@@ -1,118 +1,120 @@
 defmodule Beethoven.Az do
   @moduledoc """
-  Azure Platform awareness for the cluster. If not in Azure, a local environment global group will be used.
+  Azure Platform awareness for the node.
+  If the app is not in Azure, genserver will response `:no_azure` to all calls.
   """
 
+  use GenServer
   require Logger
+  alias __MODULE__.Lib
+
+  #
+  #
+  #
+  @doc """
+  Entry point for Supervisors. Links calling PID this this child pid.
+  """
+  @spec start_link(any()) :: {:ok, pid()}
+  def start_link(_args) do
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  end
+
+  #
+  #
+  @impl true
+  def init(_arg) do
+    # Call IMDS to get initial state
+    state =
+      Lib.call_IMDS()
+      |> case do
+        # state is now deserialized response body from IMDS
+        {:ok, state} ->
+          region =
+            state
+            |> Lib.get_AzRegion()
+
+          Logger.info("Node operating in Azure region (#{region}).")
+
+        # Not in azure
+        {:error, :timeout} ->
+          Logger.info("Node is not operating in Azure.")
+          :no_azure
+      end
+
+    #
+    {:ok, state}
+  end
+
+  #
+  #
+  # Catch all calls when not in Azure
+  @impl true
+  def handle_call(_msg, _from, :no_azure) do
+    {:reply, :no_azure, :no_azure}
+  end
+
+  #
+  #
+  # Dumps state to caller
+  @impl true
+  def handle_call(:get_all, _from, state) do
+    {:reply, state, state}
+  end
+
+  #
+  #
+  # Provides networking info to caller
+  @impl true
+  def handle_call(:az_net, _from, state) do
+    {:reply, Lib.get_AzSubnet(state), state}
+  end
+
+  #
+  #
+  # Provides region atom to caller
+  @impl true
+  def handle_call(:az_region, _from, state) do
+    {:reply, Lib.get_AzRegion(state), state}
+  end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Client fun(s)
+  # used to access the genserver as an external caller
 
   #
   #
   @doc """
-  ONLY WORKS IN AZURE.
-
-  Calls IMDS to get the subnet and netmask of the current VM.
+  Retrieves the Azure region from IMDS data.
   """
-  @spec get_AzSubnet() ::
-          {:ok, {integer(), integer(), integer(), integer()}, integer()} | :no_azure
-  def get_AzSubnet() do
-    call_IMDS()
-    |> case do
-      {:ok, metadata} ->
-        network_config =
-          metadata
-          |> Map.fetch!("network")
-          |> Map.fetch!("interface")
-          # gets first interface
-          |> List.first()
-          # get only IPV4
-          |> Map.fetch!("ipv4")
-          |> Map.fetch!("subnet")
-          |> List.first()
-
-        # Get ip address network
-        ip_address =
-          network_config
-          |> Map.fetch!("address")
-          # erlang expects strings to be charlist sometimes.
-          |> to_charlist()
-          # deserialize Ipaddress string into 4 elem tuple
-          |> :inet.parse_address()
-          # unwraps  {:ok, {172, 19, 0, 16}}
-          |> elem(1)
-
-        # Netmask
-        netmask =
-          network_config
-          |> Map.fetch!("prefix")
-          |> String.to_integer()
-
-        # return
-        {:ok, ip_address, netmask}
-
-      {:error, :timeout} ->
-        :no_azure
-    end
+  @spec get_state() :: map() | :no_azure
+  def get_state() do
+    GenServer.call(__MODULE__, :get_state)
   end
 
   #
   #
   @doc """
-  ONLY WORKS IN AZURE.
+  Retrieves the VM's networking config from IMDS data.
+  \n**RETURNS ONLY PRIMARY INT FOR VM**
+  """
+  @spec get_AzSubnet() :: {{integer(), integer(), integer(), integer()}, integer()} | :no_azure
+  def get_AzSubnet() do
+    GenServer.call(__MODULE__, :az_net)
+  end
 
-  Calls IMDS to get the region this machine is in.
+  #
+  #
+  @doc """
+  Retrieves the Azure region from IMDS data.
   """
   @spec get_AzRegion() :: atom() | :no_azure
   def get_AzRegion() do
-    call_IMDS()
-    |> case do
-      {:ok, metadata} ->
-        metadata
-        |> Map.fetch!("compute")
-        |> Map.fetch!("location")
-        |> String.to_atom()
-
-      {:error, :timeout} ->
-        :no_azure
-    end
+    GenServer.call(__MODULE__, :az_region)
   end
 
   #
   #
-  @doc """
-  ONLY WORKS IN AZURE.
-
-  Calls IMDS to get metadata about this VM. A response of `{:error, :timeout}` indicates that you are not in Azure. IMDS should never go down.
-  """
-  @spec call_IMDS() :: {:ok, map()} | {:error, :timeout}
-  def call_IMDS() do
-    # ensure :inets is enabled
-    _ = :inets.start()
-    # call IMDS and get metadata
-    :httpc.request(
-      # Method
-      :get,
-      {
-        # URL
-        "http://169.254.169.254/metadata/instance?api-version=2021-02-01",
-        # Headers
-        [{~c"Metadata", ~c"true"}]
-      },
-      # Options
-      [{:timeout, 500}],
-      # Profile
-      []
-    )
-    |> case do
-      # Get body of response and deserialize
-      {:ok, body} ->
-        #Logger.debug("Got response from IMDS.")
-        resp_body = body |> elem(2) |> to_string() |> :json.decode()
-        {:ok, resp_body}
-
-      # Timeout - not in Azure or IMDS is down (LOL)
-      {:error, :timeout} ->
-        Logger.warning("No response from IMDS. Assuming on-prem deployment.")
-        {:error, :timeout}
-    end
-  end
+  #
 end

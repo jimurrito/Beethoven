@@ -1,4 +1,4 @@
-defmodule Beethoven.Core.Lib.Startup do
+defmodule Beethoven.Core.Startup do
   @moduledoc """
   Library for service startup. Handles Seeking of other nodes.
   """
@@ -18,48 +18,45 @@ defmodule Beethoven.Core.Lib.Startup do
   @spec start_seeking(:no_azure | atom()) ::
           :clustered | :standalone | {:failed, :cluster_join_error}
   def start_seeking(:no_azure) do
+    # Get list of hosts in defined IP range
     hostIPs = Ipv4.get_host_network_addresses()
     # get Listener port
-    port =
-      Application.fetch_env(:beethoven, :listener_port)
-      |> case do
-        {:ok, value} ->
-          value
-
-        :error ->
-          Logger.notice(":listener_port is not set in config/*.exs. defaulting to (33000).")
-          33000
-      end
-
+    port = Utils.get_app_env(:listener_port, 33000)
     # start logic
     start_seek({hostIPs, port})
   end
 
   #
+  # Determine if we need to use Azure networking for seeking
+  # use_az_net? =
   #
   # when in Azure
   def start_seeking(_region) do
-    # Get network info from IMDS
-    {:ok, network, netmask} = Az.get_AzSubnet()
-    hostIPs = Ipv4.get_host_network_addresses(network, netmask)
-    # Due to how Azure works, will remove the first 3 addresses in the list.
-    hostIPs = hostIPs |> Enum.take(-(length(hostIPs) - 3))
-    # get Listener port -> used to connect to a server
-    port =
-      Application.fetch_env(:beethoven, :listener_port)
-      |> case do
-        {:ok, value} ->
-          value
+    # Determine if we need to use the VMs networking config for seeking
+    Utils.get_app_env(:use_az_net, false)
+    |> case do
+      # Use netw config in config
+      false ->
+        # redirect to non azure flow
+        start_seeking(:no_azure)
 
-        :error ->
-          Logger.notice(":listener_port is not set in config/*.exs. defaulting to (33000).")
-          33000
-      end
-
-    # start logic
-    start_seek({hostIPs, port})
+      # use Az VM Netw config
+      true ->
+        # Get network info from IMDS cache genserver
+        {network, netmask} = Az.get_AzSubnet()
+        # Get list of hosts in defined IP range
+        hostIPs = Ipv4.get_host_network_addresses(network, netmask)
+        # Due to how Azure works, will remove the first 3 addresses in the list.
+        hostIPs = hostIPs |> Enum.take(-(length(hostIPs) - 3))
+        # get Listener port -> used to connect to a server
+        port = Utils.get_app_env(:listener_port, 33000)
+        # start logic
+        start_seek({hostIPs, port})
+    end
   end
 
+  #
+  #
   #
   # private fun to handle logic of seeking.
   @spec start_seek({list(), integer()}, integer()) ::
@@ -79,7 +76,10 @@ defmodule Beethoven.Core.Lib.Startup do
       # Got copy error from tracker table
       # Will attempt to continue forward
       :copy_error ->
-        Logger.info("[start_seek] Tracker table failed to copy or is already copied. Attempting to go ahead as is.")
+        Logger.info(
+          "[start_seek] Tracker table failed to copy or is already copied. Attempting to go ahead as is."
+        )
+
         :clustered
 
       # connected, but failed to join => Failed state

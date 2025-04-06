@@ -5,8 +5,29 @@ defmodule Beethoven.Listener do
 
   use GenServer
   require Logger
+  alias Beethoven.Utils
   alias Beethoven.Core, as: CoreServer
+  alias Beethoven.RootSupervisor
 
+  #
+  #
+  #
+  @doc """
+  Starts server as a child of the root supervisor.
+  Operation runs from a task to avoid hanging the caller waiting for init.
+  """
+  @spec async_start() :: :ok
+  def async_start() do
+    {:ok, _pid} =
+      Task.start(fn ->
+        Supervisor.start_child(RootSupervisor, __MODULE__)
+      end)
+
+    :ok
+  end
+
+  #
+  #
   #
   @doc """
   Entry point for Supervisors. Links calling PID this this child pid.
@@ -14,15 +35,6 @@ defmodule Beethoven.Listener do
   @spec start_link(any()) :: {:ok, pid()}
   def start_link(_args) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
-  end
-
-  #
-  @doc """
-  Entry point for Supervisors. Non-linking.
-  """
-  @spec start(any()) :: {:ok, pid()}
-  def start(_args) do
-    GenServer.start(__MODULE__, [], name: __MODULE__)
   end
 
   #
@@ -38,20 +50,8 @@ defmodule Beethoven.Listener do
     # Create Monitor for the TaskSupervisor
     _ref = Process.monitor(task_pid)
     #
-    # pull port from env file
-    listener_port =
-      Application.fetch_env(:beethoven, :listener_port)
-      |> case do
-        # port defined in config
-        {:ok, port} ->
-          port
-
-        # port not defined
-        :error ->
-          Logger.notice(":listener_port not set in config/*.exs. Using default value '33000'.")
-          33000
-      end
-
+    # pull port from env file. Default to 33000 otherwise
+    listener_port = Utils.get_app_env(:listener_port, 33000)
     #
     port_string = Integer.to_string(listener_port)
     #

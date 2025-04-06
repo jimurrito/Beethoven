@@ -6,6 +6,8 @@ defmodule Beethoven.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      # Azure aware genserver. Monitors IMDS.
+      Beethoven.Az,
       # Core GenServer
       # Entry point for beethoven
       Beethoven.Core
