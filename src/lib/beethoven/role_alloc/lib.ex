@@ -10,6 +10,21 @@ defmodule Beethoven.RoleAlloc.Lib do
   #
   #
   @doc """
+  Makes fresh retries tuple.
+  retries have 4 categories
+  0 -> Role retries
+  1 -> Total retries
+  2 -> Max Role retries (# of nodes via Node.list/0)
+  3 -> Max Total Retries (all roles * all hosts)
+  """
+  def get_new_retries(roles) do
+    {0, 0, Node.list(), get_max_retries(roles)}
+  end
+
+  #
+  #
+  #
+  @doc """
   Gets the maximum number of retries possible.
   Based on `total roles to assign * number of nodes` in the cluster via `Node.list/0`.
 
