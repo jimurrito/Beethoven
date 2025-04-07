@@ -31,10 +31,17 @@ defmodule Beethoven.MixProject do
 
   # Run "mix help compile.app" to learn about applications.
   def application do
-    [
-      mod: {Beethoven.Application, []},
-      extra_applications: [:logger, :runtime_tools, :wx, :observer, :mnesia]
-    ]
+    if Mix.env() == :prod do
+      [
+        mod: {Beethoven.Application, []},
+        extra_applications: [:logger, :runtime_tools, :mnesia]
+      ]
+    else
+      [
+        mod: {Beethoven.Application, []},
+        extra_applications: [:logger, :runtime_tools, :mnesia, :wx, :observer]
+      ]
+    end
   end
 
   # Run "mix help deps" to learn about dependencies.

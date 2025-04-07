@@ -21,26 +21,16 @@ defmodule Beethoven.TestRole do
   @impl true
   def init(args) do
     Logger.info("Test GenServer Started!")
-    IO.inspect({TestRole, :params, args})
+    IO.inspect({:test_role_running, {TestRole, :params, args}})
     {:ok, args}
   end
 
   #
   #
   @impl true
-  def handle_call({:echo, pid, payload}, _from, state) do
-    Logger.notice("Echo call!")
-    IO.inspect(%{pid: pid, data: payload})
-    send(pid, {:echo, payload})
-    {:reply, nil, state}
-  end
-
-  #
-  #
-  @impl true
-  def handle_call({:echo, payload}, from, state) do
+  def handle_call({:echo, payload}, _from, state) do
     Logger.notice("Echo call - local!")
-    IO.inspect(%{pid: from, data: payload})
+    IO.inspect({:test_role_called, %{data: payload}})
     {:reply, payload, state}
   end
 

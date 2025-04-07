@@ -6,7 +6,7 @@ defmodule Beethoven.Listener do
   use GenServer
   require Logger
   alias Beethoven.Utils
-  alias Beethoven.Core, as: CoreServer
+  alias Beethoven.Core.Client, as: CoreClient
   alias Beethoven.RootSupervisor
 
   #
@@ -198,7 +198,7 @@ defmodule Beethoven.Listener do
           {:ok, _} ->
             Logger.info("Node (#{nodeName}) joined the Beethoven Cluster.")
             # Ensure Coordinator is in ':clustered' mode now
-            _ = GenServer.call(CoreServer, {:transition, :clustered})
+            _ = CoreClient.to_clustered()
             # Send response to caller
             :gen_tcp.send(client_socket, "joined")
 

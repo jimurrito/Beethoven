@@ -5,4 +5,5 @@ defmodule Beethoven do
   Once connected, they can coordinate to delegate roles and tasks between the nodes in the cluster.
   Written using only the Elixir and Erlang standard library.
   """
+
 end

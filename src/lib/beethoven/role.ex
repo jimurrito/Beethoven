@@ -6,7 +6,6 @@ defmodule Beethoven.Role do
   use GenServer
   require Logger
   alias Beethoven.Role.RoleSupervisor
-  alias Beethoven.Tracker
   alias Beethoven.Utils
   alias Beethoven.RootSupervisor
 
@@ -63,18 +62,14 @@ defmodule Beethoven.Role do
 
   #
   #
-  #
   # Adds a single role to the server.
   # This is usually triggered by the RoleAlloc Server.
-  # {seed, callerPid} is used to call back to the RoleAlloc Server globally.
   @impl true
-  def handle_cast({:add_role, {seed, callerPid}, role}, %{
-        roles: roles,
-        role_pids: role_pids
-      }) do
+  def handle_call({:add_role, role}, _from, %{roles: roles, role_pids: role_pids}) do
     # Spawn children in RoleSupervisor
     Logger.info("Role (:#{role}) was assigned to this node.")
-    # get target role from state
+    #
+    # get target role definition from state
     {module, args, _inst} = roles |> Map.get(role)
     #
     # Spawn role in Dynamic supervisor
@@ -83,34 +78,20 @@ defmodule Beethoven.Role do
       #
       # Pid was created
       {:ok, role_pid} ->
-        Logger.info("Role (:#{role}) was successfully spawned on node (#{node()}).")
-        Logger.debug("Monitoring role (:#{role}) on node (#{node()}).")
+        Logger.info("Role (:#{role}) was successfully spawned on this node.")
+        Logger.debug("Monitoring role (:#{role}) on this node.")
         role_ref = Process.monitor(role_pid)
         # Add new role pid+ref to state obj
         role_pids = role_pids |> Map.put(role, {role_pid, role_ref})
         #
-        # List of roles this node is running now
-        node_role_list = role_pids |> Map.keys()
-        #
-        Logger.debug(
-          "Writing the (#{length(node_role_list) |> Integer.to_string()}) roles for node (#{node()}) to Beethoven.Tracker."
-        )
-
-        # Write role change to Beethoven.Tracker
-        :ok = Tracker.add_role(node(), role)
-        # Tell caller we succeeded.
-        _ = send(callerPid, {:assigned, seed})
-        #
-        {:noreply, %{roles: roles, role_pids: role_pids}}
+        {:reply, :assigned, %{roles: roles, role_pids: role_pids}}
 
       #
       # PID failed to be created.
       msg ->
         Logger.critical(%{role_start_error: msg})
-        # Tell caller we failed.
-        send(callerPid, {:error, seed, msg})
         #
-        {:noreply, %{roles: roles, role_pids: role_pids}}
+        {:reply, {:error, msg}, %{roles: roles, role_pids: role_pids}}
     end
   end
 
@@ -120,13 +101,8 @@ defmodule Beethoven.Role do
   #
   # Kill a role that is assigned to his node.
   # This is usually triggered by the RoleAlloc Server.
-  # {seed, callerPid} is used to call back to the RoleAlloc Server globally.
-  # Expected responses: [:removed, :role_not_hosted]
   @impl true
-  def handle_cast({:kill_role, {seed, callerPid}, role}, %{
-        roles: roles,
-        role_pids: role_pids
-      }) do
+  def handle_call({:kill_role, role}, _from, %{roles: roles, role_pids: role_pids}) do
     # Pop item out of map
     {role_item, new_role_pids} = Map.pop(role_pids, role)
     # get ref and pid from role_pids map
@@ -138,13 +114,11 @@ defmodule Beethoven.Role do
         Logger.debug("Stopped monitoring role (#{role}) on node (#{node()}).")
         true = Process.demonitor(ref)
         # Kill role
-        Logger.notice("Role (#{role}) was killed by RoleAlloc Server.")
+        Logger.notice("Role (#{role}) was killed by via external request.")
         :ok = DynamicSupervisor.terminate_child(RoleSupervisor, role_pid)
-        # let caller know the result
-        _ = send(callerPid, {:removed, seed})
 
         #
-        {:noreply, %{roles: roles, role_pids: new_role_pids}}
+        {:reply, :dead, %{roles: roles, role_pids: new_role_pids}}
 
       # role not hosted on the node
       nil ->
@@ -152,10 +126,7 @@ defmodule Beethoven.Role do
           "Role (#{role}) was requested to be killed, but it does not run on this node (#{node()})."
         )
 
-        # Tell caller we failed
-        _ = send(callerPid, {:error, seed, :role_not_hosted})
-
-        {:noreply, %{roles: roles, role_pids: role_pids}}
+        {:reply, {:error, :not_here}, %{roles: roles, role_pids: role_pids}}
     end
   end
 end

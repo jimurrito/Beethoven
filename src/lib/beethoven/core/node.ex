@@ -5,7 +5,7 @@ defmodule Beethoven.Core.Node do
   """
 
   require Logger
-  alias Beethoven.Core, as: CoreServer
+  alias Beethoven.Core.Client, as: CoreClient
   alias Beethoven.RoleAlloc
   alias Beethoven.Utils
 
@@ -56,8 +56,8 @@ defmodule Beethoven.Core.Node do
 
                 # Check if there are any other nodes
                 if length(Node.list()) == 0 do
-                  # can call CoreServer since this fun will be used by a task
-                  _ = GenServer.call(CoreServer, {:transition, :standalone})
+                  # Call Core Genserver and transition to standalone as we are now alone
+                  _ = CoreClient.to_standalone()
                 else
                   # Other nodes exist in cluster.
                   # attempt to start role alloc server incase its not running

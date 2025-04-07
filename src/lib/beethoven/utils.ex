@@ -9,6 +9,41 @@ defmodule Beethoven.Utils do
   #
   #
   @doc """
+  Fn to simplify calling named Processes on other nodes... and getting a call back.
+  """
+  @spec remote_call((-> any()), node(), integer()) :: any() | {:error, :timeout}
+  def remote_call(fun, host, timeout \\ 1_000) do
+    # generate seed for tracking (100_000-999_9999)
+    seed = :rand.uniform(900_000) + 99_999
+    # ownPID
+    ownPid = self()
+    #
+    # Fun that will be ran in the remote host
+    remote_fun = fn ->
+      # run input fn
+      result = fun.()
+      # Send back to original caller
+      _ = send(ownPid, {:remote_call, seed, result})
+    end
+
+    # Spawn PID on remote node
+    _ = Node.spawn(host, remote_fun)
+
+    # Await response
+    receive do
+      {:remote_call, ^seed, response} ->
+        response
+    after
+      # Timeout awaiting response
+      timeout ->
+        {:error, :timeout}
+    end
+  end
+
+  #
+  #
+  #
+  @doc """
   Gets an environmental variable from beethoven's application config
   """
   def get_app_env(envVar, default \\ nil) do
@@ -49,7 +84,7 @@ defmodule Beethoven.Utils do
   @doc """
   Toggles the monitoring status of another node in the cluster.
   """
-  @spec monitor_node(atom(), boolean()) :: :ok
+  @spec monitor_node(node(), boolean()) :: :ok
   def monitor_node(nodeName, mode) do
     Logger.info("Monitoring on node (#{nodeName}) has been set to (#{mode}).")
     true = Node.monitor(nodeName, mode)

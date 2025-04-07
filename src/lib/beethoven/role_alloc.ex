@@ -12,9 +12,11 @@ defmodule Beethoven.RoleAlloc do
 
   use GenServer
   require Logger
+  alias Beethoven.RoleAlloc.Lib
   alias Beethoven.Tracker
   alias Beethoven.Utils
   alias Beethoven.RootSupervisor
+  alias Beethoven.Role.Client, as: RoleServer
 
   #
   #
@@ -66,9 +68,10 @@ defmodule Beethoven.RoleAlloc do
   #
   @impl true
   def init(_arg) do
+    #
     # Sets name globally
     :global.register_name(__MODULE__, self())
-    # Set role for node
+    # Set rolealloc role for this node
     :ok = Tracker.add_role(node(), :been_alloc)
     # monitor all active nodes
     :ok = Utils.monitor_all_nodes(true)
@@ -80,44 +83,97 @@ defmodule Beethoven.RoleAlloc do
     Logger.debug(role_alloc_roles: roles)
     #
     Logger.debug("Creating list of roles needed for the cluster.")
-
-    # role_list represents lists that are needed according to the runtime config provided in config.exs.
-    # get roles by key - will de duplicate if multiple instances are needed
-    # converts the list of maps from config to a list of atoms
-    role_list =
-      roles
-      |> Enum.map(fn {name, {_mod, _args, inst}} ->
-        # range to create multiple instances
-        1..inst
-        |> Enum.map(fn _ -> name end)
-      end)
-      # Flatten list
-      |> List.flatten()
-
-    # Filter what roles are needed based on what is in mnesia.
-    # Essentially removes roles hosted on Mnesia from the ones needed in the config.
-    Logger.debug("Filtering roles needed to roles hosted in Tracker.")
-    roles_needed = Tracker.find_work(role_list)
+    roles_needed = Lib.get_open_roles(roles)
     # convert list to queue
     role_queue = :queue.from_list(roles_needed)
     #
     # Get hosts - sort by hosts held.
     Logger.debug("Creating queue based on node Role load.")
-
-    host_queue = make_host_queue()
-
-    Logger.info(
-      "Found (#{:queue.len(host_queue)}) nodes in cluster and (#{:queue.len(role_queue)}) roles to be assigned"
-    )
-
-    Logger.debug(hosts: host_queue, roles: role_queue)
-
+    host_queue = Lib.make_host_queue()
+    #
+    #
+    Logger.info(nodes_found: :queue.len(host_queue), roles_needed: :queue.len(role_queue))
+    Logger.debug(host_queue: host_queue, role_queue: role_queue)
+    #
     # triggers cleanup job -. Ensures there are no stragglers after a failover
     # Cleanup will trigger an assignment loop
     :ok = GenServer.cast(__MODULE__, :clean_up)
 
     # return
-    {:ok, %{role: roles, role_queue: role_queue, host_queue: host_queue, retries: 0}}
+    {:ok,
+     %{
+       role: roles,
+       role_queue: role_queue,
+       host_queue: host_queue,
+       # retries have 4 categories
+       # 0 -> Role retries
+       # 1 -> Total retries
+       # 2 -> Max Role retries (# of nodes via Node.list/0)
+       # 3 -> Max Total Retries (all roles * all hosts)
+       retries: {0, 0, Node.list(), Lib.get_max_retries(roles)}
+     }}
+  end
+
+  #
+  #
+  #
+  # Assignment of roles has hit the max retry threshold
+  @impl true
+  def handle_cast(:assign, %{
+        role: roles,
+        role_queue: role_queue,
+        host_queue: host_queue,
+        retries: {_role_re, total_re, max_role_re, max_tot_re}
+      })
+      when total_re >= max_tot_re do
+    #
+    Logger.warning(
+      "Beethoven RoleAllocator Server has failed to assign role(s) to the maximum threshold. Will await change to cluster state."
+    )
+
+    {:noreply,
+     %{
+       role: roles,
+       role_queue: role_queue,
+       host_queue: host_queue,
+       # Reset retries
+       retries: {0, 0, max_role_re, max_tot_re}
+     }}
+  end
+
+  #
+  #
+  #
+  # Assignment of a single role has failed to be assigned to the max threshold.
+  # Moves to the next role in the queue
+  @impl true
+  def handle_cast(:assign, %{
+        role: roles,
+        role_queue: role_queue,
+        host_queue: host_queue,
+        retries: {role_re, total_re, max_role_re, max_tot_re}
+      })
+      when role_re >= max_role_re do
+    # get role that is failing to assign
+    {{:value, q_role}, new_role_queue} = :queue.out(role_queue)
+    # Set role to top of the queue
+    new_role_queue = :queue.in(q_role, new_role_queue)
+    #
+    Logger.warning(
+      "Beethoven RoleAllocator Server has failed to assign role (#{to_string(q_role)}) (#{to_string(role_re)}) times. Will move to the next role available and try again"
+    )
+
+    # Recurse
+    GenServer.cast(__MODULE__, :assign)
+
+    {:noreply,
+     %{
+       role: roles,
+       role_queue: new_role_queue,
+       host_queue: host_queue,
+       # Reset role retries
+       retries: {0, total_re, max_role_re, max_tot_re}
+     }}
   end
 
   #
@@ -129,9 +185,8 @@ defmodule Beethoven.RoleAlloc do
         role: roles,
         role_queue: role_queue,
         host_queue: host_queue,
-        retries: retries
-      })
-      when retries < 11 do
+        retries: {role_re, total_re, max_role_re, max_tot_re}
+      }) do
     Logger.debug("Starting assignment.")
     # get host from queue
     {{:value, q_host}, new_host_queue} = :queue.out(host_queue)
@@ -142,8 +197,16 @@ defmodule Beethoven.RoleAlloc do
       #
       # no more roles in queue - end cast
       {:empty, role_queue} ->
-        Logger.info("No more roles to assign. Awaiting changes to state.")
-        {:noreply, %{role: roles, role_queue: role_queue, host_queue: host_queue, retries: 0}}
+        Logger.info("No more roles to assign. Awaiting changes to cluster state.")
+
+        {:noreply,
+         %{
+           role: roles,
+           role_queue: role_queue,
+           host_queue: host_queue,
+           # zero out retries
+           retries: {0, 0, max_role_re, max_tot_re}
+         }}
 
       #
       # value from queue -> continue on
@@ -154,7 +217,6 @@ defmodule Beethoven.RoleAlloc do
         if Tracker.is_host_running_role?(q_host, q_role) do
           # running role
           Logger.debug("Node (#{q_host}) is already running an instance of role (#{q_role}).")
-          #
           # Try again, but with the next host
           new_host_queue = :queue.in(q_host, new_host_queue)
           # Recurse
@@ -165,52 +227,67 @@ defmodule Beethoven.RoleAlloc do
              role: roles,
              role_queue: role_queue,
              host_queue: new_host_queue,
-             retries: retries + 1
+             retries: {role_re + 1, total_re + 1, max_role_re, max_tot_re}
            }}
-        else
-          # not running role
-          Logger.info("Assigning role (#{q_role}) to node (#{q_host}).")
-          #
-          # generate seed for tracking (10_000-99_9999)
-          seed = :rand.uniform(90_000) + 9_999
-          #
-          # ownPID
-          ownPid = self()
 
+          #
+          #
+          # not running role
+        else
+          Logger.info("Assigning role (#{q_role}) to node (#{q_host}).")
           #
           # Run locally if target server is local
           if q_host == node() do
             # Run locally
-            GenServer.cast(Beethoven.Role, {:add_role, {seed, ownPid}, q_role})
+            RoleServer.add_role(q_role)
           else
             # Call roleServer in target node to assign the role
-            fun = fn ->
-              GenServer.cast(Beethoven.Role, {:add_role, {seed, ownPid}, q_role})
-            end
-
-            _ = Node.spawn(q_host, fun)
+            RoleServer.add_role_remote(q_role, q_host)
           end
-
-          #
-          # Await message back from server
-          # Filter response based on seed and response type
-          receive do
+          # Parse role assignment response
+          |> case do
             #
-            # Role Server assigned role successfully
-            {:assigned, ^seed} ->
+            # Role was assigned
+            :assigned ->
+              # Write role change to Beethoven.Tracker
+              :ok = Tracker.add_role(q_host, q_role)
               Logger.info("Successfully assigned role (#{q_role}) to node (#{q_host}).")
-              #
               # Add host to back of the queue
               new_host_queue = :queue.in(q_host, new_host_queue)
               # Recurse
               GenServer.cast(__MODULE__, :assign)
               #
               {:noreply,
-               %{role: roles, role_queue: new_role_queue, host_queue: new_host_queue, retries: 0}}
+               %{
+                 role: roles,
+                 role_queue: new_role_queue,
+                 host_queue: new_host_queue,
+                 # reset role retries
+                 retries: {0, total_re, max_role_re, max_tot_re}
+               }}
 
             #
-            # RoleServer failed to add role
-            {:error, ^seed, msg} when is_binary(msg) ->
+            #
+            # Remote assignment timed out
+            {:error, :timeout} ->
+              Logger.alert("Role assignment for role (#{q_role}) on node (#{q_host}) timed out.")
+              # Add host to back of the queue
+              new_host_queue = :queue.in(q_host, new_host_queue)
+              # Recurse - try on another host
+              GenServer.cast(__MODULE__, :assign)
+              #
+              {:noreply,
+               %{
+                 role: roles,
+                 role_queue: role_queue,
+                 host_queue: new_host_queue,
+                 retries: {role_re + 1, total_re + 1, max_role_re, max_tot_re}
+               }}
+
+            #
+            #
+            # Catch all for all other errors
+            {:error, msg} ->
               Logger.error(
                 "RoleServer on node (#{q_host}) failed to create instance of role (#{q_role}). [#{msg}]"
               )
@@ -225,47 +302,11 @@ defmodule Beethoven.RoleAlloc do
                  role: roles,
                  role_queue: role_queue,
                  host_queue: new_host_queue,
-                 retries: retries + 1
-               }}
-          after
-            # 1 second timeout threshold for role provisioning on target
-            1_000 ->
-              Logger.alert("Role assignment for role (#{q_role}) on node (#{q_host}) timed out.")
-              # Add host to back of the queue
-              new_host_queue = :queue.in(q_host, new_host_queue)
-              # Recurse - try on another host
-              GenServer.cast(__MODULE__, :assign)
-              #
-              {:noreply,
-               %{
-                 role: roles,
-                 role_queue: role_queue,
-                 host_queue: new_host_queue,
-                 retries: retries + 1
+                 retries: {role_re + 1, total_re + 1, max_role_re, max_tot_re}
                }}
           end
         end
     end
-  end
-
-  #
-  #
-  #
-  # Assign when we have hit 11+ failed requests
-  # Kills assign loop.
-  @impl true
-  def handle_cast(:assign, %{
-        role: roles,
-        role_queue: role_queue,
-        host_queue: host_queue,
-        retries: retries
-      })
-      when retries > 10 do
-    Logger.warning(
-      "Beethoven RoleAllocator Server has failed to assign roles (#{to_string(retries)}) times. Will await next state change."
-    )
-
-    {:noreply, %{role: roles, role_queue: role_queue, host_queue: host_queue, retries: 0}}
   end
 
   #
@@ -278,58 +319,49 @@ defmodule Beethoven.RoleAlloc do
         role: roles,
         role_queue: role_queue,
         host_queue: host_queue,
-        retries: retries
+        retries: {_role_re, _total_re, _max_role_re, _max_tot_re}
       }) do
     Logger.info("Beethoven Role Allocator clean-up job triggered.")
     # clean up offline nodes -> returns roles removed from the nodes.
     removed_roles = Tracker.clear_offline_roles()
 
     Logger.info(
-      "(#{length(removed_roles)}) Roles have been cleared from the Tracker for reassignment."
+      "(#{length(removed_roles)}) role(s) have been cleared from the Tracker for reassignment."
     )
 
-    Logger.debug("Creating list of roles needed for the cluster.")
-
     #
-    # role_list represents lists that are needed according to the runtime config provided in config.exs.
-    # get roles by key - will de duplicate if multiple instances are needed
-    # converts the list of maps from config to a list of atoms
-    role_list =
-      roles
-      |> Enum.map(fn {name, {_mod, _args, inst}} ->
-        # range to create multiple instances
-        1..inst
-        |> Enum.map(fn _ -> name end)
-      end)
-      # Flatten list
-      |> List.flatten()
-
-    # Filter what roles are needed based on what is in mnesia.
-    # Essentially removes roles hosted on Mnesia from the ones needed in the config.
-    Logger.debug("Filtering roles needed to roles hosted in Tracker.")
-    roles_needed = Tracker.find_work(role_list)
-
+    # Uses roles held in state and creates a new queue from scratch
+    # based on roles needed on the tracker
+    Logger.debug("Creating list of roles needed for the cluster.")
+    roles_needed = Lib.get_open_roles(roles)
     # convert list to queue
     new_role_queue = :queue.from_list(roles_needed)
-
+    #
     # Make new host_queue
-    new_host_queue = make_host_queue()
-
+    new_host_queue = Lib.make_host_queue()
+    #
     # Count diffs
     host_diff = :queue.len(new_host_queue) - :queue.len(host_queue)
     role_diff = :queue.len(new_role_queue) - :queue.len(role_queue)
-
+    #
     Logger.info(
       "Clean up job completed. Changes: [(#{to_string(host_diff)}) Node(s)] | [(#{to_string(role_diff)}) Role(s)]"
     )
 
+    #
     Logger.debug(new: {new_host_queue, new_role_queue}, old: {host_queue, role_queue})
 
     # triggers assignment loop
     :ok = GenServer.cast(__MODULE__, :assign)
 
     {:noreply,
-     %{role: roles, role_queue: new_role_queue, host_queue: new_host_queue, retries: retries}}
+     %{
+       role: roles,
+       role_queue: new_role_queue,
+       host_queue: new_host_queue,
+       # reset retries
+       retries: {0, 0, Node.list(), Lib.get_max_retries(roles)}
+     }}
   end
 
   #
@@ -364,7 +396,7 @@ defmodule Beethoven.RoleAlloc do
 
   #
   #
-  #
+  # handles Mnesia table update events.
   @impl true
   def handle_info({:mnesia_table_event, msg}, %{
         role: roles,
@@ -372,8 +404,7 @@ defmodule Beethoven.RoleAlloc do
         host_queue: host_queue,
         retries: retries
       }) do
-    # Logger.warning("MNESIA EVENT")
-    # IO.inspect({:event, msg})
+    # Logger.warning({:mnesia_event, msg})
     {:ok, new_host_queue} =
       msg
       |> case do
@@ -389,6 +420,7 @@ defmodule Beethoven.RoleAlloc do
           host_queue = nodeName |> :queue.in(host_queue)
           {:ok, host_queue}
 
+        #
         # Node changed from online to offline in 'Beethoven.Tracker' table
         {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :offline, _},
          [{Beethoven.Tracker, nodeName, _, :online, _}], _pid_struct} ->
@@ -401,6 +433,7 @@ defmodule Beethoven.RoleAlloc do
           host_queue = nodeName |> :queue.delete(host_queue)
           {:ok, host_queue}
 
+        #
         # Node changed from offline to online in 'Beethoven.Tracker' table
         {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _},
          [{Beethoven.Tracker, nodeName, _, :offline, _}], _pid_struct} ->
@@ -411,6 +444,7 @@ defmodule Beethoven.RoleAlloc do
           host_queue = nodeName |> :queue.in(host_queue)
           {:ok, host_queue}
 
+        #
         # Catch all
         _ ->
           # return queue as-is
@@ -430,18 +464,6 @@ defmodule Beethoven.RoleAlloc do
 
   #
   #
-  #
-  #
-  # Generates a new host queue based on how many roles the nodes have.
-  # Less roles == higher priority in the queue.
-  defp make_host_queue() do
-    Tracker.get_active_roles_by_host()
-    # sort by amount of jobs held
-    |> Enum.sort_by(fn [_node, roles] -> length(roles) end)
-    # Return list of only hosts
-    |> Enum.map(fn [node, _roles] -> node end)
-    |> :queue.from_list()
-  end
 
   #
   #
