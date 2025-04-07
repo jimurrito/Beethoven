@@ -28,15 +28,15 @@ defmodule Beethoven.RoleAlloc.Lib do
   Gets the maximum number of retries possible.
   Based on `total roles to assign * number of nodes` in the cluster via `Node.list/0`.
 
-  If result equals <1 output value will be 1.
+  If result equals <4 output value will be 4.
   """
   @spec get_max_retries(map()) :: integer()
   def get_max_retries(roles) do
     max = length(role_map_to_list(roles)) * length(Node.list())
 
-    # Ensures fn returns at least 1
+    # Ensures fn returns at least 4
     cond do
-      max < 1 -> 1
+      max < 4 -> 4
       true -> max
     end
   end

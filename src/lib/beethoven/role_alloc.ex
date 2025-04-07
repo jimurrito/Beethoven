@@ -18,6 +18,7 @@ defmodule Beethoven.RoleAlloc do
   alias Beethoven.Utils
   alias Beethoven.RootSupervisor
   alias Beethoven.Role.Client, as: RoleServer
+  alias Beethoven.RoleAlloc.Client, as: Client
 
   #
   #
@@ -74,8 +75,6 @@ defmodule Beethoven.RoleAlloc do
     :global.register_name(__MODULE__, self())
     # Set RoleAlloc role for this node
     :ok = Tracker.add_role(node(), :been_alloc)
-    # monitor all active nodes
-    :ok = Utils.monitor_all_nodes(true)
     # Subscribe to tracker changes
     {:ok, _node} = Tracker.subscribe()
     #
@@ -98,7 +97,7 @@ defmodule Beethoven.RoleAlloc do
     #
     # triggers cleanup job -. Ensures there are no stragglers after a failover
     # Cleanup will trigger an assignment loop
-    :ok = GenServer.cast(__MODULE__, :clean_up)
+    :ok = Client.start_cleanup()
 
     # return
     {:ok,
@@ -124,7 +123,7 @@ defmodule Beethoven.RoleAlloc do
       when total_re >= max_tot_re do
     #
     Logger.warning(
-      "Beethoven RoleAllocator Server has failed to assign role(s) to the maximum threshold. Will await change to cluster state."
+      "Beethoven RoleAllocator Server has failed to assign role(s) to the maximum threshold. (#{to_string(max_tot_re)}) retries. Will await change to cluster state."
     )
 
     {:noreply,
@@ -159,8 +158,8 @@ defmodule Beethoven.RoleAlloc do
       "Beethoven RoleAllocator Server has failed to assign role (#{to_string(q_role)}) (#{to_string(role_re)}) times. Will move to the next role available and try again"
     )
 
-    # Recurse
-    GenServer.cast(__MODULE__, :assign)
+    # Recurse with next role
+    :ok = Client.start_assign()
 
     {:noreply,
      %{
@@ -216,7 +215,7 @@ defmodule Beethoven.RoleAlloc do
           # Try again, but with the next host
           new_host_queue = :queue.in(q_host, new_host_queue)
           # Recurse
-          GenServer.cast(__MODULE__, :assign)
+          :ok = Client.start_assign()
           #
           {:noreply,
            %{
@@ -251,7 +250,7 @@ defmodule Beethoven.RoleAlloc do
               # Add host to back of the queue
               new_host_queue = :queue.in(q_host, new_host_queue)
               # Recurse
-              GenServer.cast(__MODULE__, :assign)
+              :ok = Client.start_assign()
               #
               {:noreply,
                %{
@@ -270,7 +269,7 @@ defmodule Beethoven.RoleAlloc do
               # Add host to back of the queue
               new_host_queue = :queue.in(q_host, new_host_queue)
               # Recurse - try on another host
-              GenServer.cast(__MODULE__, :assign)
+              :ok = Client.start_assign()
               #
               {:noreply,
                %{
@@ -291,7 +290,7 @@ defmodule Beethoven.RoleAlloc do
               # Add host to back of the queue
               new_host_queue = :queue.in(q_host, new_host_queue)
               # Recurse - try on another host
-              GenServer.cast(__MODULE__, :assign)
+              :ok = Client.start_assign()
               #
               {:noreply,
                %{
@@ -348,7 +347,7 @@ defmodule Beethoven.RoleAlloc do
     Logger.debug(new: {new_host_queue, new_role_queue}, old: {host_queue, role_queue})
 
     # triggers assignment loop
-    :ok = GenServer.cast(__MODULE__, :assign)
+    :ok = Client.start_assign()
 
     {:noreply,
      %{
@@ -358,36 +357,6 @@ defmodule Beethoven.RoleAlloc do
        # reset retries
        retries: Lib.get_new_retries(roles)
      }}
-  end
-
-  #
-  #
-  #
-  # Handles :nodedown monitoring messages.
-  @impl true
-  def handle_info({:nodedown, nodeName}, state) when is_atom(nodeName) do
-    # triggers cleanup job
-    :ok = GenServer.cast(__MODULE__, :clean_up)
-    {:noreply, state}
-  end
-
-  #
-  #
-  # Handles :clean_up requests from other nodes.
-  @impl true
-  def handle_info(:clean_up, state) do
-    # triggers cleanup job
-    :ok = GenServer.cast(__MODULE__, :clean_up)
-    {:noreply, state}
-  end
-
-  #
-  #
-  # handles :assign requests from other nodes
-  def handle_info(:assign, state) do
-    # triggers cleanup job
-    :ok = GenServer.cast(__MODULE__, :assign)
-    {:noreply, state}
   end
 
   #

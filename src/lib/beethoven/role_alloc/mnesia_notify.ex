@@ -3,8 +3,8 @@ defmodule Beethoven.RoleAlloc.MnesiaNotify do
   Library to simplify handling Mnesia events
   """
   require Logger
-  alias Beethoven.Utils
   alias Beethoven.RoleAlloc.Lib
+  alias Beethoven.RoleAlloc.Client
 
   #
   #
@@ -20,10 +20,8 @@ defmodule Beethoven.RoleAlloc.MnesiaNotify do
       # New node was added to the 'Beethoven.Tracker' table
       {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _}, [], _pid_struct} ->
         #
-        Logger.info("A new node (#{nodeName}) has joined the cluster. Starting Assign job.")
-        GenServer.cast(__MODULE__, :assign)
-        # monitor node
-        Utils.monitor_node(nodeName, true)
+        Logger.info("A new node (#{nodeName}) has joined the cluster. Starting timed assign job.")
+        :ok = Client.timed_assign()
         # Add to queue
         host_queue = nodeName |> :queue.in(host_queue)
         # Reset max thresholds
@@ -35,9 +33,7 @@ defmodule Beethoven.RoleAlloc.MnesiaNotify do
        [{Beethoven.Tracker, nodeName, _, :online, _}], _pid_struct} ->
         #
         Logger.info("A cluster node (#{nodeName}) has gone offline. Starting Clean-up job.")
-        GenServer.cast(__MODULE__, :clean_up)
-        #
-        Utils.monitor_node(nodeName, false)
+        :ok = Client.start_cleanup()
         # remove from queue
         host_queue = nodeName |> :queue.delete(host_queue)
         # Do not reset retries as :clean_up will do it anyways
@@ -48,8 +44,11 @@ defmodule Beethoven.RoleAlloc.MnesiaNotify do
       {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _},
        [{Beethoven.Tracker, nodeName, _, :offline, _}], _pid_struct} ->
         #
-        Logger.info("A cluster node (#{nodeName}) has came back online. Starting Assign job.")
-        GenServer.cast(__MODULE__, :assign)
+        Logger.info(
+          "A cluster node (#{nodeName}) has came back online. Starting timed Assign job."
+        )
+
+        :ok = Client.timed_assign()
         # Add to queue
         host_queue = nodeName |> :queue.in(host_queue)
         # Reset max thresholds

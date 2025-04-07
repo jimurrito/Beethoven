@@ -12,9 +12,9 @@ defmodule Beethoven.Role.Client do
   Adds a role to the Role server. Role must already be defined in the config.
   The same as `add_role/1` but ran on an external node.
   """
-  @spec add_role_remote(atom(), node()) :: :assigned | {:error, :timeout | any()}
-  def add_role_remote(role, nodeName) do
-    Utils.remote_call(fn -> add_role(role) end, nodeName)
+  @spec add_role_remote(atom(), node(), integer()) :: :assigned | {:error, :timeout | any()}
+  def add_role_remote(role, nodeName, timeout \\ 2_000) do
+    Utils.remote_call(fn -> add_role(role) end, nodeName, timeout)
   end
 
   #
@@ -33,9 +33,9 @@ defmodule Beethoven.Role.Client do
   Removes a role from the Role server.
   The same as `kill_role/1` but ran on an external node.
   """
-  @spec kill_role_remote(atom(), node()) :: :dead | {:error, :timeout | :not_here}
-  def kill_role_remote(role, nodeName) do
-    Utils.remote_call(fn -> kill_role(role) end, nodeName)
+  @spec kill_role_remote(atom(), node(), integer()) :: :dead | {:error, :timeout | :not_here}
+  def kill_role_remote(role, nodeName, timeout \\ 1_000) do
+    Utils.remote_call(fn -> kill_role(role) end, nodeName, timeout)
   end
 
   #
