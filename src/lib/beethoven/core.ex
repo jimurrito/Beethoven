@@ -11,7 +11,6 @@ defmodule Beethoven.Core do
   alias __MODULE__.Node, as: NodeLib
   alias __MODULE__.Startup
   alias Beethoven.Az
-  alias Beethoven.Tracker
   alias Beethoven.Utils
 
   #
@@ -46,20 +45,23 @@ defmodule Beethoven.Core do
         # If :clustered -> monitor all active nodes
         :clustered ->
           :ok = Utils.monitor_all_nodes(true)
+          # Start servers
+          GenServer.cast(__MODULE__, :start_servers)
           :clustered
 
-        # anything else
-        out ->
-          out
+        # Standalone
+        :standalone ->
+          # Start servers
+          GenServer.cast(__MODULE__, :start_servers)
+          :standalone
+
+        # error handling
+        {:failed, reason} ->
+          Logger.emergency("Beethoven.Core failed to start due to this reason:", failure: reason)
+          {:failed, reason}
       end
 
-    # start Tracker
-    m_result = Tracker.start()
-    Logger.debug("Attempted to start Tracker.", result: m_result)
-
-    # Start servers
-    GenServer.cast(__MODULE__, :start_servers)
-
+    # return
     {:ok, mode}
   end
 

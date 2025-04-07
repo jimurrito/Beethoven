@@ -1,11 +1,71 @@
-defmodule Beethoven.Locator do
+defmodule Beethoven.Core.Locator do
   @moduledoc """
-  Module for finding a Beethoven listener within a target network.
+  Library module for finding a Beethoven listener within a target network.
   """
 
   require Logger
   alias Beethoven.Tracker
 
+  #
+  #
+  #
+  @doc """
+  Iterates through a list of IPs and tries to find one running a Beethoven Listener.
+  Same returns as `try_join/2`.
+  """
+  @spec try_join_iter([{integer(), integer(), integer(), integer()}], integer()) ::
+          :ok | :cluster_join_error | :copy_error | :none_found
+  def try_join_iter(ipList, port) do
+    Logger.info(
+      "Begin cluster join iteration. (#{length(ipList)}) node IP(s) to attempt join with."
+    )
+
+    try_join_iter(ipList, port, 1)
+  end
+
+  #
+  # out of nodes
+  defp try_join_iter([], _port, _acc) do
+    :none_found
+  end
+
+  #
+  # working loop
+  defp try_join_iter([hostIP | ipList], port, acc) do
+    try_join(hostIP, port)
+    |> case do
+      # Joined from IP used
+      :ok ->
+        Logger.debug("Successfully joined cluster after (#{acc}) attempt(s).")
+        # return
+        :ok
+
+      # Failed to join cluster
+      :copy_error ->
+        Logger.debug("Table copy failure occurred on attempt #(#{acc}).")
+        # return
+        :copy_error
+
+      # Failed to join cluster
+      :cluster_join_error ->
+        Logger.debug("Join failure occurred on attempt #(#{acc}).")
+        # return
+        :cluster_join_error
+
+      # Unable to connect to socket (if any)
+      :coord_listener_conn_error ->
+        Logger.debug(
+          "Connection attempt #(#{acc}) failed to connect to a socket @ '#{:inet.ntoa(hostIP)}'"
+        )
+
+        # try next IP
+        try_join_iter(ipList, port, acc + 1)
+    end
+  end
+
+  #
+  #
+  #
   @doc """
   Attempts join to a Beethoven Listener Socket server hosted on another Elixir node.
   Using the provided socket info, the client will attempt to connect to the socket and deliver its node uri as a payload.
@@ -16,6 +76,7 @@ defmodule Beethoven.Locator do
     # Convert ipaddress tuple to string for logging
     ipString = :inet.ntoa(ipAddr)
     Logger.info("Attempting connection to Beethoven Listener @ '#{ipString}'.")
+    #
     # attempt connection to listener (250 milisecond timeout)
     case :gen_tcp.connect(ipAddr, port, [:binary, packet: 0, active: false], 250) do
       # Connected to listener
@@ -34,9 +95,10 @@ defmodule Beethoven.Locator do
         # Convert response to Atom
         |> String.to_atom()
         |> case do
-          # Joined Cluster
-          :joined ->
-            Logger.info("Successfully joined to Mnesia cluster.")
+          # Joined mnesia Cluster
+          :connected ->
+            Logger.info("Successfully joined Mnesia cluster.")
+            #
             # Add self to Beethoven.Tracker
             Tracker.join()
             |> case do
@@ -53,11 +115,6 @@ defmodule Beethoven.Locator do
                 :cluster_join_error
 
               :copy_error ->
-                # failed
-                Logger.error(
-                  "Failed to copy'Beethoven.Tracker' table to memory. Going into failed state."
-                )
-
                 :copy_error
             end
 
@@ -71,55 +128,6 @@ defmodule Beethoven.Locator do
       _error ->
         Logger.warning("Failed connection attempt to '#{ipString}': ':coord_listener_conn_error'")
         :coord_listener_conn_error
-    end
-  end
-
-  @doc """
-  Iterates through a list of IPs and tries to find one running a Beethoven Listener.
-  Same returns as `try_join/2`.
-  """
-  @spec try_join_iter([{integer(), integer(), integer(), integer()}], integer()) ::
-          :ok | :cluster_join_error | :copy_error | :none_found
-  def try_join_iter(ipList, port) do
-    Logger.info(
-      "Begin cluster join iteration. (#{length(ipList)}) node IP(s) to attempt join with."
-    )
-
-    try_join_iter(ipList, port, 1)
-  end
-
-  # out of nodes
-  defp try_join_iter([], _port, _acc) do
-    :none_found
-  end
-
-  # working loop
-  defp try_join_iter([hostIP | ipList], port, acc) do
-    try_join(hostIP, port)
-    |> case do
-      # Joined from IP used
-      :ok ->
-        Logger.debug("Successfully joined cluster after (#{acc}) attempt(s).")
-        :ok
-
-      # Failed to join cluster
-      :copy_error ->
-        Logger.debug("Table copy failure occurred on attempt #(#{acc}).")
-        :copy_error
-
-      # Failed to join cluster
-      :cluster_join_error ->
-        Logger.debug("Join failure occurred on attempt #(#{acc}).")
-        :cluster_join_error
-
-      # Unable to connect to socket (if any)
-      :coord_listener_conn_error ->
-        Logger.debug(
-          "Connection attempt #(#{acc}) failed to connect to a socket @ '#{:inet.ntoa(hostIP)}'"
-        )
-
-        # try next IP
-        try_join_iter(ipList, port, acc + 1)
     end
   end
 end

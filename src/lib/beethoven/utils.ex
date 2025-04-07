@@ -181,8 +181,11 @@ defmodule Beethoven.Utils do
   #
   #
   @doc """
-  Copies desired table to local node memory. Table must already exist in the cluster.
-  If the table was initialized on this node, the table is already in memory.
+  Copies desired table to local node memory.
+  - Table must already exist in the cluster.
+  - If the table was initialized on this node, the table is already in memory.
+  - If node successfully joined in the past, but power-cycled, rebooting will automatically grab the tables from the cluster.
+
   """
   @spec copy_mnesia_table(atom()) :: :ok | :already_exists | {:error, any()}
   def copy_mnesia_table(table) do
@@ -198,7 +201,7 @@ defmodule Beethoven.Utils do
 
       # table already in memory (this is fine)
       {:aborted, {:already_exists, _, _}} ->
-        Logger.notice("Table '#{Atom.to_string(table)}' is already copied to memory.")
+        Logger.info("Table '#{Atom.to_string(table)}' is already copied to memory.")
         :already_exists
 
       # Copy failed for some reason

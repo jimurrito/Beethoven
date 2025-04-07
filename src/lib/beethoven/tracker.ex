@@ -5,7 +5,6 @@ defmodule Beethoven.Tracker do
   """
 
   require Logger
-  alias Beethoven.Tracker, as: Tracker
   alias Beethoven.Utils
 
   #
@@ -18,14 +17,15 @@ defmodule Beethoven.Tracker do
   def start() do
     #
     # checks if table already exists in the cluster
-    if Utils.mnesia_table_exists?(Tracker) do
+    if Utils.mnesia_table_exists?(__MODULE__) do
       # table already exists.
       # add ram copy
-      Utils.copy_mnesia_table(Tracker)
+      Utils.copy_mnesia_table(__MODULE__)
       |> case do
         # Copy was successful
         :ok -> :copied
         # Table already exists in memory
+        # if joined node power-cycled, this response is expected
         :already_exists -> :already_exists
         # bubble up rest
         e -> e
@@ -33,7 +33,7 @@ defmodule Beethoven.Tracker do
     else
       Logger.debug("Creating 'Beethoven.Tracker' mnesia table.")
 
-      :mnesia.create_table(Tracker,
+      :mnesia.create_table(__MODULE__,
         # Table schema
         attributes: [:node, :role, :health, :last_change],
         # Sets ram copies for ALL existing nodes in the cluster.
@@ -44,7 +44,7 @@ defmodule Beethoven.Tracker do
 
       # Create indexes - speeds up searches for data that does not regularly change
       Logger.debug("Creating Indexes in 'Beethoven.Tracker'")
-      :mnesia.add_table_index(Tracker, :node)
+      :mnesia.add_table_index(__MODULE__, :node)
       # Add self to tracker
       :ok = add_self()
       # Subscribe to tracker changes
@@ -62,26 +62,28 @@ defmodule Beethoven.Tracker do
   """
   @spec join() :: :ok | :not_started | :copy_error
   def join() do
-    if not Utils.mnesia_table_exists?(Tracker) do
+    if not Utils.mnesia_table_exists?(__MODULE__) do
+      # Mnesia tracker table not started - nothing to join
       :not_started
     else
+      # tracker table running
       # Add self to tracker
       :ok = add_self()
       # Copy table to local memory
-      Utils.copy_mnesia_table(Tracker)
+      Utils.copy_mnesia_table(__MODULE__)
       |> case do
-        # Copied table to memory
-        :ok ->
+        # Failed to copy to memory
+        # ignore failure as called fn has its own error logging
+        {:error, error} ->
+          Logger.emergency("Failed to copy mnesia table to memory! Error: #{error}")
+          :copy_error
+
+        # Copied table to memory or its already there
+        _ ->
           # Subscribe to tracker changes
           {:ok, _node} = subscribe()
           #
           :ok
-
-        # Failed to copy to memory
-        # ignore failure as called fn has its own error logging
-        e ->
-          Logger.emergency("Failed to copy mnesia table to memory! Error: #{e}")
-          :copy_error
       end
     end
   end
@@ -105,7 +107,7 @@ defmodule Beethoven.Tracker do
     {:atomic, :ok} =
       :mnesia.transaction(fn ->
         #  [:node, :role, :role_num, :health, :last_change]
-        :mnesia.write({Tracker, node(), roles, :online, DateTime.now!("Etc/UTC")})
+        :mnesia.write({__MODULE__, node(), roles, :online, DateTime.now!("Etc/UTC")})
       end)
 
     :ok
@@ -121,7 +123,7 @@ defmodule Beethoven.Tracker do
   def subscribe() do
     # Subscribe to tracking table
     # :detailed is used to get the previous version of the record.
-    :mnesia.subscribe({:table, Tracker, :detailed})
+    :mnesia.subscribe({:table, __MODULE__, :detailed})
   end
 
   #
@@ -168,8 +170,8 @@ defmodule Beethoven.Tracker do
     fn ->
       #  [:node, :role, :role_num, :health, :last_change]
       # Only gets node names from records where the node is online.
-      pattern = {Tracker, :_, :"$1", :online, :_}
-      :mnesia.select(Tracker, [{pattern, [], [:"$1"]}])
+      pattern = {__MODULE__, :_, :"$1", :online, :_}
+      :mnesia.select(__MODULE__, [{pattern, [], [:"$1"]}])
     end
     |> :mnesia.transaction()
     # unwraps {:atomics, result}
@@ -189,8 +191,8 @@ defmodule Beethoven.Tracker do
     #
     fn ->
       #  [:node, :role, :role_num, :health, :last_change]
-      pattern = {Tracker, :_, :"$1", :offline, :_}
-      :mnesia.select(Tracker, [{pattern, [], [:"$1"]}])
+      pattern = {__MODULE__, :_, :"$1", :offline, :_}
+      :mnesia.select(__MODULE__, [{pattern, [], [:"$1"]}])
     end
     |> :mnesia.transaction()
     # unwraps {:atomics, result}
@@ -210,8 +212,8 @@ defmodule Beethoven.Tracker do
     #
     fn ->
       #  [:node, :role, :role_num, :health, :last_change]
-      pattern = {Tracker, :"$1", :"$2", :online, :_}
-      :mnesia.select(Tracker, [{pattern, [], [:"$$"]}])
+      pattern = {__MODULE__, :"$1", :"$2", :online, :_}
+      :mnesia.select(__MODULE__, [{pattern, [], [:"$$"]}])
     end
     |> :mnesia.transaction()
     # unwraps {:atomics, result}
@@ -227,9 +229,9 @@ defmodule Beethoven.Tracker do
   @spec is_host_running_role?(atom(), atom()) :: boolean()
   def is_host_running_role?(nodeName, role) when is_atom(nodeName) and is_atom(role) do
     #
-    [{Tracker, ^nodeName, host_roles, _health, _last_change}] =
+    [{__MODULE__, ^nodeName, host_roles, _health, _last_change}] =
       fn ->
-        :mnesia.read({Tracker, nodeName})
+        :mnesia.read({__MODULE__, nodeName})
       end
       |> :mnesia.transaction()
       # unwraps {:atomics, result}
@@ -265,11 +267,11 @@ defmodule Beethoven.Tracker do
   def add_role(nodeName, role) when is_atom(nodeName) and is_atom(role) do
     fn ->
       # ReadLock record
-      [{Tracker, ^nodeName, host_roles, health, _last_change}] =
-        :mnesia.wread({Tracker, nodeName})
+      [{__MODULE__, ^nodeName, host_roles, health, _last_change}] =
+        :mnesia.wread({__MODULE__, nodeName})
 
       # add new role to existing roles
-      :mnesia.write({Tracker, nodeName, [role | host_roles], health, DateTime.now!("Etc/UTC")})
+      :mnesia.write({__MODULE__, nodeName, [role | host_roles], health, DateTime.now!("Etc/UTC")})
     end
     |> :mnesia.transaction()
     |> elem(1)
@@ -284,12 +286,12 @@ defmodule Beethoven.Tracker do
   def remove_role(nodeName, role) when is_atom(nodeName) and is_atom(role) do
     fn ->
       # ReadLock record
-      [{Tracker, ^nodeName, host_roles, health, _last_change}] =
-        :mnesia.wread({Tracker, nodeName})
+      [{__MODULE__, ^nodeName, host_roles, health, _last_change}] =
+        :mnesia.wread({__MODULE__, nodeName})
 
       # remove roles
       :mnesia.write(
-        {Tracker, nodeName, List.delete(host_roles, role), health, DateTime.now!("Etc/UTC")}
+        {__MODULE__, nodeName, List.delete(host_roles, role), health, DateTime.now!("Etc/UTC")}
       )
     end
     |> :mnesia.transaction()
@@ -305,11 +307,11 @@ defmodule Beethoven.Tracker do
   def clear_roles(nodeName) when is_atom(nodeName) do
     fn ->
       # ReadLock record
-      [{Tracker, ^nodeName, _host_roles, health, _last_change}] =
-        :mnesia.wread({Tracker, nodeName})
+      [{__MODULE__, ^nodeName, _host_roles, health, _last_change}] =
+        :mnesia.wread({__MODULE__, nodeName})
 
       # remove roles
-      :mnesia.write({Tracker, nodeName, [], health, DateTime.now!("Etc/UTC")})
+      :mnesia.write({__MODULE__, nodeName, [], health, DateTime.now!("Etc/UTC")})
     end
     |> :mnesia.transaction()
     |> elem(1)
@@ -325,9 +327,9 @@ defmodule Beethoven.Tracker do
     fn ->
       # Create Pattern to get offline nodes
       #
-      pattern = {Tracker, :"$1", :"$2", :offline, :_}
+      pattern = {__MODULE__, :"$1", :"$2", :offline, :_}
       # produces list of lists
-      :mnesia.select(Tracker, [{pattern, [], [:"$$"]}])
+      :mnesia.select(__MODULE__, [{pattern, [], [:"$$"]}])
       # remove roles from nodes, returns list of roles
       |> clear_offline_roles([])
     end
@@ -345,7 +347,7 @@ defmodule Beethoven.Tracker do
   #
   # Working loop
   defp clear_offline_roles([[nodeName, roles] | records], out) do
-    :mnesia.write({Tracker, nodeName, [], :offline, DateTime.now!("Etc/UTC")})
+    :mnesia.write({__MODULE__, nodeName, [], :offline, DateTime.now!("Etc/UTC")})
     clear_offline_roles(records, [roles | out])
   end
 

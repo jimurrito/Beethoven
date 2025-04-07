@@ -4,9 +4,10 @@ defmodule Beethoven.Core.Startup do
   """
 
   require Logger
+  alias Beethoven.Tracker
   alias Beethoven.Utils
   alias Beethoven.Ipv4
-  alias Beethoven.Locator
+  alias Beethoven.Core.Locator
   alias Beethoven.Az
 
   #
@@ -16,7 +17,7 @@ defmodule Beethoven.Core.Startup do
   Starts seeking for other nodes within the current node's network
   """
   @spec start_seeking(:no_azure | atom()) ::
-          :clustered | :standalone | {:failed, :cluster_join_error}
+          :clustered | :standalone | {:failed, :cluster_join_error | :copy_error}
   def start_seeking(:no_azure) do
     # Get list of hosts in defined IP range
     hostIPs = Ipv4.get_host_network_addresses()
@@ -27,8 +28,6 @@ defmodule Beethoven.Core.Startup do
   end
 
   #
-  # Determine if we need to use Azure networking for seeking
-  # use_az_net? =
   #
   # when in Azure
   def start_seeking(_region) do
@@ -60,7 +59,7 @@ defmodule Beethoven.Core.Startup do
   #
   # private fun to handle logic of seeking.
   @spec start_seek({list(), integer()}, integer()) ::
-          :clustered | :seeking | :standalone | {:failed, :cluster_join_error}
+          :clustered | :standalone | {:failed, :cluster_join_error | :copy_error}
   defp start_seek({hostIPs, port}, attemptNum \\ 1) do
     Logger.info("[start_seek] Starting Seek attempt (#{attemptNum |> Integer.to_string()}).")
 
@@ -68,25 +67,28 @@ defmodule Beethoven.Core.Startup do
     # stops at first response from a socket
     Locator.try_join_iter(hostIPs, port)
     |> case do
-      # successfully joined Mnesia cluster => Cluster state => need to make ram copies
+      # successfully joined Mnesia cluster => Cluster state
+      # Tracker was either copied or already imported
       :ok ->
         Logger.info("[start_seek] Seeking completed successfully.")
         :clustered
 
+      #
       # Got copy error from tracker table
-      # Will attempt to continue forward
       :copy_error ->
-        Logger.info(
-          "[start_seek] Tracker table failed to copy or is already copied. Attempting to go ahead as is."
+        Logger.emergency(
+          "[start_seek] Tracker table failed to be copied into memory. Check Server logs."
         )
 
-        :clustered
+        {:failed, :copy_error}
 
+      #
       # connected, but failed to join => Failed state
       :cluster_join_error ->
-        Logger.alert("[start_seek] Failed to join Mnesia Cluster. Check Server logs.")
+        Logger.emergency("[start_seek] Failed to join Mnesia Cluster. Check Server logs.")
         {:failed, :cluster_join_error}
 
+      #
       # No sockets listening in network => retry(x3) => Standalone
       :none_found ->
         Logger.info(
@@ -97,6 +99,10 @@ defmodule Beethoven.Core.Startup do
         if attemptNum == 3 do
           # Standalone mode
           Logger.info("[start_seek] No nodes found. Defaulting to ':standalone' mode.")
+
+          # start Tracker
+          m_result = Tracker.start()
+          Logger.debug("Attempted to start Tracker.", result: m_result)
           :standalone
         else
           # Retry

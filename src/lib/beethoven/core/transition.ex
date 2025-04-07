@@ -6,7 +6,7 @@ defmodule Beethoven.Core.Transition do
 
   require Logger
   alias Beethoven.RoleAlloc
-  alias Beethoven.Listener
+  alias Beethoven.Core.Listener
   alias Beethoven.Role, as: RoleServer
 
   #
