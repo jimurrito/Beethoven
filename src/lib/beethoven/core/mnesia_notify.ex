@@ -5,7 +5,9 @@ defmodule Beethoven.Core.MnesiaNotify do
   """
 
   require Logger
+  alias Beethoven.Core.Listener
   alias Beethoven.Utils
+  alias Beethoven.RoleAlloc
 
   @doc """
   Entry function to decide what is done when the Mnesia Event occurs.
@@ -16,17 +18,20 @@ defmodule Beethoven.Core.MnesiaNotify do
     |> case do
       #
       # New node was added to the 'Beethoven.Tracker' table
-      {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _}, [], _pid_struct} ->
+      {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _}, [], _pid_struct}
+      when nodeName != node() ->
         new_node(nodeName)
 
       # Node changed from online to offline in 'Beethoven.Tracker' table
       {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :offline, _},
-       [{Beethoven.Tracker, nodeName, _, :online, _}], _pid_struct} ->
+       [{Beethoven.Tracker, nodeName, _, :online, _}], _pid_struct}
+      when nodeName != node() ->
         offline_node(nodeName)
 
       # Node changed from offline to online in 'Beethoven.Tracker' table
       {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _},
-       [{Beethoven.Tracker, nodeName, _, :offline, _}], _pid_struct} ->
+       [{Beethoven.Tracker, nodeName, _, :offline, _}], _pid_struct}
+      when nodeName != node() ->
         online_node(nodeName)
 
       # Catch all
@@ -60,6 +65,11 @@ defmodule Beethoven.Core.MnesiaNotify do
 
     # Ensure we stop monitoring the node
     Utils.monitor_node(nodeName, false)
+
+    # attempt to start role alloc server and listener incase its not running
+    _ = Listener.async_start()
+    # async_timed_start/0 uses a backoff to avoid race conditions
+    _ = RoleAlloc.async_timed_start()
   end
 
   #

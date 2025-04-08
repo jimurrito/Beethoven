@@ -36,4 +36,12 @@ defmodule Beethoven.TestRole do
 
   #
   #
+  @impl true
+  def terminate(reason, state) do
+    Logger.alert("TestRole Server termination reason:", reason: reason)
+    state
+  end
+
+  #
+  #
 end

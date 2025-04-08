@@ -6,6 +6,7 @@ defmodule Beethoven.Core do
   use GenServer
   require Logger
 
+  alias Beethoven.Core.Client
   alias __MODULE__.Transition, as: TransLib
   alias __MODULE__.MnesiaNotify, as: MNotify
   alias __MODULE__.Node, as: NodeLib
@@ -63,6 +64,15 @@ defmodule Beethoven.Core do
 
     # return
     {:ok, mode}
+  end
+
+  #
+  #
+  #
+  @impl true
+  def terminate(reason, _state) do
+    Logger.emergency("Beethoven server going down. Attempting graceful shutdown", reason: reason)
+    :ok = Client.start_shutdown()
   end
 
   #

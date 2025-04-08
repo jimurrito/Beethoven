@@ -62,4 +62,29 @@ defmodule Beethoven.RoleAlloc.Client do
 
     :ok
   end
+
+  #
+  #
+  @doc """
+  Instructs RoleAlloc Server to mark the provided node offline and start reassignment of its roles.
+  Defaults to using the nodeName of the caller unless specified.
+  """
+  @spec prune(node(), integer()) :: :ok | {:error, :timeout}
+  def prune(nodeName \\ node(), timeout \\ 1_000) do
+    # generate seed for tracking (100_000-999_9999)
+    seed = :rand.uniform(900_000) + 99_999
+
+    # Spawn PID on remote node
+    _pid = :global.send(RoleAlloc, {:prune, seed, self(), nodeName})
+
+    # Await response
+    receive do
+      {:prune, ^seed, :ok} ->
+        :ok
+    after
+      # Timeout awaiting response
+      timeout ->
+        {:error, :timeout}
+    end
+  end
 end

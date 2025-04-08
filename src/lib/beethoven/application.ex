@@ -14,8 +14,8 @@ defmodule Beethoven.Application do
       Beethoven.Core
     ]
 
-    # By default, will restart PIDs 3x before deciding the PID can stay dead.
-    opts = [strategy: :one_for_one, name: Beethoven.RootSupervisor]
+    # Disables restarts for the services.
+    opts = [strategy: :one_for_one, name: Beethoven.RootSupervisor, max_restarts: 0]
     Supervisor.start_link(children, opts)
   end
 end

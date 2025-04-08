@@ -8,6 +8,8 @@ defmodule Beethoven.Role.Client do
 
   #
   #
+  #
+  #
   @doc """
   Adds a role to the Role server. Role must already be defined in the config.
   The same as `add_role/1` but ran on an external node.
@@ -29,6 +31,8 @@ defmodule Beethoven.Role.Client do
 
   #
   #
+  #
+  #
   @doc """
   Removes a role from the Role server.
   The same as `kill_role/1` but ran on an external node.
@@ -45,6 +49,29 @@ defmodule Beethoven.Role.Client do
   """
   @spec kill_role(atom()) :: :dead | {:error, :not_here}
   def kill_role(role) do
-    GenServer.call(RoleServer, {:add_role, role})
+    GenServer.call(RoleServer, {:kill_role, role})
+  end
+
+  #
+  #
+  #
+  #
+  @doc """
+  Removes all roles from the Role server.
+  The same as `kill_all_roles/0` but ran on an external node.
+  """
+  @spec kill_all_roles_remote(node(), integer()) :: :ok | {:error, :timeout}
+  def kill_all_roles_remote(nodeName, timeout \\ 1_000) do
+    Utils.remote_call(fn -> kill_all_roles() end, nodeName, timeout)
+  end
+
+  #
+  #
+  @doc """
+  Removes all roles from the Role server.
+  """
+  @spec kill_all_roles() :: :ok
+  def kill_all_roles() do
+    GenServer.call(RoleServer, :kill_all)
   end
 end

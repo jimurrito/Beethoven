@@ -18,7 +18,8 @@ defmodule Beethoven.RoleAlloc.MnesiaNotify do
     |> case do
       #
       # New node was added to the 'Beethoven.Tracker' table
-      {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _}, [], _pid_struct} ->
+      {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _}, [], _pid_struct}
+      when nodeName != node() ->
         #
         Logger.info("A new node (#{nodeName}) has joined the cluster. Starting timed assign job.")
         :ok = Client.timed_assign()
@@ -42,7 +43,8 @@ defmodule Beethoven.RoleAlloc.MnesiaNotify do
       #
       # Node changed from offline to online in 'Beethoven.Tracker' table
       {:write, Beethoven.Tracker, {Beethoven.Tracker, nodeName, _, :online, _},
-       [{Beethoven.Tracker, nodeName, _, :offline, _}], _pid_struct} ->
+       [{Beethoven.Tracker, nodeName, _, :offline, _}], _pid_struct}
+      when nodeName != node() ->
         #
         Logger.info(
           "A cluster node (#{nodeName}) has came back online. Starting timed Assign job."

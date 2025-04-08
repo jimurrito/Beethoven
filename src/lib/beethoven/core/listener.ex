@@ -30,6 +30,26 @@ defmodule Beethoven.Core.Listener do
   #
   #
   @doc """
+  Starts server as a child of the root supervisor.
+  Operation runs from a task to avoid hanging the caller waiting for init.
+  (random number between 2.5-5.75 seconds)
+  """
+  @spec async_timed_start() :: :ok
+  def async_timed_start() do
+    {:ok, _pid} =
+      Task.start(fn ->
+        # backoff in milliseconds (random number between 2.5-5.75 seconds)
+        :ok = Utils.backoff_n(RoleAlloc.AsyncStart, 10, 9, 250)
+        Supervisor.start_child(RootSupervisor, __MODULE__)
+      end)
+
+    :ok
+  end
+
+  #
+  #
+  #
+  @doc """
   Entry point for Supervisors. Links calling PID this this child pid.
   """
   @spec start_link(any()) :: {:ok, pid()}
@@ -38,8 +58,6 @@ defmodule Beethoven.Core.Listener do
   end
 
   #
-  # TODO!
-  # FIX ALL THROW/RAISE CALLS IN THIS FUN
   #
   #
   # Callback for genserver start calls.

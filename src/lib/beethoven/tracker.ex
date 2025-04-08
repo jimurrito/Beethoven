@@ -356,6 +356,23 @@ defmodule Beethoven.Tracker do
   #
   #
   @doc """
+  Sets node in tracker offline. Also clears roles on the node.
+  """
+  @spec set_node_offline(node()) :: :ok
+  def set_node_offline(nodeName) do
+    fn ->
+      :mnesia.write({__MODULE__, nodeName, [], :offline, DateTime.now!("Etc/UTC")})
+    end
+    |> :mnesia.transaction()
+    # Unwraps {:atomics, :ok}
+    |> elem(1)
+  end
+
+  #
+  #
+  #
+  #
+  @doc """
   Compares a list of roles to what is hosted in the Tracker.
   Returns roles that are not hosted in Mnesia, but provided in the argument.
   Duplicate inputs are allowed and encouraged.

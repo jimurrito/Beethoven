@@ -114,7 +114,7 @@ defmodule Beethoven.Role do
         Logger.debug("Stopped monitoring role (#{role}) on node (#{node()}).")
         true = Process.demonitor(ref)
         # Kill role
-        Logger.notice("Role (#{role}) was killed by via external request.")
+        Logger.notice("Role (#{role}) was killed via external request.")
         :ok = DynamicSupervisor.terminate_child(RoleSupervisor, role_pid)
 
         #
@@ -129,4 +129,30 @@ defmodule Beethoven.Role do
         {:reply, {:error, :not_here}, %{roles: roles, role_pids: role_pids}}
     end
   end
+
+  #
+  #
+  #
+  @doc """
+  Kills all roles on the server
+  """
+  def handle_call(:kill_all, _from, %{roles: roles, role_pids: role_pids}) do
+    # Stop monitoring and kill the process
+    :ok =
+      role_pids
+      |> Enum.each(fn {role, {role_pid, ref}} ->
+        # stop monitoring
+        Logger.debug("Stopped monitoring role (#{role}) on node (#{node()}).")
+        true = Process.demonitor(ref)
+        # Kill child process
+        Logger.notice("Role (#{role}) was killed via external request.")
+        :ok = DynamicSupervisor.terminate_child(RoleSupervisor, role_pid)
+        #
+      end)
+
+    {:reply, :ok, %{roles: roles, role_pids: %{}}}
+  end
+
+  #
+  #
 end

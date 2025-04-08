@@ -19,7 +19,7 @@ defmodule Beethoven.Core.Node do
   def down(nodeName) do
     Logger.warning("Node (#{nodeName}) has gone offline.")
     # backoff in milliseconds (random number between 5-8.5 seconds)
-    Utils.backoff(10, 9, 500)
+    Utils.backoff_n(Core.Node, 10, 9, 500)
 
     # attempt ping
     Node.ping(nodeName)
@@ -69,7 +69,7 @@ defmodule Beethoven.Core.Node do
 
               # Node was deleted -> do nothing
               [] ->
-                Logger.debug("Node (#{nodeName}) was already deleted from Beethoven.Tracker.")
+                Logger.debug("Node (#{nodeName}) was deleted from Beethoven.Tracker.")
                 :ok
 
               # Node was already updated to offline. -> do nothing

@@ -41,6 +41,26 @@ defmodule Beethoven.RoleAlloc do
   #
   #
   @doc """
+  Starts server as a child of the root supervisor.
+  Operation runs from a task to avoid hanging the caller waiting for init.
+  (random number between 2.5-5.75 seconds)
+  """
+  @spec async_timed_start() :: :ok
+  def async_timed_start() do
+    {:ok, _pid} =
+      Task.start(fn ->
+        # backoff in milliseconds (random number between 2.5-5.75 seconds)
+        :ok = Utils.backoff_n(RoleAlloc.AsyncStart, 10, 9, 250)
+        Supervisor.start_child(RootSupervisor, __MODULE__)
+      end)
+
+    :ok
+  end
+
+  #
+  #
+  #
+  @doc """
   Entry point for Supervisors. Links calling PID this this child pid.
   """
   @spec start_link(any()) :: {:ok, pid()}
@@ -72,7 +92,7 @@ defmodule Beethoven.RoleAlloc do
   def init(_arg) do
     #
     # Sets name globally
-    :global.register_name(__MODULE__, self())
+    :global.re_register_name(__MODULE__, self())
     # Set RoleAlloc role for this node
     :ok = Tracker.add_role(node(), :been_alloc)
     # Subscribe to tracker changes
@@ -113,6 +133,7 @@ defmodule Beethoven.RoleAlloc do
   #
   #
   # Assignment of roles has hit the max retry threshold
+  # Kill assignment loop until change to cluster state
   @impl true
   def handle_cast(:assign, %{
         role: roles,
@@ -306,6 +327,7 @@ defmodule Beethoven.RoleAlloc do
 
   #
   #
+  #
   # gets roles hosted by offline nodes and add add them to the job queue.
   # Also removes any offline nodes in the host_queue variable.
   # Should be triggered occasionally and when a node goes down.
@@ -361,7 +383,33 @@ defmodule Beethoven.RoleAlloc do
 
   #
   #
+  #
+  # Call to RoleAlloc server to let it know a node is going down.
+  # This allows RoleAlloc server to move the roles prior to the expected outage.
+  # Uses Handle_info so it can respond to calls from other nodes.
+  def handle_info({:prune, seed, caller, nodeName}, state) do
+    #
+    # Change node to offline so other nodes stop monitoring it.
+    :ok = Tracker.set_node_offline(nodeName)
+    #
+    # No need to trigger cleanup as the change to tracker will cause a Mnesia event for the same
+    #
+    # respond to caller
+    _ = send(caller, {:prune, seed, :ok})
+    #
+    # If this node is to be pruned, kill role Alloc
+    # This prevents service to continuing
+    if nodeName == node() do
+      exit("RoleAlloc Server killed via Self-Prune request.")
+    end
+    #
+    {:noreply, state}
+  end
+
+  #
+  #
   # handles Mnesia table update events.
+  # Redirects to RoleAlloc.MnesiaNotify module
   @impl true
   def handle_info({:mnesia_table_event, msg}, %{
         role: roles,
