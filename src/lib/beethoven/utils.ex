@@ -70,7 +70,7 @@ defmodule Beethoven.Utils do
   The same as `backoff/3` but shows the calling service's name in the verbose output.
 
   Performs a backoff wait to void race conditions in a distributed environment.
-  (:rand.uniform(1 - max) + delta) * multiplier
+  (:rand.uniform(1..max) + delta) * multiplier
   """
   @spec backoff_n(atom(), integer(), integer(), integer()) :: :ok
   def backoff_n(name, max \\ 20, delta \\ 0, multiplier \\ 1) when is_atom(name) do
@@ -85,7 +85,7 @@ defmodule Beethoven.Utils do
   #
   @doc """
   Performs a backoff wait to void race conditions in a distributed environment.
-  (:rand.uniform(1 - max) + delta) * multiplier
+  (:rand.uniform(1..max) + delta) * multiplier
   """
   @spec backoff(integer(), integer(), integer()) :: :ok
   def backoff(max \\ 20, delta \\ 0, multiplier \\ 1) do

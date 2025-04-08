@@ -18,8 +18,8 @@ defmodule Beethoven.Core.Node do
   @spec down(atom()) :: :ok
   def down(nodeName) do
     Logger.warning("Node (#{nodeName}) has gone offline.")
-    # backoff in milliseconds (random number between 5-8.5 seconds)
-    Utils.backoff_n(Core.Node, 10, 9, 500)
+    # backoff in milliseconds (random number between 0.50-5.0 seconds)
+    Utils.backoff_n(Core.NodeDown, 10, 0, 500)
 
     # attempt ping
     Node.ping(nodeName)

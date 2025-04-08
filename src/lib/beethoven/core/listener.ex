@@ -32,14 +32,14 @@ defmodule Beethoven.Core.Listener do
   @doc """
   Starts server as a child of the root supervisor.
   Operation runs from a task to avoid hanging the caller waiting for init.
-  (random number between 2.5-5.75 seconds)
+  (random number between 0.25-2.50 seconds)
   """
   @spec async_timed_start() :: :ok
   def async_timed_start() do
     {:ok, _pid} =
       Task.start(fn ->
-        # backoff in milliseconds (random number between 2.5-5.75 seconds)
-        :ok = Utils.backoff_n(Listener.AsyncStart, 10, 9, 250)
+        # backoff in milliseconds (random number between 0.25-2.50 seconds)
+        :ok = Utils.backoff_n(Listener.AsyncStart, 10, 0, 250)
         Supervisor.start_child(RootSupervisor, __MODULE__)
       end)
 

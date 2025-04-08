@@ -107,7 +107,7 @@ defmodule Beethoven.Core.Startup do
         else
           # Retry
           # backoff in milliseconds (100-2000) milliseconds
-          Utils.backoff_n(Core.Startup,20, 0, 100)
+          Utils.backoff_n(Core.Startup, 20, 0, 100)
           # recurse
           start_seek({hostIPs, port}, attemptNum + 1)
         end

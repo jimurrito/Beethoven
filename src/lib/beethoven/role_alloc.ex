@@ -49,8 +49,8 @@ defmodule Beethoven.RoleAlloc do
   def async_timed_start() do
     {:ok, _pid} =
       Task.start(fn ->
-        # backoff in milliseconds (random number between 2.5-5.75 seconds)
-        :ok = Utils.backoff_n(RoleAlloc.AsyncStart, 10, 9, 250)
+        # backoff in milliseconds (random number between 0.25-2.50 seconds)
+        :ok = Utils.backoff_n(RoleAlloc.AsyncStart, 10, 0, 250)
         Supervisor.start_child(RootSupervisor, __MODULE__)
       end)
 
@@ -402,6 +402,7 @@ defmodule Beethoven.RoleAlloc do
     if nodeName == node() do
       exit("RoleAlloc Server killed via Self-Prune request.")
     end
+
     #
     {:noreply, state}
   end
