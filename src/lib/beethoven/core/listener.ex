@@ -39,7 +39,7 @@ defmodule Beethoven.Core.Listener do
     {:ok, _pid} =
       Task.start(fn ->
         # backoff in milliseconds (random number between 2.5-5.75 seconds)
-        :ok = Utils.backoff_n(RoleAlloc.AsyncStart, 10, 9, 250)
+        :ok = Utils.backoff_n(Listener.AsyncStart, 10, 9, 250)
         Supervisor.start_child(RootSupervisor, __MODULE__)
       end)
 
