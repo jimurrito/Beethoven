@@ -12,13 +12,12 @@ defmodule Beethoven.RoleAlloc do
 
   use GenServer
   require Logger
-  alias Beethoven.RoleAlloc.MnesiaNotify
   alias Beethoven.RoleAlloc.Lib
   alias Beethoven.Tracker
   alias Beethoven.Utils
   alias Beethoven.RootSupervisor
   alias Beethoven.Role.Client, as: RoleServer
-  alias Beethoven.RoleAlloc.Client, as: Client
+  alias Beethoven.RoleAlloc.Client, as: RoleAllocClient
 
   #
   #
@@ -117,7 +116,7 @@ defmodule Beethoven.RoleAlloc do
     #
     # triggers cleanup job -. Ensures there are no stragglers after a failover
     # Cleanup will trigger an assignment loop
-    :ok = Client.start_cleanup()
+    :ok = RoleAllocClient.start_cleanup()
 
     # return
     {:ok,
@@ -127,6 +126,16 @@ defmodule Beethoven.RoleAlloc do
        host_queue: host_queue,
        retries: Lib.get_new_retries(roles)
      }}
+  end
+
+  #
+  #
+  #
+  @impl true
+  def terminate(reason, _state) do
+    Logger.emergency("Beethoven.RoleAlloc server is going down.",
+      reason: reason
+    )
   end
 
   #
@@ -180,7 +189,7 @@ defmodule Beethoven.RoleAlloc do
     )
 
     # Recurse with next role
-    :ok = Client.start_assign()
+    :ok = RoleAllocClient.start_assign()
 
     {:noreply,
      %{
@@ -236,7 +245,7 @@ defmodule Beethoven.RoleAlloc do
           # Try again, but with the next host
           new_host_queue = :queue.in(q_host, new_host_queue)
           # Recurse
-          :ok = Client.start_assign()
+          :ok = RoleAllocClient.start_assign()
           #
           {:noreply,
            %{
@@ -271,7 +280,7 @@ defmodule Beethoven.RoleAlloc do
               # Add host to back of the queue
               new_host_queue = :queue.in(q_host, new_host_queue)
               # Recurse
-              :ok = Client.start_assign()
+              :ok = RoleAllocClient.start_assign()
               #
               {:noreply,
                %{
@@ -290,7 +299,7 @@ defmodule Beethoven.RoleAlloc do
               # Add host to back of the queue
               new_host_queue = :queue.in(q_host, new_host_queue)
               # Recurse - try on another host
-              :ok = Client.start_assign()
+              :ok = RoleAllocClient.start_assign()
               #
               {:noreply,
                %{
@@ -311,7 +320,7 @@ defmodule Beethoven.RoleAlloc do
               # Add host to back of the queue
               new_host_queue = :queue.in(q_host, new_host_queue)
               # Recurse - try on another host
-              :ok = Client.start_assign()
+              :ok = RoleAllocClient.start_assign()
               #
               {:noreply,
                %{
@@ -369,7 +378,7 @@ defmodule Beethoven.RoleAlloc do
     Logger.debug(new: {new_host_queue, new_role_queue}, old: {host_queue, role_queue})
 
     # triggers assignment loop
-    :ok = Client.start_assign()
+    :ok = RoleAllocClient.start_assign()
 
     {:noreply,
      %{
@@ -419,8 +428,54 @@ defmodule Beethoven.RoleAlloc do
         retries: retry_tup
       }) do
     #
-    {:ok, new_host_queue, retry_tup} = MnesiaNotify.run(msg, roles, host_queue, retry_tup)
+    #
+    {:ok, new_host_queue, retry_tup} =
+      Tracker.MnesiaNotify.handle(msg)
+      |> case do
+        #
+        # ignore
+        :noop ->
+          {:ok, host_queue, retry_tup}
 
+        #
+        # a new node has joined the cluster
+        {:new, nodeName} ->
+          Logger.info(
+            "A new node (#{nodeName}) has joined the cluster. Starting timed assign job."
+          )
+
+          :ok = RoleAllocClient.timed_assign()
+          # Add to queue
+          host_queue = nodeName |> :queue.in(host_queue)
+          # Reset max thresholds
+          {:ok, host_queue, Lib.get_new_retries(roles)}
+
+        #
+        # a cluster node has gone offline
+        {:offline, nodeName} ->
+          Logger.info("A cluster node (#{nodeName}) has gone offline. Starting Clean-up job.")
+          :ok = RoleAllocClient.start_cleanup()
+          # remove from queue
+          host_queue = nodeName |> :queue.delete(host_queue)
+          # Do not reset retries as :clean_up will do it anyways
+          {:ok, host_queue, retry_tup}
+
+        #
+        # Cluster node has came back online
+        {:online, nodeName} ->
+          Logger.info(
+            "A cluster node (#{nodeName}) has came back online. Starting timed Assign job."
+          )
+
+          :ok = RoleAllocClient.timed_assign()
+          # Add to queue
+          host_queue = nodeName |> :queue.in(host_queue)
+          # Reset max thresholds
+          {:ok, host_queue, Lib.get_new_retries(roles)}
+      end
+
+    #
+    #
     {:noreply,
      %{
        role: roles,

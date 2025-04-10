@@ -120,6 +120,16 @@ defmodule Beethoven.Core.Listener do
   #
   #
   #
+  @impl true
+  def terminate(reason, _state) do
+    Logger.warning("Beethoven.Listener server is going down.",
+      reason: reason
+    )
+  end
+
+  #
+  #
+  #
   # Starts accepting TCP requests.
   # Once received, a task is spawned to handle the request.
   @impl true
