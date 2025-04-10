@@ -5,7 +5,7 @@ defmodule Beethoven.Tracker do
   """
 
   require Logger
-  alias Beethoven.Utils
+  alias Beethoven.MnesiaTools
 
   #
   #
@@ -17,10 +17,10 @@ defmodule Beethoven.Tracker do
   def start() do
     #
     # checks if table already exists in the cluster
-    if Utils.mnesia_table_exists?(__MODULE__) do
+    if MnesiaTools.table_exists?(__MODULE__) do
       # table already exists.
       # add ram copy
-      Utils.copy_mnesia_table(__MODULE__)
+      MnesiaTools.copy_table(__MODULE__)
       |> case do
         # Copy was successful
         :ok -> :copied
@@ -62,7 +62,7 @@ defmodule Beethoven.Tracker do
   """
   @spec join() :: :ok | :not_started | :copy_error
   def join() do
-    if not Utils.mnesia_table_exists?(__MODULE__) do
+    if not MnesiaTools.table_exists?(__MODULE__) do
       # Mnesia tracker table not started - nothing to join
       :not_started
     else
@@ -70,7 +70,7 @@ defmodule Beethoven.Tracker do
       # Add self to tracker
       :ok = add_self()
       # Copy table to local memory
-      Utils.copy_mnesia_table(__MODULE__)
+      MnesiaTools.copy_table(__MODULE__)
       |> case do
         # Failed to copy to memory
         # ignore failure as called fn has its own error logging
@@ -122,8 +122,7 @@ defmodule Beethoven.Tracker do
   @spec subscribe() :: {:ok, node()} | {:error, reason :: term()}
   def subscribe() do
     # Subscribe to tracking table
-    # :detailed is used to get the previous version of the record.
-    :mnesia.subscribe({:table, __MODULE__, :detailed})
+    MnesiaTools.subscribe(__MODULE__)
   end
 
   #

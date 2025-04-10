@@ -6,11 +6,14 @@ defmodule Beethoven.Core do
   use GenServer
   require Logger
 
+  alias Beethoven.Tracker
   alias Beethoven.Core.Client
   alias __MODULE__.Transition, as: TransLib
-  alias __MODULE__.MnesiaNotify, as: MNotify
   alias __MODULE__.Node, as: NodeLib
   alias __MODULE__.Startup
+  alias Beethoven.Core.Listener
+  alias Beethoven.Utils
+  alias Beethoven.RoleAlloc
   alias Beethoven.Az
   alias Beethoven.Utils
 
@@ -71,7 +74,7 @@ defmodule Beethoven.Core do
   #
   @impl true
   def terminate(reason, _state) do
-    Logger.emergency("Beethoven server going down. Attempting graceful shutdown", reason: reason)
+    Logger.emergency("Beethoven.Core server is going down. Attempting graceful shutdown.", reason: reason)
     :ok = Client.start_shutdown()
   end
 
@@ -122,7 +125,44 @@ defmodule Beethoven.Core do
   # Redirects all Mnesia subscription events into the Lib.MnesiaNotify module.
   @impl true
   def handle_info({:mnesia_table_event, msg}, mode) do
-    :ok = MNotify.run(msg)
+    :ok =
+      Tracker.MnesiaNotify.handle(msg)
+      |> case do
+        #
+        # do nothing
+        :noop ->
+          :ok
+
+        #
+        #
+        {:new, nodeName} ->
+          Logger.debug("Node (#{nodeName}) as been added to 'Beethoven.Tracker' table.")
+          # Monitor new node
+          Utils.monitor_node(nodeName, true)
+
+        #
+        #
+        {:offline, nodeName} ->
+          Logger.debug("Node (#{nodeName}) has changed availability: [:online] => [:offline].")
+          # attempt to start role alloc server and listener incase its not running
+          _ = Listener.async_start()
+          # async_timed_start/0 uses a backoff to avoid race conditions
+          _ = RoleAlloc.async_timed_start()
+          # Ensure we stop monitoring the node
+          Utils.monitor_node(nodeName, false)
+
+        #
+        #
+        {:online, nodeName} ->
+          Logger.debug("Node (#{nodeName}) has changed availability: [:online] => [:offline].")
+          # attempt to start role alloc server and listener incase its not running
+          _ = Listener.async_start()
+          # async_timed_start/0 uses a backoff to avoid race conditions
+          _ = RoleAlloc.async_timed_start()
+          # Ensure we stop monitoring the node
+          Utils.monitor_node(nodeName, false)
+      end
+
     {:noreply, mode}
   end
 

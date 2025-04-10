@@ -62,6 +62,16 @@ defmodule Beethoven.Role do
 
   #
   #
+  #
+  @impl true
+  def terminate(reason, _state) do
+    Logger.emergency("Beethoven.Role server is going down.",
+      reason: reason
+    )
+  end
+
+  #
+  #
   # Adds a single role to the server.
   # This is usually triggered by the RoleAlloc Server.
   @impl true

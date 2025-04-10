@@ -5,8 +5,8 @@ defmodule Beethoven.MixProject do
     [
       name: "Beethoven",
       app: :beethoven,
-      version: "0.2.3",
-      elixir: "~> 1.14",
+      version: "0.2.4",
+      elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
