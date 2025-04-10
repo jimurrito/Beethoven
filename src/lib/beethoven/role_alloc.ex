@@ -1,13 +1,6 @@
 defmodule Beethoven.RoleAlloc do
   @moduledoc """
   Role Allocation Server. Works as a queue to assign roles needed by the configuration.
-
-  # TODO
-  - Fix bug where a node goes down, but comes back up before it is updated in tracker
-    ex: Node (nodeY@127.0.0.1) is back online
-    Potential solutions
-    - a task that waits and calls the role alloc server back to let it know if it needs to remove the node or not?
-
   """
 
   use GenServer

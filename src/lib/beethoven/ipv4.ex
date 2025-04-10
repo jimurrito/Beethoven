@@ -46,7 +46,7 @@ defmodule Beethoven.Ipv4 do
   @doc """
   Gets the number of IPs within a netmask.
   """
-  @spec get_netmask_hosts(binary() | integer()) :: integer()
+  @spec get_netmask_hosts(binary() | integer()) :: float()
   def get_netmask_hosts(mask) when is_binary(mask) do
     get_netmask_hosts(String.to_integer(mask))
   end
