@@ -3,24 +3,7 @@ defmodule Beethoven.Core.Client do
   Client library for accessing or interacting with the `Beethoven.Core` server.
   """
 
-  alias Beethoven.Role.Client, as: RoleClient
   alias Beethoven.Core
-  alias Beethoven.RoleAlloc.Client, as: RoleAlloc
-
-  #
-  #
-  @doc """
-  Kills Beethoven Core and dependency tree gracefully.
-  """
-  @spec start_shutdown() :: :ok
-  def start_shutdown() do
-    # Prune self from Tracker via RoleAlloc Server
-    :ok = RoleAlloc.prune()
-    # Kill all roles on the RoleServer
-    :ok = RoleClient.kill_all_roles()
-    #
-    :ok
-  end
 
   #
   #

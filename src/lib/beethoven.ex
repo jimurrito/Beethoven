@@ -8,16 +8,25 @@ defmodule Beethoven do
   This module acts as the unified client for interacting with beethoven as an external client.
   Avoid using the other modules for external PID calls to beethoven services.
   """
-  alias Beethoven.Core.Client
+  
+  alias Beethoven.Role.Client, as: RoleClient
+  alias Beethoven.RoleAlloc.Client, as: RoleAlloc
 
+  #
+  #
   @doc """
   Kills the an Elixir/Erlang application running Beethoven.
   """
   @spec kill_node() :: :ok
   def kill_node() do
-    # Shuts Down Core
-    :ok = Client.start_shutdown()
+    # Prune self from Tracker via RoleAlloc Server
+    :ok = RoleAlloc.prune()
+    # Kill all roles on the RoleServer
+    :ok = RoleClient.kill_all_roles()
     # Kills ErlangVM
     :ok = :init.stop()
   end
+
+  #
+  #
 end

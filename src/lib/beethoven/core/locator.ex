@@ -105,7 +105,7 @@ defmodule Beethoven.Core.Locator do
               # Successfully added self
               :ok ->
                 :ok
-
+              # tracker not started already.
               :not_started ->
                 # failed
                 Logger.error(
@@ -114,6 +114,7 @@ defmodule Beethoven.Core.Locator do
 
                 :cluster_join_error
 
+              # Copy to memory failed
               :copy_error ->
                 :copy_error
             end
