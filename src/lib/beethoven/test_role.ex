@@ -19,10 +19,10 @@ defmodule Beethoven.TestRole do
   #
   #
   @impl true
-  def init(args) do
+  def init(init_args) do
     Logger.info("Test GenServer Started!")
-    IO.inspect({:test_role_running, {TestRole, :params, args}})
-    {:ok, args}
+    IO.inspect({:test_role_running, {TestRole, [args: init_args]}})
+    {:ok, init_args}
   end
 
   #
