@@ -113,13 +113,18 @@ defmodule Beethoven.DistrServer do
           end
 
         # Subscribes to table changes (if applicable)
+        # Must copy to memory if you want to subscribe.
         if subscribe? do
+          _result = copy_table(tableName)
           {:ok, _node} = subscribe(tableName)
         end
 
         # execute user defined entry point
         entry_point(init_arg)
       end
+
+      #
+      #
     end
   end
 

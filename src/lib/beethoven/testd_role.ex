@@ -33,11 +33,8 @@ defmodule Beethoven.TestdRole do
   @impl true
   def entry_point(init_args) do
     #
-    # Copy table to local memory (if-applicable)
-    result = copy_table(Beethoven.TestdRole.Mnesia)
-    #
     IO.inspect(
-      {:test_distributed_role_running, {TestdRole, [args: init_args, copy_result: result]}}
+      {:test_distributed_role_running, {TestdRole, [args: init_args]}}
     )
 
     #

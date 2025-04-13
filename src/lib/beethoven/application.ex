@@ -11,7 +11,9 @@ defmodule Beethoven.Application do
       Beethoven.Az,
       # Core GenServer
       # Entry point for beethoven
-      Beethoven.Core
+      Beethoven.Core,
+      #
+      #Beethoven.TestdRole
     ]
 
     # Disables restarts for the services.
