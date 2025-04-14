@@ -33,9 +33,7 @@ defmodule Beethoven.TestdRole do
   @impl true
   def entry_point(init_args) do
     #
-    IO.inspect(
-      {:test_distributed_role_running, {TestdRole, [args: init_args]}}
-    )
+    IO.inspect({:test_distributed_role_running, {TestdRole, [args: init_args]}})
 
     #
     {:ok, :ok}
@@ -44,7 +42,7 @@ defmodule Beethoven.TestdRole do
   #
   #
   @impl true
-  def create_action() do
+  def create_action(_tableConfig) do
     :ok
   end
 end

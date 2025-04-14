@@ -10,7 +10,9 @@ defmodule Beethoven.MnesiaTools do
   @typedoc """
   TableConfig contains the payload needed to create the state table needed by the process.
   """
-  @type tableConfig() :: {atom(), list(atom()), list(atom()), atom(), atom()}
+  @type tableConfig() ::
+          {tableName :: atom(), columns :: list(atom()), indexes :: list(atom()),
+           dataType :: atom(), copyType :: atom()}
 
   #
   #
@@ -92,10 +94,11 @@ defmodule Beethoven.MnesiaTools do
   #
   @doc """
   Copies a replica of a desired table to local node memory.
-  - Table must already exist in the cluster.
-  - If the table was initialized on this node, the table is already in memory.
-  - If node successfully joined in the past, but power-cycled, rebooting will automatically grab the tables from the cluster.
 
+  The table may already exist in memory for the following reasons:
+  - The table was created for all nodes, and this node was already in the cluster.
+  - The table was initialized on this node.
+  - A node with the same name was successfully joined the cluster in the past, and power-cycled.
   """
   @spec copy_table(atom()) :: :ok | :already_exists | {:error, any()}
   def copy_table(table) do

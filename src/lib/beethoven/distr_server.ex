@@ -8,6 +8,8 @@ defmodule Beethoven.DistrServer do
 
   require Logger
   import Beethoven.MnesiaTools
+  alias Beethoven.DistrServer
+  alias Beethoven.MnesiaTools
   alias GenServer, as: GS
 
   #
@@ -65,7 +67,7 @@ defmodule Beethoven.DistrServer do
   **-Callback required-**\n
   Callback that is triggered when the process creates the Mnesia Table for the cluster.
   """
-  @callback create_action() :: :ok
+  @callback create_action(tableConfig :: MnesiaTools.tableConfig()) :: :ok
   #
   #
   # MASKED CALL BACKS
@@ -102,12 +104,15 @@ defmodule Beethoven.DistrServer do
           subscribe?: subscribe?
         } = config()
 
+        # Create tableConfig type
+        tableConfig = {tableName, columns, indexes, dataType, copyType}
+
         # Create table if it does not already exist
         :ok =
-          create_table_ifnot_exist({tableName, columns, indexes, dataType, copyType})
+          create_table_ifnot_exist(tableConfig)
           |> case do
             # table was created
-            :ok -> create_action()
+            :ok -> create_action(tableConfig)
             # table already exists
             :already_exists -> :ok
           end
@@ -158,9 +163,33 @@ defmodule Beethoven.DistrServer do
   Sends a cast to the provided `DistrServer`.
   Similar to `GenServer.call/2` and `GenServer.call/3`
   """
-  @spec call(GS.server(), any(), timeout()) :: :ok
+  @spec call(GS.server(), any(), timeout()) :: any()
   def call(server, request, timeout \\ 5000) do
     GenServer.call(server, request, timeout)
+  end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # LIB FUNCTIONS
+  #
+  #
+  @doc """
+  Converts the `DistrConfig()` into the `tableConfig()` type.
+  """
+  @spec distr_to_table_conf(DistrServer.distrConfig()) :: MnesiaTools.tableConfig()
+  def distr_to_table_conf(distrConfig) do
+    %{
+      tableName: tableName,
+      columns: columns,
+      indexes: indexes,
+      dataType: dataType,
+      copyType: copyType,
+      subscribe?: _subscribe
+    } = distrConfig
+
+    #
+    {tableName, columns, indexes, dataType, copyType}
   end
 
   #
