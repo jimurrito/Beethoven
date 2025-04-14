@@ -3,10 +3,6 @@ defmodule Beethoven.CoreServer do
   Core Service for Beethoven.
   Watches other nodes within the cluster and cascade updates across the beethoven PIDs as needed.
 
-  Once the server is started, it will spawn downlevel servers needed by Beethoven.
-  - `RoleServer`
-  - `BeaconServer`
-
   ---
 
   # External API calls
@@ -127,14 +123,15 @@ defmodule Beethoven.CoreServer do
   """
   @impl true
   def entry_point(mode) do
+    Logger.info(status: :startup)
+    #
     tableConfig = config() |> DistrServer.distr_to_table_conf()
     # Add self to tracker
     :ok = add_self(tableConfig)
     #
-    Logger.info(table: elem(tableConfig, 0), mode: mode, status: :startup)
+    {tableName, _, _, _, _} = tableConfig
     #
-    # Add servers to root supervisor
-    :ok = start_downlevel_servers()
+    Logger.info(status: :startup_complete, table: tableName, mode: mode)
     #
     # Return mode + empty list of alert followers.
     {:ok, {mode, []}}
@@ -205,50 +202,61 @@ defmodule Beethoven.CoreServer do
   # Specifically when a node is new, or goes from `:offline` to `:online`.
   # Offline changes happen via `:nodedown` + `handle_info/2`
   @impl true
-  def handle_info({:mnesia_table_event, msg}, {_mode, followers}) do
-    {nodeName, status, mode} =
-      msg
-      |> mnesia_notify()
-      |> case do
-        # node on tracker is now `:online`
-        {nodeName, :online} ->
-          # set server to `:clustered`
-          # monitor node
-          true = Node.monitor(nodeName, true)
-          {nodeName, :online, :clustered}
+  def handle_info({:mnesia_table_event, msg}, {mode, followers}) do
+    msg
+    |> mnesia_notify()
+    |> case do
+      # node on tracker is now `:online`
+      {nodeName, :online} ->
+        # set server to `:clustered`
+        # monitor node
+        true = Node.monitor(nodeName, true)
+        {nodeName, :online, :clustered}
 
-        # Node goes `:offline` -> do nothing
-        {nodeName, :offline} ->
-          # unmonitor node
-          true = Node.monitor(nodeName, false)
-          #
-          # determine if we need to become :standalone
-          mode =
-            if Node.list() == [] do
-              # No more other nodes -> standalone
-              :standalone
-            else
-              # Other nodes still available -> :clustered
-              :clustered
-            end
+      # Node goes `:offline` -> do nothing
+      {nodeName, :offline} ->
+        # unmonitor node
+        true = Node.monitor(nodeName, false)
+        #
+        # determine if we need to become :standalone
+        mode =
+          if Node.list() == [] do
+            # No more other nodes -> standalone
+            :standalone
+          else
+            # Other nodes still available -> :clustered
+            :clustered
+          end
 
-          #
-          {nodeName, :offline, mode}
-      end
+        #
+        {nodeName, :offline, mode}
 
+      # bubble up :noop
+      :noop ->
+        :noop
+    end
     #
-    Logger.debug(
-      operation: :mnesia_table_event,
-      affected_node: nodeName,
-      node_status: status,
-      mode: mode
-    )
+    |> case do
+      # Nothing we are tracking
+      :noop ->
+        {:noreply, {mode, followers}}
 
-    # Alert followers
-    :ok = alert_followers(nodeName, status, followers)
+      # alert followers
+      {nodeName, status, mode} ->
+        #
+        Logger.debug(
+          operation: :mnesia_table_event,
+          affected_node: nodeName,
+          node_status: status,
+          mode: mode
+        )
 
-    #
-    {:noreply, {mode, followers}}
+        # Alert followers
+        :ok = alert_followers(nodeName, status, followers)
+
+        #
+        {:noreply, {mode, followers}}
+    end
   end
 
   #
@@ -293,26 +301,6 @@ defmodule Beethoven.CoreServer do
   #
   # Internal Lib functions
   #
-
-  #
-  #
-  # Downlevel servers
-  # Servers *must* be OTP compliant.
-  @spec downlevel_servers() :: list(module())
-  defp downlevel_servers() do
-    [
-      Beethoven.RoleServer
-    ]
-  end
-
-  #
-  #
-  # Starts downlevel servers
-  @spec start_downlevel_servers() :: :ok
-  defp start_downlevel_servers() do
-    downlevel_servers()
-    |> Enum.each(&({:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, &1)))
-  end
 
   #
   #
@@ -377,7 +365,7 @@ defmodule Beethoven.CoreServer do
 
   #
   #
-  @spec mnesia_notify(trackerEvent()) :: {node(), nodeStatus()}
+  @spec mnesia_notify(trackerEvent()) :: {node(), nodeStatus()} | :noop
   defp mnesia_notify(msg) do
     msg
     |> case do
@@ -395,6 +383,10 @@ defmodule Beethoven.CoreServer do
       {:write, _, {_, nodeName, :offline, _}, [{_, nodeName, :online, _}], _}
       when nodeName != node() ->
         {nodeName, :offline}
+
+      # catch all
+      _ ->
+        :noop
     end
   end
 

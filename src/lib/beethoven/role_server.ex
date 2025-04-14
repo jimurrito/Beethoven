@@ -4,10 +4,27 @@ defmodule Beethoven.RoleServer do
   Leveraging the Mnesia integration with `DistrServer`,
   these processes will be ephemeral and keep all state within Mnesia.
   """
+  require Logger
   alias Beethoven.DistrServer
   alias Beethoven.RoleUtils
 
   use DistrServer
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # DistrServer callback functions
+  #
+
+  #
+  #
+  @doc """
+  Supervisor Entry point.
+  """
+  @spec start_link(any()) :: GenServer.on_start()
+  def start_link(init_args \\ []) do
+    DistrServer.start_link(__MODULE__, init_args, name: __MODULE__)
+  end
 
   #
   #
@@ -26,19 +43,19 @@ defmodule Beethoven.RoleServer do
   #
   # Setup table with all the roles defined in `config.exs`
   @impl true
-  def create_action(tableConfig) do
+  def create_action({tableName, _columns, _indexes, _dataType, _copyType}) do
     # fn to setup table with initial data
     {:atomic, :ok} =
       fn ->
         # Lock entire table to ensure no other transaction could jump in.
-        _ = :mnesia.lock_table(tableConfig.tableName, :read)
+        # _ = :mnesia.lock_table(tableConfig.tableName, :read)
         # Get Roles from config
         RoleUtils.get_role_config()
         |> Enum.each(
           # Add roles to table
           fn {name, {_mod, _args, inst}} ->
             # {MNESIA_TABLE, role_name, count, assigned, workers, last_changed}
-            :mnesia.write({tableConfig.tableName, name, inst, 0, [], DateTime.now!("Etc/UTC")})
+            :mnesia.write({tableName, name, inst, 0, [], DateTime.now!("Etc/UTC")})
           end
         )
       end
@@ -51,6 +68,8 @@ defmodule Beethoven.RoleServer do
   #
   @impl true
   def entry_point(_var) do
+    Logger.info(status: :startup)
+    Logger.info(status: :startup_complete)
     {:ok, :ok}
   end
 end

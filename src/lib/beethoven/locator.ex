@@ -10,9 +10,14 @@ defmodule Beethoven.Locator do
 
   # `:seeking`
   Service will start up and perform a seeking operation.
-  The locator will start the Core service once either is met:
-  - (1). Seeking attempts have become exhausted. [`:standalone`]
-  - (2). A listener server is found. [`:clustered`]
+  The locator will start the Core service(s) once either is met:
+  - (1). Seeking attempts have become exhausted. [CoreServer <- `:standalone`]
+  - (2). A listener server is found. [CoreServer <- `:clustered`]
+
+  > Core Services is defined as:
+  > - `Beethoven.CoreServer`
+  > - `Beethoven.RoleServer`
+  > - `Beethoven.BeaconServer`
 
   ---
 
@@ -55,6 +60,7 @@ defmodule Beethoven.Locator do
   # Callback for process start
   @impl true
   def init(_init_arg) do
+    Logger.info(status: :startup)
     # Get list of hosts in defined IP range
     hostIPs = Ipv4.get_host_network_addresses()
     # get Listener port
@@ -62,7 +68,7 @@ defmodule Beethoven.Locator do
     # Start seek process
     :ok = GenServer.cast(__MODULE__, :seek)
     #
-    Logger.info(status: :startup, port: port, host_ips_found: length(hostIPs))
+    Logger.info(status: :startup_complete, port: port, host_ips_found: length(hostIPs))
     #
     # 3 => max attempts
     {:ok, {:seek, hostIPs, port, 3}}
@@ -170,8 +176,14 @@ defmodule Beethoven.Locator do
   @impl true
   def handle_continue({:start_core, mode}, state) do
     # Start CoreServer under RootSupervisor
-    {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, {Beethoven.CoreServer, [mode]})
     Logger.info(operation: :started_core, mode: mode)
+    {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, {Beethoven.CoreServer, mode})
+
+    #
+    # Start RoleServer
+    Logger.info(operation: :started_role_server)
+    {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, Beethoven.RoleServer)
+    #
     {:noreply, state}
   end
 
