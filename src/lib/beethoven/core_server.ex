@@ -36,7 +36,7 @@ defmodule Beethoven.CoreServer do
   #
 
   @doc """
-  Callback needed for downlevel services to streamline receiving node down updates.
+  Callback needed for downlevel services to streamline receiving node down updates.\n
   **Required if you follow core server for cluster updates via `alert_me/1`**
   """
   @callback node_update(nodeName :: node(), status :: nodeStatus()) :: :ok

@@ -5,10 +5,48 @@ defmodule Beethoven.RoleServer do
   these processes will be ephemeral and keep all state within Mnesia.
   """
   require Logger
+  alias Beethoven.Utils
+  alias Beethoven.CoreServer
   alias Beethoven.DistrServer
   alias Beethoven.RoleUtils
 
   use DistrServer
+  @behaviour CoreServer
+
+  #
+  #
+  # CoreServer behavior, node_update/2 callback
+  # Called by CoreServer when a node changes state or gets added to the cluster
+  @impl true
+  def node_update(nodeName, status) do
+    DistrServer.cast(__MODULE__, {:node_update, nodeName, status})
+  end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Internal Types
+  #
+
+  #
+  @typedoc """
+  Alias for `atom()`.
+  """
+  @type roleName :: atom()
+
+  #
+  @typedoc """
+  Simplified type for tracker records.
+  Just excludes the table name from the record tuple.
+  """
+  @type roleRecord() ::
+          {roleName :: atom(), roleModule :: module(), args :: any(), instances :: integer()}
+  #
+  @typedoc """
+  List of `roleRecord()` objects.
+  """
+  @type roleRecords() :: list(roleRecord())
+  #
 
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -36,7 +74,7 @@ defmodule Beethoven.RoleServer do
       indexes: [:role],
       dataType: :ordered_set,
       copyType: :multi,
-      subscribe?: true
+      subscribe?: false # Unsure if we need this right now.
     }
   end
 
@@ -48,7 +86,8 @@ defmodule Beethoven.RoleServer do
     {:atomic, :ok} =
       fn ->
         # Lock entire table to ensure no other transaction could jump in.
-        # _ = :mnesia.lock_table(tableConfig.tableName, :read)
+        _ = :mnesia.lock_table(tableName, :read)
+        _ = :mnesia.lock_table(tableName, :write)
         # Get Roles from config
         RoleUtils.get_role_config()
         |> Enum.each(
@@ -69,7 +108,237 @@ defmodule Beethoven.RoleServer do
   @impl true
   def entry_point(_var) do
     Logger.info(status: :startup)
+    # get roles from config.exs
+    role_map = RoleUtils.get_role_config()
+    #
+    # Start DynamicSupervisor
+    {:ok, _pid} = DynamicSupervisor.start_link(name: Beethoven.RoleSupervisor)
+    #
+    # Start assign loop
+    :ok = start_assign()
+    #
     Logger.info(status: :startup_complete)
-    {:ok, :ok}
+    {:ok, role_map}
   end
+
+  #
+  #
+  # handles assign cast.
+  # When triggered, RoleServer will attempt to assign itself work after a backoff.
+  # Use `start_assign/0` for casts to this callback.
+  @impl true
+  def handle_cast(:assign, role_map) do
+    Logger.info(operation: :assign, status: :startup)
+    # backoff (150 - 2250) Milliseconds
+    :ok = Utils.backoff_n(__MODULE__, 15, 1, 150)
+    # Assign self a job (if applicable)
+    assign()
+    # create role on server
+    |> case do
+      # No work
+      :noop ->
+        Logger.info(operation: :assign, status: :no_work)
+        {:noreply, role_map}
+
+      # heres a job!
+      {:ok, roleName} ->
+        Logger.info(operation: :assign, status: :found_work, work: roleName)
+        # Start role
+        :ok = start_role(roleName, role_map)
+        # Restart assign loop
+        :ok = start_assign()
+        Logger.info(operation: :assign, status: :ok, work: roleName)
+        {:noreply, role_map}
+    end
+  end
+
+  #
+  #
+  # [Callback] handles node_update cast from CoreServer
+  # triggered when a node in the cluster changes state.
+  @impl true
+  def handle_cast({:node_update, nodeName, status}, state) do
+    Logger.info(operation: :node_update, status: :startup, node: nodeName, status: status)
+    #
+    case status do
+      # Node has come online -> ignore
+      :online ->
+        #
+        Logger.info(operation: :node_update, status: :ok, node: nodeName, status: status)
+
+      # Node has gone offline -> prune node
+      :offline ->
+        # backoff (150 - 2250) Milliseconds
+        Utils.backoff_n(__MODULE__, 15, 1, 150)
+        # get DistrServer Mnesia config
+        config = config()
+        # remove node from table
+        :ok = prune_node(config.tableName, nodeName)
+        # Trigger assign
+        :ok = start_assign()
+        #
+        Logger.info(operation: :node_update, status: :pruned, node: nodeName, status: status)
+    end
+
+    #
+    #
+    {:noreply, state}
+  end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Client functions
+  #
+
+  #
+  #
+  @doc """
+  Starts assignment job on the RoleServer.
+  """
+  @spec start_assign() :: :ok
+  def start_assign() do
+    DistrServer.cast(__MODULE__, :assign)
+  end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Internal Lib functions
+  #
+
+  #
+  #
+  # Start a role under the dynamic role supervisor
+  # role_name, {mod, args, inst}
+  @spec start_role(roleName(), RoleUtils.roleMap()) :: :ok
+  defp start_role(roleName, roleMap) do
+    #
+    IO.inspect({:DEBUG, roleMap, roleName})
+    # Parse role info from state
+    {mod, args, _inst} = Map.get(roleMap, roleName)
+    # Add role to role supervisor
+    {:ok, _pid} = DynamicSupervisor.start_child(Beethoven.RoleSupervisor, {mod, args})
+    #
+    :ok
+  end
+
+  #
+  #
+  # Assignment function
+  @spec assign() :: {:ok, roleName()} | :noop
+  defp assign() do
+    # get DistrServer Mnesia config
+    config = config()
+    #
+    fn ->
+      # Acquire locks
+      _ = :mnesia.lock_table(config.tableName, :read)
+      _ = :mnesia.lock_table(config.tableName, :write)
+      # Find work on the table - pick random work
+      find_work(config.tableName)
+      |> case do
+        # No work found
+        [] ->
+          :noop
+
+        # work found
+        work ->
+          # pick random role, expand object
+          [role_name, count, assigned, workers, _last_changed] = work |> Enum.random()
+          # increment assigned and add self to workers
+          :ok =
+            :mnesia.write({
+              config.tableName,
+              role_name,
+              count,
+              assigned + 1,
+              [node() | workers],
+              DateTime.now!("Etc/UTC")
+            })
+
+          # return role
+          {:ok, role_name}
+      end
+
+      #
+    end
+    #
+    |> :mnesia.transaction()
+    # Unwrap {:atomic, roleName() | :noop}
+    |> elem(1)
+  end
+
+  #
+  #
+  # Finds jobs that are not completely fulfilled yet.
+  @spec find_work(atom()) :: roleRecords()
+  defp find_work(tableName) do
+    fn ->
+      :mnesia.select(tableName, [
+        {
+          {tableName, :"$1", :"$2", :"$3", :"$4", :"$5"},
+          # Finds records where :count is larger then :assigned.
+          [{:>, :"$2", :"$3"}],
+          [:"$$"]
+        }
+      ])
+    end
+    |> :mnesia.transaction()
+    # Unwrap {:atomic, records}
+    |> elem(1)
+    |> Enum.filter(
+      # Filter out roles that we already host
+      fn [_role_name, _count, _assigned, workers, _last_changed] ->
+        not Enum.member?(workers, node())
+      end
+    )
+  end
+
+  #
+  #
+  # Clears work from a given node
+  @spec prune_node(atom(), node()) :: :ok
+  defp prune_node(tableName, nodeName) do
+    # transaction function
+    fn ->
+      # Acquire locks
+      _ = :mnesia.lock_table(tableName, :read)
+      _ = :mnesia.lock_table(tableName, :write)
+      # iterates all rows and removes the downed node.
+      :mnesia.foldl(
+        fn record, _acc -> clear_node(record, nodeName) end,
+        :ok,
+        tableName
+      )
+    end
+    |> :mnesia.transaction()
+    |> elem(1)
+  end
+
+  #
+  #
+  # Clears node from role records.
+  @spec clear_node({atom(), roleName(), integer(), integer(), list(node()), DateTime}, node()) ::
+          :ok
+  defp clear_node({tableName, role, count, assigned, workers, _last_changed}, nodeName) do
+    if Enum.member?(workers, nodeName) do
+      :ok =
+        :mnesia.write({
+          tableName,
+          role,
+          count,
+          assigned - 1,
+          List.delete(workers, nodeName),
+          DateTime.now!("Etc/UTC")
+        })
+    end
+
+    # return :ok
+    :ok
+    #
+  end
+
+  #
+  #
 end

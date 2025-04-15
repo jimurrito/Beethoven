@@ -91,7 +91,7 @@ defmodule Beethoven.Locator do
   @impl true
   def handle_continue({:seek, _ips, _port, att, max}, {_mode, hostIPs, port, _max})
       when att > max do
-    Logger.warning(status: :out_of_attempts, attempts: att, max_attempts: max)
+    Logger.warning(status: :out_of_attempts, attempt_num: att, max_attempts: max)
     # Start Core in `:standalone` mode
     {:noreply, {:watching, hostIPs, port, max}, {:continue, {:start_core, :standalone}}}
   end
