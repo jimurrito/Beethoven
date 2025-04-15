@@ -86,8 +86,8 @@ defmodule Beethoven.RoleServer do
     {:atomic, :ok} =
       fn ->
         # Lock entire table to ensure no other transaction could jump in.
-        _ = :mnesia.lock_table(tableName, :read)
-        _ = :mnesia.lock_table(tableName, :write)
+        #_ = :mnesia.lock_table(tableName, :read)
+        #_ = :mnesia.lock_table(tableName, :write)
         # Get Roles from config
         RoleUtils.get_role_config()
         |> Enum.each(
@@ -233,8 +233,8 @@ defmodule Beethoven.RoleServer do
     #
     fn ->
       # Acquire locks
-      _ = :mnesia.lock_table(config.tableName, :read)
-      _ = :mnesia.lock_table(config.tableName, :write)
+      #_ = :mnesia.lock_table(config.tableName, :read)
+      #_ = :mnesia.lock_table(config.tableName, :write)
       # Find work on the table - pick random work
       find_work(config.tableName)
       |> case do
@@ -264,7 +264,7 @@ defmodule Beethoven.RoleServer do
       #
     end
     #
-    |> :mnesia.transaction()
+    |> :mnesia.sync_transaction()
     # Unwrap {:atomic, roleName() | :noop}
     |> elem(1)
   end
@@ -284,7 +284,7 @@ defmodule Beethoven.RoleServer do
         }
       ])
     end
-    |> :mnesia.transaction()
+    |> :mnesia.sync_transaction()
     # Unwrap {:atomic, records}
     |> elem(1)
     |> Enum.filter(
@@ -303,8 +303,8 @@ defmodule Beethoven.RoleServer do
     # transaction function
     fn ->
       # Acquire locks
-      _ = :mnesia.lock_table(tableName, :read)
-      _ = :mnesia.lock_table(tableName, :write)
+      #_ = :mnesia.lock_table(tableName, :read)
+      #_ = :mnesia.lock_table(tableName, :write)
       # iterates all rows and removes the downed node.
       :mnesia.foldl(
         fn record, _acc -> clear_node(record, nodeName) end,
@@ -312,7 +312,7 @@ defmodule Beethoven.RoleServer do
         tableName
       )
     end
-    |> :mnesia.transaction()
+    |> :mnesia.sync_transaction()
     |> elem(1)
   end
 

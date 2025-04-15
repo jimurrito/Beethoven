@@ -1,6 +1,8 @@
 defmodule Beethoven.Locator do
   @moduledoc """
   GenServer to handle searching for other Beethoven nodes or clusters.
+  This Locator server's goal is to find a BeaconServer on another node.
+  Once connected, they will communicate with each other via the `Beethoven.SeekChat` module.
 
   # Modes
   - `:seeking` -> Currently Searching for listening servers.
@@ -178,6 +180,12 @@ defmodule Beethoven.Locator do
     # Start CoreServer under RootSupervisor
     Logger.info(operation: :started_core, mode: mode)
     {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, {Beethoven.CoreServer, mode})
+
+    #
+    # Start BeaconServer
+    Logger.info(operation: :started_beacon_server)
+    # uses `_result` instead of `{:ok, _pid}` as this service may fail to boot. that is OK
+    _result = Supervisor.start_child(Beethoven.RootSupervisor, Beethoven.BeaconServer)
 
     #
     # Start RoleServer
