@@ -23,6 +23,7 @@ defmodule Beethoven.CoreServer do
 
   """
 
+  alias Beethoven.BeaconServer
   alias Beethoven.Utils
   alias Beethoven.MnesiaTools
   alias Beethoven.DistrServer
@@ -129,6 +130,9 @@ defmodule Beethoven.CoreServer do
     # Add self to tracker
     :ok = add_self(tableConfig)
     #
+    # Monitor all nodes in cluster
+    :ok = Enum.each(Node.list(), &(true = Node.monitor(&1, true)))
+    #
     {tableName, _, _, _, _} = tableConfig
     #
     Logger.info(status: :startup_complete, table: tableName, current_mode: mode)
@@ -189,11 +193,12 @@ defmodule Beethoven.CoreServer do
 
     {tableName, _columns, _indexes, _dataType, _copyType} =
       config() |> DistrServer.distr_to_table_conf()
-
     # random backoff to reduce noise on Mnesia (15ms - 750ms)
     :ok = Utils.backoff_n(__MODULE__, 50, 1, 15)
     # Attempt to update Mnesia
     :ok = update_node(tableName, nodeName, :offline)
+    # Trigger recover attempt on BeaconServer
+    :ok = BeaconServer.attempt_recover()
     #
     {:noreply, {mode, followers}}
   end

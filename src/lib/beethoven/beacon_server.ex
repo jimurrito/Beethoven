@@ -47,7 +47,8 @@ defmodule Beethoven.BeaconServer do
     #
     Logger.info(status: :startup)
     # Start Task manager for requests
-    {:ok, _taskSup_pid} = Task.Supervisor.start_link(name: BTSup)
+    # Ignore results to let it fail if we are re-running init/1
+    _result = Task.Supervisor.start_link(name: BTSup)
     #
     # pull port from env file. Default to 33000 otherwise
     listener_port = Utils.get_app_env(:listener_port, 33000)
@@ -72,7 +73,7 @@ defmodule Beethoven.BeaconServer do
       # Failed in anyway
       {:error, e} ->
         Logger.warning(status: :beacon_socket_failed, reason: e, port: listener_port)
-        {:error, e}
+        {:ok, {:error, e}}
     end
   end
 

@@ -136,7 +136,7 @@ defmodule Beethoven.Locator do
   # Finishes connection to join cluster and moves to watching mode.
   @impl true
   def handle_continue({:connect, server_socket}, {:seek, hostIPs, port, max}) do
-    Logger.info(operation: :connect_attempt)
+    Logger.info(operation: :join_attempt, socket: server_socket)
     # Create a message, then serializes it into a binary
     msg = SeekChat.new_msg(:seeking, :join) |> SeekChat.encode()
     # Sends request to join to the listener server
@@ -200,8 +200,6 @@ defmodule Beethoven.Locator do
   #
   # Internal Lib functions
   #
-
-
 
   #
   #
