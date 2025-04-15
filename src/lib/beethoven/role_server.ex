@@ -74,7 +74,8 @@ defmodule Beethoven.RoleServer do
       indexes: [:role],
       dataType: :ordered_set,
       copyType: :multi,
-      subscribe?: false # Unsure if we need this right now.
+      # Unsure if we need this right now.
+      subscribe?: false
     }
   end
 
@@ -85,9 +86,6 @@ defmodule Beethoven.RoleServer do
     # fn to setup table with initial data
     {:atomic, :ok} =
       fn ->
-        # Lock entire table to ensure no other transaction could jump in.
-        #_ = :mnesia.lock_table(tableName, :read)
-        #_ = :mnesia.lock_table(tableName, :write)
         # Get Roles from config
         RoleUtils.get_role_config()
         |> Enum.each(
@@ -110,10 +108,10 @@ defmodule Beethoven.RoleServer do
     Logger.info(status: :startup)
     # get roles from config.exs
     role_map = RoleUtils.get_role_config()
-    #
     # Start DynamicSupervisor
     {:ok, _pid} = DynamicSupervisor.start_link(name: Beethoven.RoleSupervisor)
-    #
+    # Subscribe to node change updates from CoreServer
+    :ok = CoreServer.alert_me(__MODULE__)
     # Start assign loop
     :ok = start_assign()
     #
@@ -209,6 +207,17 @@ defmodule Beethoven.RoleServer do
 
   #
   #
+  @doc """
+  Manually copy the tracking DB to the node.
+  """
+  @spec copy_tracker() :: :ok | :already_exists | {:error, any()}
+  def copy_tracker() do
+    config = config()
+    copy_table(config.tableName)
+  end
+
+  #
+  #
   # Start a role under the dynamic role supervisor
   # role_name, {mod, args, inst}
   @spec start_role(roleName(), RoleUtils.roleMap()) :: :ok
@@ -233,8 +242,8 @@ defmodule Beethoven.RoleServer do
     #
     fn ->
       # Acquire locks
-      #_ = :mnesia.lock_table(config.tableName, :read)
-      #_ = :mnesia.lock_table(config.tableName, :write)
+      _ = :mnesia.lock_table(config.tableName, :read)
+      _ = :mnesia.lock_table(config.tableName, :write)
       # Find work on the table - pick random work
       find_work(config.tableName)
       |> case do
@@ -264,7 +273,7 @@ defmodule Beethoven.RoleServer do
       #
     end
     #
-    |> :mnesia.sync_transaction()
+    |> :mnesia.transaction()
     # Unwrap {:atomic, roleName() | :noop}
     |> elem(1)
   end
@@ -284,7 +293,7 @@ defmodule Beethoven.RoleServer do
         }
       ])
     end
-    |> :mnesia.sync_transaction()
+    |> :mnesia.transaction()
     # Unwrap {:atomic, records}
     |> elem(1)
     |> Enum.filter(
@@ -303,8 +312,8 @@ defmodule Beethoven.RoleServer do
     # transaction function
     fn ->
       # Acquire locks
-      #_ = :mnesia.lock_table(tableName, :read)
-      #_ = :mnesia.lock_table(tableName, :write)
+      _ = :mnesia.lock_table(tableName, :read)
+      _ = :mnesia.lock_table(tableName, :write)
       # iterates all rows and removes the downed node.
       :mnesia.foldl(
         fn record, _acc -> clear_node(record, nodeName) end,
@@ -312,7 +321,7 @@ defmodule Beethoven.RoleServer do
         tableName
       )
     end
-    |> :mnesia.sync_transaction()
+    |> :mnesia.transaction()
     |> elem(1)
   end
 

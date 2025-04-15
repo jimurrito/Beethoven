@@ -131,7 +131,7 @@ defmodule Beethoven.CoreServer do
     #
     {tableName, _, _, _, _} = tableConfig
     #
-    Logger.info(status: :startup_complete, table: tableName, mode: mode)
+    Logger.info(status: :startup_complete, table: tableName, current_mode: mode)
     #
     # Return mode + empty list of alert followers.
     {:ok, {mode, []}}
@@ -148,7 +148,7 @@ defmodule Beethoven.CoreServer do
 
     Logger.info(operation: :alert_me, new_follower: nodeName, follower_count: length(followers))
     # Add caller node name to followers list
-    {:noreply, {mode, [nodeName | followers]}}
+    {:noreply, {mode, followers}}
   end
 
   #
@@ -160,7 +160,7 @@ defmodule Beethoven.CoreServer do
   # Use `get_mode/1` for external calls.
   @impl true
   def handle_call(:get_mode, _from, {mode, followers}) do
-    Logger.debug(operation: :get_mode, mode: mode)
+    Logger.debug(operation: :get_mode, current_mode: mode)
     {:reply, mode, {mode, followers}}
   end
 
@@ -170,9 +170,11 @@ defmodule Beethoven.CoreServer do
   # Use `new_node/1` for external calls.
   @impl true
   def handle_call({:add_node, nodeName}, _from, {mode, followers}) do
-    Logger.info(operation: :add_node, new_node: nodeName, mode: mode)
+    Logger.info(operation: :add_node, new_node: nodeName, current_mode: mode)
     tableConfig = config() |> DistrServer.distr_to_table_conf()
     :ok = add_node(tableConfig, nodeName)
+    # add node to Mnesia cluster config
+    :ok = add_node_to_mnesia(nodeName)
     {:reply, :ok, {mode, followers}}
   end
 
@@ -183,7 +185,7 @@ defmodule Beethoven.CoreServer do
   # Attempts to update the node in Mnesia
   @impl true
   def handle_info({:nodedown, nodeName}, {mode, followers}) do
-    Logger.warning(operation: :nodedown, affected_node: nodeName, mode: mode)
+    Logger.warning(operation: :nodedown, affected_node: nodeName, current_mode: mode)
 
     {tableName, _columns, _indexes, _dataType, _copyType} =
       config() |> DistrServer.distr_to_table_conf()
@@ -248,7 +250,7 @@ defmodule Beethoven.CoreServer do
           operation: :mnesia_table_event,
           affected_node: nodeName,
           node_status: status,
-          mode: mode
+          current_mode: mode
         )
 
         # Alert followers
@@ -264,6 +266,17 @@ defmodule Beethoven.CoreServer do
   #
   # Client functions
   #
+
+  #
+  #
+  @doc """
+  Adds a node to Mnesia cluster
+  """
+  @spec add_node_to_mnesia(node()) :: :ok
+  def add_node_to_mnesia(nodeName) do
+    _result = :mnesia.change_config(:extra_db_nodes, [nodeName])
+    :ok
+  end
 
   #
   #
