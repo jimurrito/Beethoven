@@ -34,7 +34,7 @@ defmodule Beethoven.Az do
             |> Lib.get_AzRegion()
 
           Logger.info("Node operating in Azure region (#{region}).")
-          region
+          state
 
         # Not in azure
         {:error, :timeout} ->
