@@ -31,6 +31,7 @@ defmodule Beethoven.Locator do
 
   use GenServer
   require Logger
+  alias Beethoven.Az
   alias Beethoven.Utils
   alias Beethoven.Ipv4
   alias Beethoven.SeekChat
@@ -63,8 +64,25 @@ defmodule Beethoven.Locator do
   @impl true
   def init(_init_arg) do
     Logger.info(status: :startup)
-    # Get list of hosts in defined IP range
-    hostIPs = Ipv4.get_host_network_addresses()
+    use_azure? = Utils.get_app_env(:use_az_net, false)
+    az_region = Az.get_AzRegion()
+    # Check if we should use Azure
+    hostIPs =
+      cond do
+        # We be Azure aware + we are in Azure
+        use_azure? and az_region != :no_azure ->
+          {net, mask} = Az.get_AzSubnet()
+          Logger.info(use_azure?: use_azure?, network: {net, mask})
+          Ipv4.get_host_network_addresses(net, mask)
+
+        # everything else, use config
+        true ->
+          # Get list of hosts in defined IP range
+          Ipv4.get_host_network_addresses()
+      end
+
+    #
+
     # get Listener port
     port = Utils.get_app_env(:listener_port, 33000)
     # Start seek process
