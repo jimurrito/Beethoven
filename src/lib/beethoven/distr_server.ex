@@ -67,7 +67,7 @@ defmodule Beethoven.DistrServer do
   **-Callback required-**\n
   Callback that is triggered when the process creates the Mnesia Table for the cluster.
   """
-  @callback create_action(MnesiaTools.tableConfig()) :: :ok
+  @callback create_action(tableConfig :: MnesiaTools.tableConfig()) :: :ok
   #
   #
   # MASKED CALL BACKS

@@ -71,7 +71,7 @@ defmodule Beethoven.RoleServer do
     %{
       tableName: __MODULE__.Tracker,
       columns: [:role, :count, :assigned, :workers, :last_change],
-      indexes: [:role],
+      indexes: [],
       dataType: :ordered_set,
       copyType: :multi,
       # Unsure if we need this right now.

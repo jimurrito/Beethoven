@@ -102,7 +102,7 @@ defmodule Beethoven.CoreServer do
     %{
       tableName: __MODULE__.Tracker,
       columns: [:node, :status, :last_change],
-      indexes: [:node],
+      indexes: [],
       dataType: :ordered_set,
       copyType: :multi,
       subscribe?: true

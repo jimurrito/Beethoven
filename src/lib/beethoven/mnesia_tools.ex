@@ -31,18 +31,6 @@ defmodule Beethoven.MnesiaTools do
   #
   #
   @doc """
-
-  """
-  @spec apply_indexes(tableConfig()) :: :ok
-  def apply_indexes({tableName, _columns, indexes, _type, _copy}) do
-    indexes
-    |> Enum.each(&:mnesia.add_table_index(tableName, &1))
-  end
-
-  #
-  #
-  #
-  @doc """
   Creates table if it does not already exist.
   Applies indexes on creation.
   Will
@@ -50,7 +38,7 @@ defmodule Beethoven.MnesiaTools do
   @spec create_table_ifnot_exist(tableConfig()) :: :ok | :already_exists
   def create_table_ifnot_exist(tableConfig) do
     #
-    {tableName, columns, _indexes, type, copy_type} = tableConfig
+    {tableName, columns, indexes, type, copy_type} = tableConfig
     #
     ram_copies =
       case copy_type do
@@ -69,11 +57,13 @@ defmodule Beethoven.MnesiaTools do
             # Sets ram copies for ALL existing nodes in the cluster.
             ram_copies: ram_copies,
             # This setting orders the table by order the nodes joined the cluster.
-            type: type
+            type: type,
+            # indexes
+            index: indexes
           )
 
-        # Applies indexes
-        apply_indexes(tableConfig)
+        :ok
+
         #
       else
         # if multi, attempt to copy table to memory
