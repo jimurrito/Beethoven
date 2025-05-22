@@ -31,7 +31,7 @@ defmodule Beethoven do
   @type nodeStatusMap() :: %{
           node: node(),
           status: CoreServer.nodeStatus(),
-          last_change: DateTime
+          last_change: DateTime.t()
         }
 
   #

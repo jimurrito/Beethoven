@@ -68,7 +68,7 @@ defmodule Beethoven.CoreServer do
   A single row in the CoreServer tracker.
   """
   @type trackerRow() ::
-          {mod :: module(), nodeName :: node(), status :: nodeStatus(), lastChange :: DateTime}
+          {mod :: module(), nodeName :: node(), status :: nodeStatus(), lastChange :: DateTime.t()}
 
   #
   #
