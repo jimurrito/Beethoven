@@ -17,9 +17,9 @@ defmodule Beethoven.CoreServer do
   Using `alert_me/1` from a local client, you can tell the CoreServer to call you back when there is a change to a cluster node.
   Ignores changes to itself, only delivers updates of other nodes.
 
-  To use this, the caller *must* implement the `CoreServer` behavior and callback `node_down/2`.
+  To use this, the caller *must* implement the `CoreServer` behavior and callback `node_update/2`.
   Once a change occurs, the CoreServer will call the callback function for the following module/process.
-  `node_down/2` should contain the logic needed when a node changes state.
+  `node_update/2` should contain the logic needed when a node changes state.
 
   """
 

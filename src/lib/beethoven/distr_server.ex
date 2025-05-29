@@ -90,6 +90,15 @@ defmodule Beethoven.DistrServer do
       use GenServer
       # Imports mnesiaTools
       import Beethoven.MnesiaTools
+
+      #
+      # this fn fixes a bug with the LanguageServer seeing
+      # subscribe? as `dynamic(boolean())`
+      @spec _remove_dynamic(any()) :: boolean()
+      defp _remove_dynamic(t) do
+        t.subscribe? == true
+      end
+
       #
       @impl true
       def init(init_arg) do
