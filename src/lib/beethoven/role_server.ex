@@ -10,8 +10,7 @@ defmodule Beethoven.RoleServer do
   alias Beethoven.DistrServer
   alias Beethoven.RoleUtils
 
-  use DistrServer
-  @behaviour CoreServer
+  use DistrServer, subscribe?: false
 
   #
   #
@@ -73,9 +72,7 @@ defmodule Beethoven.RoleServer do
       columns: [:role, :count, :assigned, :workers, :last_change],
       indexes: [],
       dataType: :ordered_set,
-      copyType: :multi,
-      # Unsure if we need this right now.
-      subscribe?: false
+      copyType: :multi
     }
   end
 

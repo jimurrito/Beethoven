@@ -33,15 +33,13 @@ defmodule Beethoven.DistrServer do
   but make read operations consistent regardless of the table's size.
   - `:dataType` -> Data type for the Mnesia table.
   - `:copyType` -> How the new table will be copied across the Beethoven cluster.
-  - `:subscribe?` -> Whether to subscribe to Mnesia table changes or not.
   """
   @type distrConfig() :: %{
           tableName: atom(),
           columns: list(atom()),
           indexes: list(atom()),
           dataType: atom(),
-          copyType: copyTypes(),
-          subscribe?: boolean()
+          copyType: copyTypes()
         }
 
   #
@@ -80,25 +78,48 @@ defmodule Beethoven.DistrServer do
   #
   #
   @doc false
-  defmacro __using__(_opts) do
+  defmacro __using__(subscribe?: subscribe) do
+    #
     #
     quote do
       # force this modules behavior
-      # Commented out until callbacks
       @behaviour Beethoven.DistrServer
+      # Add CoreServer Callback for node down
+      @behaviour Beethoven.CoreServer
       # Imports GenServer behaviors
       use GenServer
       # Imports mnesiaTools
       import Beethoven.MnesiaTools
+      require Logger
 
       #
-      # this fn fixes a bug with the LanguageServer seeing
-      # subscribe? as `dynamic(boolean())`
-      @spec _remove_dynamic(any()) :: boolean()
-      defp _remove_dynamic(t) do
-        t.subscribe? == true
+      #
+      #
+      def node_update(nodeName, status) do
+        Logger.error(
+          "The DistrServer invoked called back `node_update/2` is not declared for this module (#{__MODULE__}). Please add this call back before using `alert_me/1` again."
+        )
       end
 
+      defoverridable node_update: 2
+
+      #
+      #
+      #
+      def config() do
+        %{
+          tableName: __MODULE__.Tracker,
+          columns: [:col0, :col1, :col2],
+          indexes: [],
+          dataType: :set,
+          copyType: :local
+        }
+      end
+
+      defoverridable config: 0
+
+      #
+      #
       #
       @impl true
       def init(init_arg) do
@@ -108,8 +129,7 @@ defmodule Beethoven.DistrServer do
           columns: columns,
           indexes: indexes,
           dataType: dataType,
-          copyType: copyType,
-          subscribe?: subscribe?
+          copyType: copyType
         } = config()
 
         # Create tableConfig type
@@ -127,9 +147,13 @@ defmodule Beethoven.DistrServer do
 
         # Subscribes to table changes (if applicable)
         # Must copy to memory if you want to subscribe.
-        if subscribe? do
-          _result = copy_table(tableName)
-          {:ok, _node} = subscribe(tableName)
+        unquote do
+          if subscribe do
+            quote do
+              _result = copy_table(tableName)
+              {:ok, _node} = subscribe(tableName)
+            end
+          end
         end
 
         # execute user defined entry point
@@ -192,8 +216,7 @@ defmodule Beethoven.DistrServer do
       columns: columns,
       indexes: indexes,
       dataType: dataType,
-      copyType: copyType,
-      subscribe?: _subscribe
+      copyType: copyType
     } = distrConfig
 
     #

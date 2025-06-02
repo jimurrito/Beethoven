@@ -5,7 +5,7 @@ defmodule Beethoven.TestdRole do
 
   require Logger
   alias Beethoven.DistrServer
-  use DistrServer
+  use DistrServer, subscribe?: true
 
   #
   #
@@ -16,8 +16,7 @@ defmodule Beethoven.TestdRole do
       columns: [:name1, :name2],
       indexes: [:name1],
       dataType: :ordered_set,
-      copyType: :local,
-      subscribe?: true
+      copyType: :local
     }
   end
 

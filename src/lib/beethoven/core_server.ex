@@ -29,7 +29,7 @@ defmodule Beethoven.CoreServer do
   alias Beethoven.DistrServer
 
   require Logger
-  use DistrServer
+  use DistrServer, subscribe?: true
 
   #
   #
@@ -68,7 +68,8 @@ defmodule Beethoven.CoreServer do
   A single row in the CoreServer tracker.
   """
   @type trackerRow() ::
-          {mod :: module(), nodeName :: node(), status :: nodeStatus(), lastChange :: DateTime.t()}
+          {mod :: module(), nodeName :: node(), status :: nodeStatus(),
+           lastChange :: DateTime.t()}
 
   #
   #
@@ -104,8 +105,7 @@ defmodule Beethoven.CoreServer do
       columns: [:node, :status, :last_change],
       indexes: [],
       dataType: :ordered_set,
-      copyType: :multi,
-      subscribe?: true
+      copyType: :multi
     }
   end
 
@@ -193,6 +193,7 @@ defmodule Beethoven.CoreServer do
 
     {tableName, _columns, _indexes, _dataType, _copyType} =
       config() |> DistrServer.distr_to_table_conf()
+
     # random backoff to reduce noise on Mnesia (15ms - 750ms)
     :ok = Utils.backoff_n(__MODULE__, 50, 1, 15)
     # Attempt to update Mnesia
