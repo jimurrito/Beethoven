@@ -150,6 +150,10 @@ defmodule Beethoven.CoreServer do
   def handle_cast({:alert_me, nodeName}, {mode, followers}) do
     followers = [nodeName | followers]
 
+    # deduplicate
+    followers = followers |> Enum.dedup()
+    #
+
     Logger.info(operation: :alert_me, new_follower: nodeName, follower_count: length(followers))
     # Add caller node name to followers list
     {:noreply, {mode, followers}}
