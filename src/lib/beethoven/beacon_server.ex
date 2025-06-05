@@ -92,14 +92,9 @@ defmodule Beethoven.BeaconServer do
   #
   #
   # Cast handler to restart the Server on request
-  # This handles the requests to recover when we are not failed.
+  # This handles the requests to recover when we are **not** failed.
   @impl true
   def handle_cast(:recover, socket) do
-    Logger.warning(
-      operation: :recover,
-      msg: "No need to recover when we are not in a failed state."
-    )
-
     {:noreply, socket}
   end
 
