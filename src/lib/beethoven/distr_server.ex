@@ -140,18 +140,43 @@ defmodule Beethoven.DistrServer do
           create_table_ifnot_exist(tableConfig)
           |> case do
             # table was created
-            :ok -> create_action(tableConfig)
+            :ok ->
+              Logger.info(table: tableName, table_exists: true, created: true)
+              create_action(tableConfig)
+
             # table already exists
-            :already_exists -> :ok
+            :already_exists ->
+              Logger.info(table: tableName, table_exists: true, created: false)
+              :ok
           end
 
         # Subscribes to table changes (if applicable)
         # Must copy to memory if you want to subscribe.
         unquote do
           if subscribe do
+            #
+            # When subscribing
+            #
             quote do
-              _result = copy_table(tableName)
+              result = copy_table(tableName)
               {:ok, _node} = subscribe(tableName)
+
+              Logger.info(
+                table: tableName,
+                subscribe?: true,
+                copy_result: result,
+                subscribe_result: :ok
+              )
+            end
+          else
+            #
+            # When **NOT** subscribing
+            #
+            quote do
+              Logger.info(
+                table: tableName,
+                subscribe?: false
+              )
             end
           end
         end

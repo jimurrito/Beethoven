@@ -3,8 +3,6 @@ defmodule Beethoven.MnesiaTools do
   Generic Library to simplify certain Mnesia tasks.
   """
 
-  require Logger
-
   #
   #
   @typedoc """
@@ -22,9 +20,7 @@ defmodule Beethoven.MnesiaTools do
   """
   @spec table_exists?(atom()) :: boolean()
   def table_exists?(table) when is_atom(table) do
-    result = :mnesia.system_info(:tables) |> Enum.member?(table)
-    Logger.debug(tableName: table, table_exists?: result)
-    result
+    :mnesia.system_info(:tables) |> Enum.member?(table)
   end
 
   #
@@ -47,43 +43,32 @@ defmodule Beethoven.MnesiaTools do
       end
 
     # If the input table does not exist
-    result =
-      if not table_exists?(tableName) do
-        # Create table
-        {:atomic, :ok} =
-          :mnesia.create_table(tableName,
-            # Table schema
-            attributes: columns,
-            # Sets ram copies for ALL existing nodes in the cluster.
-            ram_copies: ram_copies,
-            # This setting orders the table by order the nodes joined the cluster.
-            type: type,
-            # indexes
-            index: indexes
-          )
+    if not table_exists?(tableName) do
+      # Create table
+      {:atomic, :ok} =
+        :mnesia.create_table(tableName,
+          # Table schema
+          attributes: columns,
+          # Sets ram copies for ALL existing nodes in the cluster.
+          ram_copies: ram_copies,
+          # This setting orders the table by order the nodes joined the cluster.
+          type: type,
+          # indexes
+          index: indexes
+        )
 
-        :ok
+      :ok
 
-        #
-      else
-        # if multi, attempt to copy table to memory
-        if copy_type == :multi do
-          _result = copy_table(tableName)
-        end
-
-        # Already created
-        :already_exists
+      #
+    else
+      # if multi, attempt to copy table to memory
+      if copy_type == :multi do
+        _result = copy_table(tableName)
       end
 
-    Logger.debug(
-      status: result,
-      tableName: tableName,
-      type: type,
-      copyType: copy_type
-    )
-
-    #
-    result
+      # Already created
+      :already_exists
+    end
   end
 
   #
@@ -99,25 +84,19 @@ defmodule Beethoven.MnesiaTools do
   """
   @spec copy_table(atom()) :: :ok | :already_exists | {:error, any()}
   def copy_table(table) do
-    Logger.info("Making in-memory copy of the Mnesia table '#{table}'.")
-
     # Copy x table to self.
     :mnesia.add_table_copy(table, node(), :ram_copies)
     |> case do
       # Successfully copied table to memory
       {:atomic, :ok} ->
-        Logger.info("Successfully copied table '#{table}' to memory.")
         :ok
 
       # table already in memory (this is fine)
       {:aborted, {:already_exists, _, _}} ->
-        Logger.info("Table '#{table}' is already copied to memory.")
         :already_exists
 
       # Copy failed for some reason
       {:aborted, error} ->
-        Logger.alert("Failed to copy table '#{table}' to memory.")
-        Logger.alert(error: error)
         {:error, error}
     end
   end
@@ -130,18 +109,14 @@ defmodule Beethoven.MnesiaTools do
   """
   @spec delete_copy(atom()) :: :ok
   def delete_copy(table) do
-    Logger.info("Purging in-memory copies of the Mnesia Cluster table '#{table}'.")
-
     # remove table copy from self.
     :mnesia.del_table_copy(table, node())
     |> case do
       {:atomic, :ok} ->
-        Logger.info("Successfully removed table '#{table}' from memory.")
         :ok
 
       # table already in memory (this is fine)
       {:aborted, _} ->
-        Logger.info("Table '#{table}' was already deleted from memory.")
         :ok
     end
   end
@@ -154,7 +129,6 @@ defmodule Beethoven.MnesiaTools do
   """
   @spec subscribe(atom()) :: {:ok, node()} | {:error, reason :: term()}
   def subscribe(tableName) do
-    Logger.debug("Subscribed to '#{tableName}'.")
     # :detailed is used to get the previous version of the record.
     :mnesia.subscribe({:table, tableName, :detailed})
   end

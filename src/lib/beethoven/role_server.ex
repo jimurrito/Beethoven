@@ -229,8 +229,6 @@ defmodule Beethoven.RoleServer do
   # role_name, {mod, args, inst}
   @spec start_role(roleName(), RoleUtils.roleMap()) :: :ok
   defp start_role(roleName, roleMap) do
-    #
-    IO.inspect({:DEBUG, roleMap, roleName})
     # Parse role info from state
     {mod, args, _inst} = Map.get(roleMap, roleName)
     # Add role to role supervisor
