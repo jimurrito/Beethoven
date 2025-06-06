@@ -16,7 +16,10 @@ defmodule Beethoven.Application do
       # Locator GenServer
       # Entry point for beethoven
       # Once seeking is complete, it will spawn `Core` to this Supervisor.
-      Beethoven.Locator
+      Beethoven.Locator,
+      # Allocator service
+      # accepts signals from agents to determine how busy a node is.
+      Beethoven.Alloc
     ]
 
     # Disables restarts for the services.

@@ -2,11 +2,11 @@
 
 # v0.3.0 flight path
 
-- Fix RoleServer logging
+- ~~Fix RoleServer logging~~
 - Add ability to lookup a role and see what node is hosting it
 - ~~Unified API?~~
 - ~~add mgmt option to Locator (may need to update `seek_chat.ex`)~~
-- Remove all the verbose from MnesiaTools and move to the calling modules' code.
+- ~~Remove all the verbose from MnesiaTools and move to the calling modules' code.~~
 - ~~Speed up role assignment~~
 - ~~table resiliency service?~~
 - Update documentation/ensure accuracy
