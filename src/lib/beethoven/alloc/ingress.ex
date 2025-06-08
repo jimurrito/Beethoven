@@ -6,6 +6,9 @@ defmodule Beethoven.Alloc.Ingress do
   require Logger
   use GenServer
 
+  # alias Beethoven.Alloc.Tools
+  alias Beethoven.Alloc.Cruncher
+  alias __MODULE__.Cache, as: IngressCache
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
@@ -22,7 +25,7 @@ defmodule Beethoven.Alloc.Ingress do
   @typedoc """
 
   """
-  @type signal_header() :: {name :: atom(), weight :: integer(), type :: atom()}
+  @type signal_header() :: {name :: atom(), weight :: float(), type :: atom()}
 
   #
   @typedoc """
@@ -51,25 +54,54 @@ defmodule Beethoven.Alloc.Ingress do
   @impl true
   def init(_init_arg) do
     Logger.info(status: :startup)
-    #
-    # - CREATE ETS TABLE IF NEEDED
-    #
+    _ = :ets.new(IngressCache, [:set, :public, :named_table])
     Logger.info(status: :startup_complete)
     {:ok, :ok}
   end
 
   #
-  #
+  # Send cast into a continue
   @impl true
   def handle_cast({:signal, payload}, :ok) do
-    IO.inspect(allocator_signal: payload)
+    {:noreply, :ok, {:continue, {:process_signal, payload}}}
+  end
+
+  #
+  #
+  @impl true
+  def handle_continue({:process_signal, {{name, weight, type}, payload}}, state) do
     #
-    # - 
+    Logger.debug(
+      operation: :signal_received,
+      signal: name,
+      weight: weight,
+      type: type,
+      payload: payload
+    )
+
     #
+    # Set to ETS based on type
+    true =
+      case type do
+        # when signal is count
+        :count ->
+          # get record
+          [{^name, ^weight, ^type, data}] = :ets.lookup(IngressCache, name)
+          # set into ETS
+          :ets.insert(IngressCache, {name, weight, type, data + payload})
+
+        # all other signals
+        type ->
+          # set into ETS
+          :ets.insert(IngressCache, {name, weight, type, payload})
+      end
+
     #
+    # Send alert to `Alloc.Cruncher`
+    :ok = Cruncher.send_check()
+
     #
-    #
-    {:noreply, :ok}
+    {:noreply, state}
   end
 
   #
@@ -81,7 +113,7 @@ defmodule Beethoven.Alloc.Ingress do
   #
   #
   @doc """
-  Sends a signal message to Allocator
+  Sends a signal message to `Alloc.Ingress`
 
       {header :: {name :: atom(), weight :: integer(), type :: atom()}, payload :: signal_payload()}
   """
@@ -90,5 +122,6 @@ defmodule Beethoven.Alloc.Ingress do
     GenServer.cast(__MODULE__, {:signal, signal})
   end
 
+  #
   #
 end

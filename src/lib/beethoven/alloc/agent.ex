@@ -18,7 +18,7 @@ defmodule Beethoven.Alloc.Agent do
   @typedoc """
   Defines a single signal that this agent can accept.
   """
-  @type signal() :: [name: atom(), weight: integer(), type: signal_type()]
+  @type signal() :: [name: atom(), weight: float(), type: signal_type()]
 
   #
   @typedoc """
@@ -36,7 +36,7 @@ defmodule Beethoven.Alloc.Agent do
     quote do
       #
       import Beethoven.Alloc.Agent
-      import Beethoven.Alloc.Dispatch
+      import Beethoven.Alloc.Tracker
       #
     end
   end
@@ -44,7 +44,7 @@ defmodule Beethoven.Alloc.Agent do
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
-  # Generate funcs
+  # Generate func(s)
   #
 
   #

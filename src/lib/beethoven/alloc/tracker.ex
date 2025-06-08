@@ -1,10 +1,10 @@
-defmodule Beethoven.Alloc.Dispatch do
+defmodule Beethoven.Alloc.Tracker do
   @moduledoc """
   Allocator service to aggregate how busy nodes are within the cluster.
   Utilizes `Beethoven.AllocAgent` behaviour to egress data into the allocator.
   """
   alias Beethoven.DistrServer
-  alias __MODULE__.Tracker, as: AllocTracker
+  alias __MODULE__, as: AllocTracker
 
   require Logger
   use DistrServer, subscribe?: true
@@ -31,7 +31,7 @@ defmodule Beethoven.Alloc.Dispatch do
   def config() do
     %{
       tableName: AllocTracker,
-      columns: [:node, :score, :telemetry, :last_change],
+      columns: [:node, :score, :last_change],
       indexes: [],
       dataType: :set,
       copyType: :multi
@@ -56,6 +56,18 @@ defmodule Beethoven.Alloc.Dispatch do
     #
     Logger.info(status: :startup_complete)
     {:ok, :ok}
+  end
+
+  #
+  #
+  @impl true
+  def handle_call(:allocate, _from, state) do
+    #
+    # - call Mnesia
+    # - get node with the lowest score
+    # - return to caller
+    #
+    {:noreply, nil, state}
   end
 
   #

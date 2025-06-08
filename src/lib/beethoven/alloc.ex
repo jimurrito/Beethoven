@@ -7,8 +7,8 @@ defmodule Beethoven.Alloc do
 
   def start_link(_opt) do
     children = [
-      # Dispatch server for allocation requests
-      Alloc.Dispatch,
+      # Tracker DistrServer
+      Alloc.Tracker,
       # Ingress server for signal. Sets signals to cruncher.
       Alloc.Ingress,
       # Cruncher to aggregate data and set a score for the current node.

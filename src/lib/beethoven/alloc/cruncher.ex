@@ -26,11 +26,38 @@ defmodule Beethoven.Alloc.Cruncher do
   #
   @impl true
   def init(_init_arg) do
-    Logger.info(status: :startup)
-    #
-
-    #
     Logger.info(status: :startup_complete)
     {:ok, :ok}
   end
+
+  #
+  #
+  @impl true
+  def handle_cast(:check, :ok) do
+    #
+    # - Pull data from ETS
+    # - Aggregate data
+    # - Push score to Mnesia
+    #
+    {:noreply, :ok}
+  end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Public API functions
+  #
+
+  #
+  #
+  @doc """
+  Sends a check message to the local instance of Cruncher
+  """
+  @spec send_check() :: :ok
+  def send_check() do
+    GenServer.cast(__MODULE__, :check)
+  end
+
+  #
+  #
 end
