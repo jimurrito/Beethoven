@@ -64,7 +64,7 @@ defmodule Beethoven.Allocator.Cruncher do
       |> Enum.sum()
 
     #
-    Logger.info(new_busy_score: score, node: node())
+    Logger.debug(new_busy_score: score, node: node())
 
     # Write to mnesia
     :ok = :mnesia.dirty_write({AllocTracker, node(), score, DateTime.now!("Etc/UTC")})
