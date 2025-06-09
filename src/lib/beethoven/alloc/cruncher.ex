@@ -6,6 +6,9 @@ defmodule Beethoven.Alloc.Cruncher do
   require Logger
   use GenServer
 
+  alias Beethoven.Alloc.Tracker, as: AllocTracker
+  alias Beethoven.Alloc.Ingress.Cache, as: IngressCache
+
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
@@ -34,10 +37,25 @@ defmodule Beethoven.Alloc.Cruncher do
   #
   @impl true
   def handle_cast(:check, :ok) do
+    Logger.debug(operation: :check)
+
     #
-    # - Pull data from ETS
-    # - Aggregate data
-    # - Push score to Mnesia
+    # Get all records and create a score
+    score =
+      :ets.select(IngressCache, [
+        {{:"$1", :"$2", :"$3", :"$4"}, [], [:"$_"]}
+      ])
+      # Algorithm per item
+      |> Enum.map(&algorithm/1)
+      # Sum the values in the list
+      # This will be the score
+      |> Enum.sum()
+
+    #
+    Logger.info(new_busy_score: score, node: node())
+
+    # Write to mnesia
+    :ok = :mnesia.dirty_write({AllocTracker, node(), score, DateTime.now!("Etc/UTC")})
     #
     {:noreply, :ok}
   end
@@ -56,6 +74,18 @@ defmodule Beethoven.Alloc.Cruncher do
   @spec send_check() :: :ok
   def send_check() do
     GenServer.cast(__MODULE__, :check)
+  end
+
+  #
+  #
+  @doc """
+  Crunching algorithm for each signal item.
+
+  REPLACE WITH SOMETHING BETTER LATER
+
+  """
+  def algorithm({_name, weight, _type, data}) do
+    :math.log(data) * weight
   end
 
   #

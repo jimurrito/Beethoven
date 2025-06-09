@@ -86,9 +86,27 @@ defmodule Beethoven.Alloc.Ingress do
         # when signal is count
         :count ->
           # get record
-          [{^name, ^weight, ^type, data}] = :ets.lookup(IngressCache, name)
-          # set into ETS
-          :ets.insert(IngressCache, {name, weight, type, data + payload})
+          :ets.lookup(IngressCache, name)
+          |> case do
+            # record found
+            [{^name, ^weight, ^type, data}] ->
+              # combine old and new state
+              new_data = data + payload
+              # lower then 0 check
+              new_data =
+                cond do
+                  # State is lower then 0.
+                  new_data < 0 -> 0
+                  # not lower -> return as is.
+                  true -> new_data
+                end
+
+              :ets.insert(IngressCache, {name, weight, type, new_data})
+
+            # not found
+            [] ->
+              :ets.insert(IngressCache, {name, weight, type, payload})
+          end
 
         # all other signals
         type ->
