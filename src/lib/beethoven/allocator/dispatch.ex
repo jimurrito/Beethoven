@@ -41,7 +41,7 @@ defmodule Beethoven.Allocator.Dispatch do
     #
     # Get all records
     {AllocTracker, node, score, _} =
-      :mnesia.select(AllocTracker, [
+      :mnesia.dirty_select(AllocTracker, [
         {{:"$1", :"$2", :"$3"}, [], [:"$_"]}
       ])
       # sort by score
