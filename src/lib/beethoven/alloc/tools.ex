@@ -1,4 +1,4 @@
-defmodule Beethoven.Alloc.Tools do
+defmodule Beethoven.Allocator.Tools do
   @moduledoc false
 
   #

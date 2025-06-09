@@ -1,20 +1,20 @@
-defmodule Beethoven.Alloc do
+defmodule Beethoven.Allocator do
   @moduledoc """
   Set of modules for handling allocation of work between cluster nodes.
   """
 
-  alias Beethoven.Alloc
+  alias Beethoven.Allocator
 
   use Supervisor
 
   def start_link(_opt) do
     children = [
       # Tracker DistrServer
-      Alloc.Tracker,
+      Allocator.Tracker,
       # Ingress server for signal. Sets signals to cruncher.
-      Alloc.Ingress,
+      Allocator.Ingress,
       # Cruncher to aggregate data and set a score for the current node.
-      Alloc.Cruncher
+      Allocator.Cruncher
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]

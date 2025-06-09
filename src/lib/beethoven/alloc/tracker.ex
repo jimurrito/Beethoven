@@ -1,4 +1,4 @@
-defmodule Beethoven.Alloc.Tracker do
+defmodule Beethoven.Allocator.Tracker do
   @moduledoc """
   Allocator service to aggregate how busy nodes are within the cluster.
   Utilizes `Beethoven.AllocAgent` behaviour to egress data into the allocator.

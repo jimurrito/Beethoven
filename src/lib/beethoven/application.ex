@@ -19,7 +19,7 @@ defmodule Beethoven.Application do
       Beethoven.Locator,
       # Allocator service
       # accepts signals from agents to determine how busy a node is.
-      Beethoven.Alloc
+      Beethoven.Allocator
     ]
 
     # Disables restarts for the services.

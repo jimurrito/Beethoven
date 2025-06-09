@@ -1,4 +1,4 @@
-defmodule Beethoven.Alloc.Ingress do
+defmodule Beethoven.Allocator.Ingress do
   @moduledoc """
   GenServer to handle ingress of signal data.
   """
@@ -6,8 +6,8 @@ defmodule Beethoven.Alloc.Ingress do
   require Logger
   use GenServer
 
-  # alias Beethoven.Alloc.Tools
-  alias Beethoven.Alloc.Cruncher
+  # alias Beethoven.Allocator.Tools
+  alias Beethoven.Allocator.Cruncher
   alias __MODULE__.Cache, as: IngressCache
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -115,7 +115,7 @@ defmodule Beethoven.Alloc.Ingress do
       end
 
     #
-    # Send alert to `Alloc.Cruncher`
+    # Send alert to `Allocator.Cruncher`
     :ok = Cruncher.send_check()
 
     #
@@ -131,7 +131,7 @@ defmodule Beethoven.Alloc.Ingress do
   #
   #
   @doc """
-  Sends a signal message to `Alloc.Ingress`
+  Sends a signal message to `Allocator.Ingress`
 
       {header :: {name :: atom(), weight :: integer(), type :: atom()}, payload :: signal_payload()}
   """

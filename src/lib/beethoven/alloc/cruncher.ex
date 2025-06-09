@@ -1,4 +1,4 @@
-defmodule Beethoven.Alloc.Cruncher do
+defmodule Beethoven.Allocator.Cruncher do
   @moduledoc """
   Crunches signal data and generates an allocation score for the current node.
   """
@@ -6,8 +6,8 @@ defmodule Beethoven.Alloc.Cruncher do
   require Logger
   use GenServer
 
-  alias Beethoven.Alloc.Tracker, as: AllocTracker
-  alias Beethoven.Alloc.Ingress.Cache, as: IngressCache
+  alias Beethoven.Allocator.Tracker, as: AllocTracker
+  alias Beethoven.Allocator.Ingress.Cache, as: IngressCache
 
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

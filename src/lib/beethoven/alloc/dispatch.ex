@@ -1,4 +1,4 @@
-defmodule Beethoven.Alloc.Dispatch do
+defmodule Beethoven.Allocator.Dispatch do
   @moduledoc """
   Dispatches the URI of the node with the least amount of work.
   """
@@ -6,7 +6,7 @@ defmodule Beethoven.Alloc.Dispatch do
   require Logger
   use GenServer
 
-  alias Beethoven.Alloc.Tracker, as: AllocTracker
+  alias Beethoven.Allocator.Tracker, as: AllocTracker
 
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

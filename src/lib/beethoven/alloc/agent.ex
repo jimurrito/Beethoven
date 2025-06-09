@@ -1,4 +1,4 @@
-defmodule Beethoven.Alloc.Agent do
+defmodule Beethoven.Allocator.Agent do
   @moduledoc """
   Behaviour to create an agent for data ingress into `Beethoven.Allocator`.
   """
@@ -35,8 +35,8 @@ defmodule Beethoven.Alloc.Agent do
   defmacro __using__(_opts) do
     quote do
       #
-      import Beethoven.Alloc.Agent
-      #import Beethoven.Alloc.Tracker
+      import Beethoven.Allocator.Agent
+      #import Beethoven.Allocator.Tracker
       #
     end
   end
@@ -60,7 +60,7 @@ defmodule Beethoven.Alloc.Agent do
           #
           @spec unquote(String.to_atom("increment_#{name}_count"))() :: :ok
           def unquote(String.to_atom("increment_#{name}_count"))() do
-            Beethoven.Alloc.Ingress.send_signal(
+            Beethoven.Allocator.Ingress.send_signal(
               {{unquote(name), unquote(weight), unquote(type)}, 1}
             )
           end
@@ -69,7 +69,7 @@ defmodule Beethoven.Alloc.Agent do
           #
           @spec unquote(String.to_atom("decrement_#{name}_count"))() :: :ok
           def unquote(String.to_atom("decrement_#{name}_count"))() do
-            Beethoven.Alloc.Ingress.send_signal(
+            Beethoven.Allocator.Ingress.send_signal(
               {{unquote(name), unquote(weight), unquote(type)}, -1}
             )
           end
@@ -81,7 +81,7 @@ defmodule Beethoven.Alloc.Agent do
           #
           @spec unquote(String.to_atom("#{type}_#{name}"))(data :: any()) :: :ok
           def unquote(String.to_atom("#{type}_#{name}"))(data) do
-            Beethoven.Alloc.Ingress.send_signal(
+            Beethoven.Allocator.Ingress.send_signal(
               {{unquote(name), unquote(weight), unquote(type)}, data}
             )
           end
