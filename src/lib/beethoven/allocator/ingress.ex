@@ -1,14 +1,16 @@
 defmodule Beethoven.Allocator.Ingress do
   @moduledoc """
   GenServer to handle ingress of signal data.
+  Data sent to this Server is pushed into `:ets` for use by `Beethoven.Allocator.Cruncher`.
   """
 
   require Logger
   use GenServer
 
-  # alias Beethoven.Allocator.Tools
+  alias Beethoven.Allocator.Types
   alias Beethoven.Allocator.Cruncher
   alias __MODULE__.Cache, as: IngressCache
+
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
@@ -17,21 +19,15 @@ defmodule Beethoven.Allocator.Ingress do
 
   #
   @typedoc """
-
+  Message wrapper for sending payload to `Beethoven.Allocator.Ingress`.
   """
-  @type signal_message() :: {header :: signal_header(), payload :: signal_payload()}
+  @type signal_message() :: Types.signal_message()
 
   #
   @typedoc """
-
+  Header for the signal metadata; when sending a signal to `Beethoven.Allocator.Ingress`.
   """
-  @type signal_header() :: {name :: atom(), weight :: float(), type :: atom()}
-
-  #
-  @typedoc """
-
-  """
-  @type signal_payload() :: any()
+  @type signal_message_header() :: Types.signal_message_header()
 
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -120,24 +116,6 @@ defmodule Beethoven.Allocator.Ingress do
 
     #
     {:noreply, state}
-  end
-
-  #
-  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-  #
-  # callbacks for agents functions
-  #
-
-  #
-  #
-  @doc """
-  Sends a signal message to `Allocator.Ingress`
-
-      {header :: {name :: atom(), weight :: integer(), type :: atom()}, payload :: signal_payload()}
-  """
-  @spec send_signal(signal_message()) :: :ok
-  def send_signal(signal) do
-    GenServer.cast(__MODULE__, {:signal, signal})
   end
 
   #

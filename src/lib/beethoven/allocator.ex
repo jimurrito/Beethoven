@@ -1,6 +1,14 @@
 defmodule Beethoven.Allocator do
   @moduledoc """
-  Set of modules for handling allocation of work between cluster nodes.
+  Allocator is a stack of processes that facilitate the aggregation of telemetry signals
+  to determine how busy a given `Beethoven` node is.
+
+  # Public API
+
+  - `allocate/0` Provides the URI of the least-busy node in the cluster.
+
+  The busyness of nodes is determined via signals.
+  Refer to the documentation for `Beethoven.Allocator.Agent` for more information on creating signals.
   """
 
   require Logger
@@ -18,6 +26,12 @@ defmodule Beethoven.Allocator do
   # DistrServer callback functions
   #
 
+  #
+  #
+  @doc """
+  Supervisor Entry point.
+  """
+  @spec start_link(any()) :: GenServer.on_start()
   def start_link(init_args) do
     #
     children = [
@@ -114,7 +128,8 @@ defmodule Beethoven.Allocator do
   #
   #
   @doc """
-  Requests a node for work allocation.
+  Provides the URI of the least-busy node in the cluster.
+  Using this function has no side effects so discarding the output without using it will not cause issues.
   """
   @spec allocate() :: node()
   def allocate() do

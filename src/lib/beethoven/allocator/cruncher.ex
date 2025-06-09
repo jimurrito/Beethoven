@@ -1,6 +1,18 @@
 defmodule Beethoven.Allocator.Cruncher do
   @moduledoc """
-  Crunches signal data and generates an allocation score for the current node.
+  Crunches signal data and generates an allocation (or busy-score) score for the current node.
+  Signal data is pulled from the `Beethoven.Allocator.Ingress.Cache` ets table.
+  The aggregated score is stored in the `Beethoven.Allocator.Tracker` Mnesia table.
+  This PID will refresh the score anytime `Beethoven.Allocator.Ingress` pushes an update and sends a cast to this PID.
+
+  ## Current (Placeholder) algorithm:
+
+      [
+        log(data) * weight
+        ...
+      ]
+      |> Enum.sum()
+
   """
 
   require Logger
