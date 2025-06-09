@@ -14,7 +14,9 @@ defmodule Beethoven.Allocator do
       # Ingress server for signal. Sets signals to cruncher.
       Allocator.Ingress,
       # Cruncher to aggregate data and set a score for the current node.
-      Allocator.Cruncher
+      Allocator.Cruncher,
+      # Dispatcher PID
+      Allocator.Dispatch
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]
