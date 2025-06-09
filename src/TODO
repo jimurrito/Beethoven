@@ -1,0 +1,14 @@
+# TODO
+
+# v0.3.0 flight path
+
+- ~~Fix RoleServer logging~~
+- Add ability to lookup a role and see what node is hosting it
+- ~~Unified API?~~
+- ~~add mgmt option to Locator (may need to update `seek_chat.ex`)~~
+- ~~Remove all the verbose from MnesiaTools and move to the calling modules' code.~~
+- ~~Speed up role assignment~~
+- ~~table resiliency service?~~
+- Update documentation/ensure accuracy
+- ditch tableConfig tuple for distrServer. Should just pipe in whole map config.
+- Correct the use of `:status` and `:operation` in Logger to the correct scenarios

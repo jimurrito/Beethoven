@@ -77,7 +77,7 @@ defmodule Beethoven do
   """
   @spec get_active_nodes() :: nodeList()
   def get_active_nodes() do
-    Node.list()
+    [node() | Node.list()]
   end
 
   #
@@ -89,20 +89,14 @@ defmodule Beethoven do
   def get_cluster_nodes() do
     tableName = CoreServer.Tracker
     #
-    {:atomic, return} =
-      fn ->
-        :mnesia.select(tableName, [
-          {
-            {tableName, :"$1", :"$2", :"$3"},
-            [],
-            [%{node: :"$1", status: :"$2", last_change: :"$3"}]
-          }
-        ])
-      end
-      |> :mnesia.transaction()
 
-    #
-    return
+    :mnesia.dirty_select(tableName, [
+      {
+        {tableName, :"$1", :"$2", :"$3"},
+        [],
+        [%{node: :"$1", status: :"$2", last_change: :"$3"}]
+      }
+    ])
   end
 
   #
@@ -114,20 +108,13 @@ defmodule Beethoven do
   def get_roles() do
     tableName = RoleServer.Tracker
     #
-    {:atomic, return} =
-      fn ->
-        :mnesia.select(tableName, [
-          {
-            {tableName, :"$1", :"$2", :"$3", :"$4", :_},
-            [],
-            [%{role: :"$1", count: :"$2", assigned: :"$3", nodes: :"$4"}]
-          }
-        ])
-      end
-      |> :mnesia.transaction()
-
-    #
-    return
+    :mnesia.dirty_select(tableName, [
+      {
+        {tableName, :"$1", :"$2", :"$3", :"$4", :_},
+        [],
+        [%{role: :"$1", count: :"$2", assigned: :"$3", nodes: :"$4"}]
+      }
+    ])
   end
 
   #

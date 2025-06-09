@@ -9,22 +9,14 @@ defmodule Beethoven.RoleServer do
   alias Beethoven.CoreServer
   alias Beethoven.DistrServer
   alias Beethoven.RoleUtils
+  alias Beethoven.Signals
 
   use DistrServer, subscribe?: false
 
   #
-  #
-  # CoreServer behavior, node_update/2 callback
-  # Called by CoreServer when a node changes state or gets added to the cluster
-  @impl true
-  def node_update(nodeName, status) do
-    DistrServer.cast(__MODULE__, {:node_update, nodeName, status})
-  end
-
-  #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
-  # Internal Types
+  # Types
   #
 
   #
@@ -118,14 +110,28 @@ defmodule Beethoven.RoleServer do
 
   #
   #
+  #
+  # Called by CoreServer when a node changes state or gets added to the cluster
+  @impl true
+  def node_update(nodeName, status) do
+    DistrServer.cast(__MODULE__, {:node_update, nodeName, status})
+  end
+
+  #
+  #
   # handles assign cast.
   # When triggered, RoleServer will attempt to assign itself work after a backoff.
   # Use `start_assign/0` for casts to this callback.
   @impl true
   def handle_cast(:assign, role_map) do
     Logger.info(operation: :assign, status: :startup)
-    # backoff (150 - 2250) Milliseconds
-    :ok = Utils.backoff_n(__MODULE__, 15, 1, 150)
+    # backoff bases on config
+    {:ok, backoff} =
+      Utils.get_app_env(:common_random_backoff, 150..300)
+      |> Utils.random_backoff()
+
+    Logger.debug(operation: :assign_backoff_complete, waited_ms: backoff)
+
     # Assign self a job (if applicable)
     assign()
     # create role on server
@@ -163,8 +169,13 @@ defmodule Beethoven.RoleServer do
 
       # Node has gone offline -> prune node
       :offline ->
-        # backoff (150 - 2250) Milliseconds
-        Utils.backoff_n(__MODULE__, 15, 1, 150)
+        # backoff bases on config
+        {:ok, backoff} =
+          Utils.get_app_env(:common_random_backoff, 150..300)
+          |> Utils.random_backoff()
+
+        Logger.debug(operation: :node_update_backoff_complete, waited_ms: backoff)
+
         # get DistrServer Mnesia config
         config = config()
         # remove node from table
@@ -219,14 +230,12 @@ defmodule Beethoven.RoleServer do
   # role_name, {mod, args, inst}
   @spec start_role(roleName(), RoleUtils.roleMap()) :: :ok
   defp start_role(roleName, roleMap) do
-    #
-    IO.inspect({:DEBUG, roleMap, roleName})
     # Parse role info from state
     {mod, args, _inst} = Map.get(roleMap, roleName)
     # Add role to role supervisor
     {:ok, _pid} = DynamicSupervisor.start_child(Beethoven.RoleSupervisor, {mod, args})
-    #
-    :ok
+    # Send signal
+    Signals.increment_beethoven_role_count()
   end
 
   #

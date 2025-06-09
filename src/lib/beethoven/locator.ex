@@ -65,13 +65,13 @@ defmodule Beethoven.Locator do
   def init(_init_arg) do
     Logger.info(status: :startup)
     use_azure? = Utils.get_app_env(:use_az_net, false)
-    az_region = Az.get_AzRegion()
+    az_region = Az.get_az_region()
     # Check if we should use Azure
     hostIPs =
       cond do
         # We be Azure aware + we are in Azure
         use_azure? and az_region != :no_azure ->
-          {net, mask} = Az.get_AzSubnet()
+          {net, mask} = Az.get_az_subnet()
           Logger.info(use_azure?: use_azure?, network: {net, mask})
           Ipv4.get_host_network_addresses(net, mask)
 
@@ -123,8 +123,12 @@ defmodule Beethoven.Locator do
   def handle_continue({:seek, [], port, att, max}, state) do
     Logger.debug(status: :not_found, attempts: att, max_attempts: max)
     {_mode, hostIPs, _port, _max} = state
-    # backoff (150 - 2250) Milliseconds
-    :ok = Utils.backoff_n(__MODULE__, 15, 0, 150)
+    # backoff bases on config
+    {:ok, backoff} =
+      Utils.get_app_env(:common_random_backoff, 150..300)
+      |> Utils.random_backoff()
+
+    Logger.debug(status: :not_found_backoff_complete, waited_ms: backoff)
     #
     {:noreply, state, {:continue, {:seek, hostIPs, port, att + 1, max}}}
   end

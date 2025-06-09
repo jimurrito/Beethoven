@@ -150,6 +150,10 @@ defmodule Beethoven.CoreServer do
   def handle_cast({:alert_me, nodeName}, {mode, followers}) do
     followers = [nodeName | followers]
 
+    # deduplicate
+    followers = followers |> Enum.dedup()
+    #
+
     Logger.info(operation: :alert_me, new_follower: nodeName, follower_count: length(followers))
     # Add caller node name to followers list
     {:noreply, {mode, followers}}
@@ -194,8 +198,10 @@ defmodule Beethoven.CoreServer do
     {tableName, _columns, _indexes, _dataType, _copyType} =
       config() |> DistrServer.distr_to_table_conf()
 
-    # random backoff to reduce noise on Mnesia (15ms - 750ms)
-    :ok = Utils.backoff_n(__MODULE__, 50, 1, 15)
+    # random backoff to reduce noise on Mnesia (20ms - 200ms)
+    {:ok, backoff} = Utils.random_backoff(20..200)
+    Logger.debug(operation: :nodedown_backoff, waited_ms: backoff)
+
     # Attempt to update Mnesia
     :ok = update_node(tableName, nodeName, :offline)
     # Trigger recover attempt on BeaconServer
