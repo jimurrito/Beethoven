@@ -9,6 +9,7 @@ defmodule Beethoven.RoleServer do
   alias Beethoven.CoreServer
   alias Beethoven.DistrServer
   alias Beethoven.RoleUtils
+  alias Beethoven.Signals
 
   use DistrServer, subscribe?: false
 
@@ -233,8 +234,8 @@ defmodule Beethoven.RoleServer do
     {mod, args, _inst} = Map.get(roleMap, roleName)
     # Add role to role supervisor
     {:ok, _pid} = DynamicSupervisor.start_child(Beethoven.RoleSupervisor, {mod, args})
-    #
-    :ok
+    # Send signal
+    Signals.increment_beethoven_role_count()
   end
 
   #
