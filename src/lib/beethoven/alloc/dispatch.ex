@@ -6,6 +6,8 @@ defmodule Beethoven.Alloc.Dispatch do
   require Logger
   use GenServer
 
+  alias Beethoven.Alloc.Tracker, as: AllocTracker
+
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
@@ -37,10 +39,37 @@ defmodule Beethoven.Alloc.Dispatch do
   @impl true
   def handle_call(:allocate, _from, state) do
     #
-    # - Pull all data from Mnesia
-    # - return node with the lowest score to the caller
+    # Get all records
+    {AllocTracker, node, score, _} =
+      :mnesia.select(AllocTracker, [
+        {{:"$1", :"$2", :"$3"}, [], [:"$_"]}
+      ])
+      # sort by score
+      |> Enum.sort_by(&elem(&1, 2), :asc)
+      # get only the first
+      |> List.first()
+
     #
-    {:reply, nil, state}
+    Logger.debug(status: :allocation_requested, provided: node, score: score)
+
+    #
+    {:reply, node, state}
+  end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Public API functions
+  #
+
+  #
+  #
+  @doc """
+  Requests a node for work allocation.
+  """
+  @spec allocate() :: node()
+  def allocate() do
+    GenServer.call(__MODULE__, :allocate)
   end
 
   #

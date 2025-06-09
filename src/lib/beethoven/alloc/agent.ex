@@ -36,7 +36,7 @@ defmodule Beethoven.Alloc.Agent do
     quote do
       #
       import Beethoven.Alloc.Agent
-      import Beethoven.Alloc.Tracker
+      #import Beethoven.Alloc.Tracker
       #
     end
   end
