@@ -11,15 +11,14 @@ defmodule Beethoven.Application do
     :ok = :mnesia.start()
     #
     children = [
+      # Ready tracker
+      Beethoven.Ready,
       # Azure aware genserver. Monitors IMDS.
       Beethoven.Az,
       # Locator GenServer
       # Entry point for beethoven
-      # Once seeking is complete, it will spawn `Core` to this Supervisor.
-      Beethoven.Locator,
-      # Allocator service
-      # accepts signals from agents to determine how busy a node is.
-      Beethoven.Allocator
+      # Once seeking is complete, it will spawn multiple core services to this Supervisor.
+      Beethoven.Locator
     ]
 
     # Disables restarts for the services.

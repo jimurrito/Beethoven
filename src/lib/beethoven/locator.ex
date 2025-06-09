@@ -199,6 +199,12 @@ defmodule Beethoven.Locator do
   # Starts Core genserver under root Supervisor
   @impl true
   def handle_continue({:start_core, mode}, state) do
+    #
+    # Start Allocator service
+    Logger.info(operation: :started_allocation_stack)
+    # uses `_result` instead of `{:ok, _pid}` as this service may fail to boot. that is OK
+    {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, Beethoven.Allocator)
+
     # Start CoreServer under RootSupervisor
     Logger.info(operation: :started_core, mode: mode)
     {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, {Beethoven.CoreServer, mode})

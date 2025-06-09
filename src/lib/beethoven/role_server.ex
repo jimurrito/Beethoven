@@ -139,6 +139,10 @@ defmodule Beethoven.RoleServer do
       # No work
       :noop ->
         Logger.info(operation: :assign, status: :no_work)
+        #
+        # Set Beethoven as ready
+        :ok = Beethoven.Ready.set_ready(true)
+        #
         {:noreply, role_map}
 
       # heres a job!
