@@ -5,7 +5,7 @@ defmodule Beethoven.MixProject do
     [
       name: "Beethoven",
       app: :beethoven,
-      version: "0.3.5",
+      version: "0.3.6",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -34,12 +34,12 @@ defmodule Beethoven.MixProject do
     if Mix.env() == :prod do
       [
         mod: {Beethoven.Application, []},
-        extra_applications: [:logger, :runtime_tools, :mnesia]
+        extra_applications: [:logger, :runtime_tools, :mnesia, :os_mon]
       ]
     else
       [
         mod: {Beethoven.Application, []},
-        extra_applications: [:logger, :runtime_tools, :mnesia, :wx, :observer]
+        extra_applications: [:logger, :runtime_tools, :mnesia, :os_mon, :wx, :observer]
       ]
     end
   end

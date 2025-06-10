@@ -205,6 +205,11 @@ defmodule Beethoven.Locator do
     # uses `_result` instead of `{:ok, _pid}` as this service may fail to boot. that is OK
     {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, Beethoven.Allocator)
 
+    #
+    # Start HwMon
+    Logger.info(operation: :started_hw_mon)
+    {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, Beethoven.HwMon)
+
     # Start CoreServer under RootSupervisor
     Logger.info(operation: :started_core, mode: mode)
     {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, {Beethoven.CoreServer, mode})
