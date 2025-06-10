@@ -4,15 +4,6 @@ defmodule Beethoven.Allocator.Cruncher do
   Signal data is pulled from the `Beethoven.Allocator.Ingress.Cache` ets table.
   The aggregated score is stored in the `Beethoven.Allocator.Tracker` Mnesia table.
   This PID will refresh the score anytime `Beethoven.Allocator.Ingress` pushes an update and sends a cast to this PID.
-
-  ## Current (Placeholder) algorithm:
-
-      [
-        log(data) * weight
-        ...
-      ]
-      |> Enum.sum()
-
   """
 
   require Logger
@@ -20,6 +11,7 @@ defmodule Beethoven.Allocator.Cruncher do
 
   alias Beethoven.Allocator.Tracker, as: AllocTracker
   alias Beethoven.Allocator.Ingress.Cache, as: IngressCache
+  alias :math, as: Math
 
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -49,8 +41,6 @@ defmodule Beethoven.Allocator.Cruncher do
   #
   @impl true
   def handle_cast(:check, :ok) do
-    Logger.debug(operation: :check)
-
     #
     # Get all records and create a score
     score =
@@ -92,12 +82,19 @@ defmodule Beethoven.Allocator.Cruncher do
   #
   @doc """
   Crunching algorithm for each signal item.
-
-  REPLACE WITH SOMETHING BETTER LATER
-
   """
+  def algorithm({_name, weight, :percent, data}) do
+    # Exponential growth for higher %
+    Math.exp(data * 0.05) * weight
+  end
+
+  def algorithm({_name, _weight, :pre_processed, data}) do
+    data
+  end
+
+  #
   def algorithm({_name, weight, _type, data}) do
-    :math.log(data) * weight
+    data * weight
   end
 
   #

@@ -5,7 +5,7 @@ defmodule Beethoven.Allocator.Types do
   @typedoc """
   Defines types of signal that can be used.
   """
-  @type signal_type() :: :count | :percent
+  @type signal_type() :: :count | :percent | :set_amount | :pre_processed
 
   #
   @typedoc """

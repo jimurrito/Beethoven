@@ -2,6 +2,14 @@ defmodule Beethoven.Ready do
   @moduledoc """
   Simple PID to track when Beethoven has fully initialized.
   Usually just called from RoleServer when it has ran out of work.
+
+  This is important as creating Mnesia tables before joining Beethoven will cause cluster conflicts.
+
+  # Public API
+  - 'ready?/0' Queries the ETS table used by this module to see if Beethoven is ready. Returns boolean.
+  - 'until_ready/1' Similar to `ready?/0` but will block until Beethoven is ready.
+  - `set_ready/1` Sets the ready state of Beethoven on ETS. Normally called by `Beethoven.RoleServer`
+
   """
 
   require Logger

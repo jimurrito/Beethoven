@@ -12,9 +12,8 @@ defmodule Beethoven.Signals do
 
   #
   # When a node uses starts hosting a role
-  signal(name: :beethoven_role, weight: 5.0, type: :count)
+  signal(name: :beethoven_role, weight: 0.1, type: :count)
 
   #
   #
-
 end

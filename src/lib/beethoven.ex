@@ -61,8 +61,35 @@ defmodule Beethoven do
   #
   #
   @doc """
+  Gets the current ready state for Beethoven.
+
+  Wrapper for `Beethoven.Ready.ready?/0`.
+  """
+  @spec ready?() :: boolean()
+  def ready?() do
+    Beethoven.Ready.ready?()
+  end
+
+  #
+  #
+  @doc """
+  Similar to `ready?()` but will block until the service is ready.
+  Defaults to 5_000 milliseconds.
+
+  Wrapper for `Beethoven.Ready.until_ready/1`.
+  """
+  @spec until_ready(integer()) :: :ok | :timeout
+  def until_ready(timeout \\ 5_000) do
+    Beethoven.Ready.until_ready(timeout)
+  end
+
+  #
+  #
+  @doc """
   Returns state of this node within the Beethoven cluster.
   Return will only be `:clustered` or `:standalone`.
+
+  Wrapper for `Beethoven.CoreServer.get_mode/0`.
   """
   @spec get_node_status() :: CoreServer.serverStatus()
   def get_node_status() do
