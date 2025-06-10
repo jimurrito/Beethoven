@@ -34,17 +34,6 @@ defmodule Beethoven.Allocator do
   @spec start_link(any()) :: GenServer.on_start()
   def start_link(init_args) do
     #
-    children = [
-      # Ingress server for signal. Sets signals to cruncher.
-      __MODULE__.Ingress,
-      # Cruncher to aggregate data and set a score for the current node.
-      __MODULE__.Cruncher
-    ]
-
-    # Spawn Supervisor
-    opts = [strategy: :one_for_one, name: AllocSupervisor]
-    _ = Supervisor.start_link(children, opts)
-    #
     # Start GenServer
     DistrServer.start_link(__MODULE__, init_args, name: __MODULE__)
   end
@@ -78,6 +67,17 @@ defmodule Beethoven.Allocator do
   #
   @impl true
   def entry_point(_var) do
+    #
+    children = [
+      # Ingress server for signal. Sets signals to cruncher.
+      __MODULE__.Ingress,
+      # Cruncher to aggregate data and set a score for the current node.
+      __MODULE__.Cruncher
+    ]
+
+    # Spawn Supervisor
+    opts = [strategy: :one_for_one, name: AllocSupervisor]
+    _ = Supervisor.start_link(children, opts)
     # get node alert
     :ok = CoreServer.alert_me(__MODULE__)
     Logger.info(status: :startup_complete)

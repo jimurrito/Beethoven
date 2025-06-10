@@ -12,14 +12,9 @@ defmodule Beethoven.Locator do
 
   # `:seeking`
   Service will start up and perform a seeking operation.
-  The locator will start the Core service(s) once either is met:
+  The locator will start the Core service(s) (via Substrate) once either is met:
   - (1). Seeking attempts have become exhausted. [CoreServer <- `:standalone`]
   - (2). A listener server is found. [CoreServer <- `:clustered`]
-
-  > Core Services is defined as:
-  > - `Beethoven.CoreServer`
-  > - `Beethoven.RoleServer`
-  > - `Beethoven.BeaconServer`
 
   ---
 
@@ -111,9 +106,15 @@ defmodule Beethoven.Locator do
   @impl true
   def handle_continue({:seek, _ips, _port, att, max}, {_mode, hostIPs, port, _max})
       when att > max do
-    Logger.warning(status: :out_of_attempts, attempt_num: att, max_attempts: max)
+    Logger.warning(
+      status: :out_of_attempts,
+      attempt_num: att,
+      max_attempts: max,
+      mode: :standalone
+    )
+
     # Start Core in `:standalone` mode
-    {:noreply, {:watching, hostIPs, port, max}, {:continue, {:start_core, :standalone}}}
+    {:noreply, {:watching, hostIPs, port, max}, {:continue, {:start_substrate, :standalone}}}
   end
 
   #
@@ -178,7 +179,7 @@ defmodule Beethoven.Locator do
 
       # check msg contents
       msgPayload == :joined ->
-        Logger.info(result: :joined, fail_reason: nil, sender: sender)
+        Logger.info(result: :joined, sender: sender, mode: :clustered)
 
       # catch all
       true ->
@@ -191,48 +192,23 @@ defmodule Beethoven.Locator do
     end
 
     #
-    {:noreply, {:watching, hostIPs, port, max}, {:continue, {:start_core, :clustered}}}
+    {:noreply, {:watching, hostIPs, port, max}, {:continue, {:start_substrate, :clustered}}}
   end
 
   #
   #
   # Starts Core genserver under root Supervisor
   @impl true
-  def handle_continue({:start_core, mode}, state) do
-    #
-    # Start Allocator service
-    Logger.info(operation: :started_allocation_stack)
-    # uses `_result` instead of `{:ok, _pid}` as this service may fail to boot. that is OK
-    {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, Beethoven.Allocator)
+  def handle_continue({:start_substrate, mode}, state) do
+    # Set Beethoven as ready
+    :ok = Beethoven.Ready.set_ready(true)
 
-    #
-    # Start HwMon
-    Logger.info(operation: :started_hw_mon)
-    {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, Beethoven.HwMon)
+    # Start Core Service Substrate under RootSupervisor
+    {:ok, _pid} =
+      Supervisor.start_child(Beethoven.RootSupervisor, {Beethoven.Substrate, mode: mode})
 
-    # Start CoreServer under RootSupervisor
-    Logger.info(operation: :started_core, mode: mode)
-    {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, {Beethoven.CoreServer, mode})
-
-    #
-    # Start BeaconServer
-    Logger.info(operation: :started_beacon_server)
-    # uses `_result` instead of `{:ok, _pid}` as this service may fail to boot. that is OK
-    _result = Supervisor.start_child(Beethoven.RootSupervisor, Beethoven.BeaconServer)
-
-    #
-    # Start RoleServer
-    Logger.info(operation: :started_role_server)
-    {:ok, _pid} = Supervisor.start_child(Beethoven.RootSupervisor, Beethoven.RoleServer)
-    #
     {:noreply, state}
   end
-
-  #
-  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-  #
-  # Internal Lib functions
-  #
 
   #
   #

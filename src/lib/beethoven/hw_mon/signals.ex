@@ -1,4 +1,4 @@
-defmodule Beethoven.HwMonSignals do
+defmodule Beethoven.HwMon.Signals do
   @moduledoc false
 
   use Beethoven.Allocator.Agent

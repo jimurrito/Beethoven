@@ -1,21 +1,14 @@
 defmodule Beethoven.HwMon do
   @moduledoc """
-  DistrServer to monitor hardware resources and sends signals to `Beethoven.Allocator` plus the integrated Mnesia table.
+  Supervisor for the HwMon stack of PIDs.
+  These PIDs log historical hardware consumption and signal changes to `Beethoven.Allocator.Ingress`.
   """
 
-  alias Beethoven.DistrServer
-  alias __MODULE__.Tracker, as: HwTracker
-
   require Logger
-  use DistrServer, subscribe?: false
+  use Supervisor
 
-  import Beethoven.HwMonSignals
-
-  #
-  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-  #
-  # DistrServer callback functions
-  #
+  alias __MODULE__.Supervisor, as: HwMonSup
+  alias __MODULE__, as: HwMon
 
   #
   #
@@ -24,127 +17,21 @@ defmodule Beethoven.HwMon do
   """
   @spec start_link(any()) :: GenServer.on_start()
   def start_link(init_args \\ []) do
-    DistrServer.start_link(__MODULE__, init_args, name: __MODULE__)
+    Supervisor.start_link(__MODULE__, init_args, name: HwMonSup)
   end
 
   #
   #
   @impl true
-  def config() do
-    %{
-      tableName: HwTracker,
-      columns: [:node, :avail_cpu, :avail_ram_gb, :last_change],
-      indexes: [],
-      # :mnesia data types
-      dataType: :set,
-      # :local | :multi
-      copyType: :multi
-    }
-  end
+  def init(_init_arg) do
+    children = [
+      # HwMon Server
+      HwMon.Server,
+      # Archive server
+      HwMon.Archive
+    ]
 
-  #
-  #
-  # Setup table with all the roles defined in `config.exs`
-  @impl true
-  def create_action({tableName, _columns, _indexes, _dataType, _copyType}) do
-    now! = DateTime.now!("Etc/UTC")
-
-    fn ->
-      [node() | Node.list()]
-      |> Enum.each(&:mnesia.write({tableName, &1, 0.0, 0.0, now!}))
-    end
-    |> :mnesia.transaction()
-    |> elem(1)
-  end
-
-  #
-  #
-  @impl true
-  def entry_point(_var) do
-    :ok = GenServer.cast(__MODULE__, :check)
-    Logger.info(status: :startup_complete)
-    {:ok, :ok}
-  end
-
-  @doc """
-    #
-  # PERCENTAGE FORMAT
-  #
-  # YES -> 4% => 4.0 | 61% => 61.0
-  # NO  -> 4% => 0.04 | 61% => 0.61
-  """
-  #
-  @impl true
-  def handle_cast(:check, state) do
-    # get RAM amount
-    {ram_percent, avail_ram} = memory_usage()
-    # get cpu
-    {cpu_percent, num_cores} = cpu_usage()
-    avail_cpu = num_cores * 100 - cpu_percent
-    # Send Signal
-    :ok = percent_ram(ram_percent)
-    # This accounts for many CPU Cores.
-    :ok = percent_cpu(cpu_percent / num_cores * 100)
-    #
-    # Update Mnesia
-    :ok = :mnesia.dirty_write({HwTracker, node(), avail_cpu, avail_ram, DateTime.now!("Etc/UTC")})
-    #
-    :ok = GenServer.cast(__MODULE__, :wait)
-    {:noreply, state}
-  end
-
-  #
-  @impl true
-  def handle_cast(:wait, state) do
-    :ok = Process.sleep(30_000)
-    :ok = GenServer.cast(__MODULE__, :check)
-    {:noreply, state}
-  end
-
-  #
-  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-  #
-  # Internal functions
-  #
-
-  #
-  # PERCENTAGE FORMAT
-  #
-  # YES -> 4% => 4.0 | 61% => 61.0
-  # NO  -> 4% => 0.04 | 61% => 0.61
-
-  #
-  #
-  @spec memory_usage() :: {float(), float()}
-  defp memory_usage() do
-    [
-      system_total_memory: system_total_memory,
-      free_memory: _free_memory,
-      total_memory: _total_memory,
-      buffered_memory: _buffered_memory,
-      cached_memory: _cached_memory,
-      total_swap: _total_swap,
-      free_swap: _free_swap,
-      available_memory: available_memory
-    ] = :memsup.get_system_memory_data()
-
-    # get memory used via total - available
-    # then divide by system_total_memory to get the %
-    percent = (system_total_memory - available_memory) / system_total_memory
-    gb = available_memory / 1_000_000_000
-    {percent * 100, gb}
-  end
-
-  #
-  #
-  @spec cpu_usage() :: {float(), integer()}
-  defp cpu_usage() do
-    {cpu_list, _stats, _idles, _} = :cpu_sup.util([:detailed])
-    # get # of cores
-    cpu_num = length(cpu_list)
-    # must divide by 256 as that represents 1% CPU usage.
-    # then divide by the num of CPU cores.
-    {:cpu_sup.avg1() / 256, cpu_num}
+    Supervisor.init(children, strategy: :one_for_one)
   end
 
   #
