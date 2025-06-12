@@ -228,7 +228,7 @@ defmodule Beethoven.BeaconServer do
         type == :watching ->
           Logger.debug(operation: :client_watching, sender: sender, msg: msgPayload)
           # return a list of nodes in the cluster
-          SeekChat.new_msg(:reply, Node.list())
+          SeekChat.new_msg(:reply, [node() | Node.list()])
 
         # For some reason, client signed the message as :reply
         type == :reply ->

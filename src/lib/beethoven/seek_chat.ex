@@ -21,7 +21,7 @@ defmodule Beethoven.SeekChat do
   @type type() :: :seeking | :watching | :reply
   #
   @typedoc """
-  Message payload.
+  Message payload. Payloads are usually discarded on requests, but that may change in the future.
   # Options:
   - `:join` --> (CLIENT) Seeking to join a cluster.
   - `:check` --> (CLIENT) Client is watching, and wants to know if we are in a cluster.

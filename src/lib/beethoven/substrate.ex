@@ -38,7 +38,9 @@ defmodule Beethoven.Substrate do
       # Beacon server
       Beethoven.BeaconServer,
       # Role Server
-      Beethoven.RoleServer
+      Beethoven.RoleServer,
+      # Mgmt Worm
+      Beethoven.Worm
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

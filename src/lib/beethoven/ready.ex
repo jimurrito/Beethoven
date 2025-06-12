@@ -71,7 +71,7 @@ defmodule Beethoven.Ready do
   #
   #
   @doc """
-  Similar to `ready?()` but will block until the service is ready.
+  Similar to `ready?/0` but will block until the service is ready.
   Defaults to 5_000 milliseconds.
   """
   @spec until_ready(integer()) :: :ok | :timeout

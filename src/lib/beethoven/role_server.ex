@@ -119,6 +119,15 @@ defmodule Beethoven.RoleServer do
 
   #
   #
+  # Catch all cast when we have no roles
+  @impl true
+  def handle_cast(request, role_map) when role_map == %{} do
+    Logger.debug(ignored_request: request, reason: :no_roles)
+    {:noreply, %{}}
+  end
+
+  #
+  #
   # handles assign cast.
   # When triggered, RoleServer will attempt to assign itself work after a backoff.
   # Use `start_assign/0` for casts to this callback.
