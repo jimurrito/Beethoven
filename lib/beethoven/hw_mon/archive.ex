@@ -1,6 +1,7 @@
 defmodule Beethoven.HwMon.Archive do
   @moduledoc """
   Tracks historical CPU and RAM usage as sampled by `HwMon.Server`.
+  Each metric will only cache up to 100k entries. Entries are pruned via FIFO.
   """
 
   require Logger
@@ -57,7 +58,7 @@ defmodule Beethoven.HwMon.Archive do
   @impl true
   def handle_cast({:ingest, {metric_type, timestamp, data}}, state) do
     #
-    Logger.debug(operation: :ingest, metric_type: metric_type, data: data)
+    # Logger.debug(operation: :ingest, metric_type: metric_type, data: data)
     #
     true =
       :ets.lookup(ArchiveTable, metric_type)
@@ -68,6 +69,8 @@ defmodule Beethoven.HwMon.Archive do
 
         # found
         [{^metric_type, history}] ->
+          # Limit metrics to 100_000
+          [history | _rest] = Enum.chunk_every(history, 100_000)
           :ets.insert(ArchiveTable, {metric_type, [{timestamp, data} | history]})
       end
 

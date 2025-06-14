@@ -130,7 +130,7 @@ defmodule Beethoven.HwMon.Server do
 
   #
   #
-  @spec memory_usage() :: {float(), float()}
+  @spec memory_usage() :: {float(), float(), float()}
   defp memory_usage() do
     [
       system_total_memory: system_total_memory,

@@ -6,9 +6,53 @@ defmodule Beethoven.Allocator do
   # Public API
 
   - `allocate/0` Provides the URI of the least-busy node in the cluster.
+  - `get_all/0` Dumps all records from the `#{__MODULE__}.Tracker` mnesia table.
+
+  # Readme
 
   The busyness of nodes is determined via signals.
-  Refer to the documentation for `Beethoven.Allocator.Agent` for more information on creating signals.
+  A signal is defined via the `signal/1` macro in `#{__MODULE__}.Agent`
+
+  ## Example
+
+      defmodule HttpSignal do
+        use #{__MODULE__}.Agent
+        signal(name: :http_connections, weight: 10.0, type: :count)
+      end
+
+
+  This creates a function on compile time that is used to send the signal to the Allocator.
+
+  ## Example for `:count` type signals
+
+        # Increases the internal count by 1
+        HttpSignal.increment_http_connections_count/0
+
+        # Decreases the internal count by 1
+        HttpSignal.decrement_http_connections_count/0
+
+  # Signal types
+
+  - `:count` -> Controls a counter for a given metric.
+  Creates 2 functions. `increment_{:name}_count/0`
+  - `:percent` -> Represents a percent value.
+  Creates 1 function. `percent_{:name}/1`
+  - `:pre_processed` -> Represents an abstract value.
+  Creates 1 function. `pre_processed_{:name}/1`
+
+  # Signal handling
+
+  ## Ingress
+
+  Once the signals are sent via the generated function, they are casted to a local instance of `#{__MODULE__}.Ingress`.
+  This service will normalize the data from the function and save to ETS. Once saved, it will signal `#{__MODULE__}.Cruncher` to check the new data.
+
+  ## Cruncher
+
+  Once signaled, this service will call the ETS table shared with `#{__MODULE__}.Ingress` and grab all the current signal data.
+  Using the weight and data payload for the signal, a busy score is generated. This score is stored in an Mnesia table for all other nodes to access.
+  This flow allows other PIDs to call the public API for `#{__MODULE__}` and get the nodeURI for the node with the least amount of work on it.
+
   """
 
   require Logger
