@@ -25,7 +25,6 @@ defmodule Beethoven.CoreServer do
 
   alias Beethoven.BeaconServer
   alias Beethoven.Utils
-  alias Beethoven.MnesiaTools
   alias Beethoven.DistrServer
 
   require Logger
