@@ -67,13 +67,13 @@ defmodule Beethoven.Allocator.Ingress do
   @impl true
   def handle_continue({:process_signal, {{name, weight, type}, payload}}, state) do
     #
-    Logger.debug(
-      operation: :signal_received,
-      signal: name,
-      weight: weight,
-      type: type,
-      payload: payload
-    )
+    #Logger.debug(
+    #  operation: :signal_received,
+    #  signal: name,
+    #  weight: weight,
+    #  type: type,
+    #  payload: payload
+    #c)
 
     #
     # Set to ETS based on type

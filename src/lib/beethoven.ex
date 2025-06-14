@@ -112,8 +112,8 @@ defmodule Beethoven do
   @doc """
   Returns all cluster nodes and their state.
   """
-  @spec get_cluster_nodes() :: nodeStatusMapList()
-  def get_cluster_nodes() do
+  @spec get_cluster_nodes(:detailed) :: nodeStatusMapList()
+  def get_cluster_nodes(:detailed) do
     tableName = CoreServer.Tracker
     #
 
@@ -122,6 +122,24 @@ defmodule Beethoven do
         {tableName, :"$1", :"$2", :"$3"},
         [],
         [%{node: :"$1", status: :"$2", last_change: :"$3"}]
+      }
+    ])
+  end
+
+  #
+  #
+  @doc """
+  Returns all cluster nodes and their state.
+  """
+  @spec get_cluster_nodes() :: nodeStatusMapList()
+  def get_cluster_nodes() do
+    tableName = CoreServer.Tracker
+
+    :mnesia.dirty_select(tableName, [
+      {
+        {tableName, :"$1", :_, :_},
+        [],
+        [:"$1"]
       }
     ])
   end

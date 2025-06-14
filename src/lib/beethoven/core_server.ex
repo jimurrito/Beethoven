@@ -31,6 +31,8 @@ defmodule Beethoven.CoreServer do
   require Logger
   use DistrServer, subscribe?: true
 
+  alias __MODULE__.Tracker, as: CoreTracker
+
   #
   #
   # Callbacks
@@ -101,7 +103,7 @@ defmodule Beethoven.CoreServer do
   @impl true
   def config() do
     %{
-      tableName: __MODULE__.Tracker,
+      tableName: CoreTracker,
       columns: [:node, :status, :last_change],
       indexes: [],
       dataType: :ordered_set,
@@ -125,17 +127,16 @@ defmodule Beethoven.CoreServer do
   @impl true
   def entry_point(mode) do
     Logger.info(status: :startup)
-    #
-    tableConfig = config() |> DistrServer.distr_to_table_conf()
     # Add self to tracker
-    :ok = add_self(tableConfig)
+    :ok = add_self()
     #
     # Monitor all nodes in cluster
-    :ok = Enum.each(Node.list(), &(true = Node.monitor(&1, true)))
+    Beethoven.get_cluster_nodes()
+    |> Enum.filter(&(&1 != node()))
+    |> Enum.each(&(true = Node.monitor(&1, true)))
+
     #
-    {tableName, _, _, _, _} = tableConfig
-    #
-    Logger.info(status: :startup_complete, table: tableName, current_mode: mode)
+    Logger.info(status: :startup_complete, current_mode: mode)
     #
     # Return mode + empty list of alert followers.
     {:ok, {mode, []}}
@@ -149,11 +150,8 @@ defmodule Beethoven.CoreServer do
   @impl true
   def handle_cast({:alert_me, nodeName}, {mode, followers}) do
     followers = [nodeName | followers]
-
     # deduplicate
     followers = followers |> Enum.dedup()
-    #
-
     Logger.info(operation: :alert_me, new_follower: nodeName, follower_count: length(followers))
     # Add caller node name to followers list
     {:noreply, {mode, followers}}
@@ -179,8 +177,7 @@ defmodule Beethoven.CoreServer do
   @impl true
   def handle_call({:add_node, nodeName}, _from, {mode, followers}) do
     Logger.info(operation: :add_node, new_node: nodeName, current_mode: mode)
-    tableConfig = config() |> DistrServer.distr_to_table_conf()
-    :ok = add_node(tableConfig, nodeName)
+    :ok = add_node(nodeName)
     # add node to Mnesia cluster config
     :ok = add_node_to_mnesia(nodeName)
     {:reply, :ok, {mode, followers}}
@@ -195,15 +192,12 @@ defmodule Beethoven.CoreServer do
   def handle_info({:nodedown, nodeName}, {mode, followers}) do
     Logger.warning(operation: :nodedown, affected_node: nodeName, current_mode: mode)
 
-    {tableName, _columns, _indexes, _dataType, _copyType} =
-      config() |> DistrServer.distr_to_table_conf()
-
-    # random backoff to reduce noise on Mnesia (20ms - 200ms)
-    {:ok, backoff} = Utils.random_backoff(20..200)
+    # random backoff to reduce noise on Mnesia (2ms - 20ms)
+    {:ok, backoff} = Utils.random_backoff(2..20)
     Logger.debug(operation: :nodedown_backoff, waited_ms: backoff)
 
     # Attempt to update Mnesia
-    :ok = update_node(tableName, nodeName, :offline)
+    :ok = update_node(nodeName, :offline)
     # Trigger recover attempt on BeaconServer
     :ok = BeaconServer.attempt_recover()
     #
@@ -341,10 +335,10 @@ defmodule Beethoven.CoreServer do
   #
   # Add a node to tracker as online.
   # There is no mechanism to remove the node from the tracker.
-  @spec add_node(MnesiaTools.tableConfig(), node()) :: :ok
-  defp add_node({tableName, _columns, _indexes, _dataType, _copyType}, nodeName) do
+  @spec add_node(node()) :: :ok
+  defp add_node(nodeName) do
     fn ->
-      :mnesia.write({tableName, nodeName, :online, DateTime.now!("Etc/UTC")})
+      :mnesia.write({CoreTracker, nodeName, :online, DateTime.now!("Etc/UTC")})
     end
     |> :mnesia.transaction()
     # unwrap {:atomic, :ok} -> :ok
@@ -354,27 +348,27 @@ defmodule Beethoven.CoreServer do
   #
   #
   # Add self to tracker as online.msg, state
-  @spec add_self(MnesiaTools.tableConfig()) :: :ok
-  defp add_self(tableConfig) do
-    add_node(tableConfig, node())
+  @spec add_self() :: :ok
+  defp add_self() do
+    add_node(node())
   end
 
   #
   #
   # Change status of a node on the tracker
-  @spec update_node(atom(), node(), nodeStatus()) :: :ok
-  defp update_node(tableName, nodeName, new_status) do
+  @spec update_node(node(), nodeStatus()) :: :ok
+  defp update_node(nodeName, new_status) do
     fn ->
       # read the status of the node to ensure it is not already updated on the table.
       # wread/1 ensures we get a `:write` lock on the record when we read it.
-      [{tableName, ^nodeName, old_status, _last_change}] =
-        :mnesia.wread({tableName, nodeName})
+      [{CoreTracker, ^nodeName, old_status, _last_change}] =
+        :mnesia.wread({CoreTracker, nodeName})
 
       # check status is *not* the desired one.
       :ok =
         if old_status != new_status do
           # write change to mnesia
-          :mnesia.write({tableName, nodeName, new_status, DateTime.now!("Etc/UTC")})
+          :mnesia.write({CoreTracker, nodeName, new_status, DateTime.now!("Etc/UTC")})
         else
           # ignore as the change was already committed to the table.
           :ok
