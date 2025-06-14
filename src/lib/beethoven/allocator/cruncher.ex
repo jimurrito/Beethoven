@@ -52,6 +52,7 @@ defmodule Beethoven.Allocator.Cruncher do
       # Sum the values in the list
       # This will be the score
       |> Enum.sum()
+      |> Float.round(8)
 
     #
     Logger.debug(new_busy_score: score, node: node())

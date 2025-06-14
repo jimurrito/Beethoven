@@ -34,7 +34,7 @@ defmodule Beethoven.HwMon.Server do
   def config() do
     %{
       tableName: HwTracker,
-      columns: [:node, :avail_cpu, :avail_ram_gb, :last_change],
+      columns: [:node, :avail_cpu, :core_count, :avail_ram_mb, :total_ram_mb, :last_change],
       indexes: [],
       # :mnesia data types
       dataType: :set,
@@ -52,7 +52,7 @@ defmodule Beethoven.HwMon.Server do
 
     fn ->
       [node() | Node.list()]
-      |> Enum.each(&:mnesia.write({tableName, &1, 0.0, 0.0, now!}))
+      |> Enum.each(&:mnesia.write({tableName, &1, 0.0, 0.0, 0.0, 0.0, now!}))
     end
     |> :mnesia.transaction()
     |> elem(1)
@@ -78,7 +78,7 @@ defmodule Beethoven.HwMon.Server do
   @impl true
   def handle_cast(:check, state) do
     # get RAM amount
-    {ram_percent, avail_ram} = memory_usage()
+    {ram_percent, avail_ram, total_ram} = memory_usage()
     # get cpu
     {cpu_percent, num_cores} = cpu_usage()
     avail_cpu = num_cores * 100 - cpu_percent
@@ -97,7 +97,11 @@ defmodule Beethoven.HwMon.Server do
     #
     #
     # Update Mnesia
-    :ok = :mnesia.dirty_write({HwTracker, node(), avail_cpu, avail_ram, DateTime.now!("Etc/UTC")})
+    :ok =
+      :mnesia.dirty_write(
+        {HwTracker, node(), avail_cpu, num_cores, avail_ram, total_ram, DateTime.now!("Etc/UTC")}
+      )
+
     #
     :ok = GenServer.cast(__MODULE__, :wait)
     {:noreply, state}
@@ -131,7 +135,7 @@ defmodule Beethoven.HwMon.Server do
     [
       system_total_memory: system_total_memory,
       free_memory: _free_memory,
-      total_memory: _total_memory,
+      total_memory: total_memory,
       buffered_memory: _buffered_memory,
       cached_memory: _cached_memory,
       total_swap: _total_swap,
@@ -142,8 +146,9 @@ defmodule Beethoven.HwMon.Server do
     # get memory used via total - available
     # then divide by system_total_memory to get the %
     percent = (system_total_memory - available_memory) / system_total_memory
-    gb = available_memory / 1_000_000_000
-    {percent * 100, gb}
+    avail_in_mb = available_memory / 1_000_000
+    total_in_mb = total_memory / 1_000_000
+    {percent * 100, avail_in_mb, total_in_mb}
   end
 
   #

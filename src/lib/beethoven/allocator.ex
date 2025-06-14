@@ -137,7 +137,7 @@ defmodule Beethoven.Allocator do
     # Get all records
     {AllocTracker, node, score, _} =
       :mnesia.dirty_select(AllocTracker, [
-        {{:"$1", :"$2", :"$3", :"$4"}, [], [:"$_"]}
+        {:mnesia.table_info(AllocTracker, :wild_pattern), [], [:"$_"]}
       ])
       # sort by score
       |> Enum.sort_by(&elem(&1, 2), :asc)
@@ -149,4 +149,19 @@ defmodule Beethoven.Allocator do
     #
     node
   end
+
+  #
+  #
+  @doc """
+  Gets all the records from the Allocator table.
+  """
+  @spec get_all() :: list(tuple())
+  def get_all() do
+    :mnesia.dirty_select(AllocTracker, [
+      {:mnesia.table_info(AllocTracker, :wild_pattern), [], [:"$_"]}
+    ])
+  end
+
+  #
+  #
 end

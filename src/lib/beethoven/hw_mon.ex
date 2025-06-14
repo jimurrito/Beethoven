@@ -10,6 +10,34 @@ defmodule Beethoven.HwMon do
   alias __MODULE__.Supervisor, as: HwMonSup
   alias __MODULE__, as: HwMon
 
+  alias __MODULE__.Server.Tracker, as: HwTracker
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Public API functions
+  #
+
+  #
+  #
+  @doc """
+  Get Node performance specs from Mnesia.
+
+      {Beethoven.HwMon.Server.Tracker, :node, :avail_cpu, :avail_ram_gb, :last_change}
+  """
+  @spec get_hw_usage() :: [{:mnesia.table(), node(), float(), float(), DateTime.t()}]
+  def get_hw_usage() do
+    :mnesia.dirty_select(HwTracker, [
+      {:mnesia.table_info(HwTracker, :wild_pattern), [], [:"$_"]}
+    ])
+  end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Supervisor functions
+  #
+
   #
   #
   @doc """
