@@ -13,6 +13,8 @@ defmodule Beethoven.RoleServer do
 
   use DistrServer, subscribe?: false
 
+  alias __MODULE__.Tracker, as: RoleTracker
+
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
@@ -60,7 +62,7 @@ defmodule Beethoven.RoleServer do
   @impl true
   def config() do
     %{
-      tableName: __MODULE__.Tracker,
+      tableName: RoleTracker,
       columns: [:role, :count, :assigned, :workers, :last_change],
       indexes: [],
       dataType: :ordered_set,
@@ -71,7 +73,7 @@ defmodule Beethoven.RoleServer do
   #
   # Setup table with all the roles defined in `config.exs`
   @impl true
-  def create_action({tableName, _columns, _indexes, _dataType, _copyType}) do
+  def create_action(_tableConfig) do
     # fn to setup table with initial data
     {:atomic, :ok} =
       fn ->
@@ -81,7 +83,7 @@ defmodule Beethoven.RoleServer do
           # Add roles to table
           fn {name, {_mod, _args, inst}} ->
             # {MNESIA_TABLE, role_name, count, assigned, workers, last_changed}
-            :mnesia.write({tableName, name, inst, 0, [], DateTime.now!("Etc/UTC")})
+            :mnesia.write({RoleTracker, name, inst, 0, [], DateTime.now!("Etc/UTC")})
           end
         )
       end
@@ -178,10 +180,8 @@ defmodule Beethoven.RoleServer do
 
         Logger.debug(operation: :node_update_backoff_complete, waited_ms: backoff)
 
-        # get DistrServer Mnesia config
-        config = config()
         # remove node from table
-        :ok = prune_node(config.tableName, nodeName)
+        :ok = prune_node(nodeName)
         # Trigger assign
         :ok = start_assign()
         #
@@ -222,8 +222,7 @@ defmodule Beethoven.RoleServer do
   """
   @spec copy_tracker() :: :ok | :already_exists | {:error, any()}
   def copy_tracker() do
-    config = config()
-    copy_table(config.tableName)
+    copy_table(RoleTracker)
   end
 
   #
@@ -245,15 +244,13 @@ defmodule Beethoven.RoleServer do
   # Assignment function
   @spec assign() :: {:ok, roleName()} | :noop
   defp assign() do
-    # get DistrServer Mnesia config
-    config = config()
     #
     fn ->
       # Acquire locks
-      _ = :mnesia.lock_table(config.tableName, :read)
-      _ = :mnesia.lock_table(config.tableName, :write)
+      _ = :mnesia.lock_table(RoleTracker, :read)
+      _ = :mnesia.lock_table(RoleTracker, :write)
       # Find work on the table - pick random work
-      find_work(config.tableName)
+      find_work()
       |> case do
         # No work found
         [] ->
@@ -266,7 +263,7 @@ defmodule Beethoven.RoleServer do
           # increment assigned and add self to workers
           :ok =
             :mnesia.write({
-              config.tableName,
+              RoleTracker,
               role_name,
               count,
               assigned + 1,
@@ -289,12 +286,12 @@ defmodule Beethoven.RoleServer do
   #
   #
   # Finds jobs that are not completely fulfilled yet.
-  @spec find_work(atom()) :: roleRecords()
-  defp find_work(tableName) do
+  @spec find_work() :: roleRecords()
+  defp find_work() do
     fn ->
-      :mnesia.select(tableName, [
+      :mnesia.select(RoleTracker, [
         {
-          {tableName, :"$1", :"$2", :"$3", :"$4", :"$5"},
+          {RoleTracker, :"$1", :"$2", :"$3", :"$4", :"$5"},
           # Finds records where :count is larger then :assigned.
           [{:>, :"$2", :"$3"}],
           [:"$$"]
@@ -315,18 +312,18 @@ defmodule Beethoven.RoleServer do
   #
   #
   # Clears work from a given node
-  @spec prune_node(atom(), node()) :: :ok
-  defp prune_node(tableName, nodeName) do
+  @spec prune_node(node()) :: :ok
+  defp prune_node(nodeName) do
     # transaction function
     fn ->
       # Acquire locks
-      _ = :mnesia.lock_table(tableName, :read)
-      _ = :mnesia.lock_table(tableName, :write)
+      _ = :mnesia.lock_table(RoleTracker, :read)
+      _ = :mnesia.lock_table(RoleTracker, :write)
       # iterates all rows and removes the downed node.
       :mnesia.foldl(
         fn record, _acc -> clear_node(record, nodeName) end,
         :ok,
-        tableName
+        RoleTracker
       )
     end
     |> :mnesia.transaction()
@@ -336,13 +333,16 @@ defmodule Beethoven.RoleServer do
   #
   #
   # Clears node from role records.
-  @spec clear_node({atom(), roleName(), integer(), integer(), list(node()), DateTime}, node()) ::
+  @spec clear_node(
+          {RoleTracker, roleName(), integer(), integer(), list(node()), DateTime},
+          node()
+        ) ::
           :ok
-  defp clear_node({tableName, role, count, assigned, workers, _last_changed}, nodeName) do
+  defp clear_node({RoleTracker, role, count, assigned, workers, _last_changed}, nodeName) do
     if Enum.member?(workers, nodeName) do
       :ok =
         :mnesia.write({
-          tableName,
+          RoleTracker,
           role,
           count,
           assigned - 1,
