@@ -1,5 +1,7 @@
 defmodule Beethoven.RoleServer do
   @moduledoc """
+  # DEPRECATED! Do not use. Use `Beethoven.RoleMgmt` instead.
+
   This server is responsible for the management and allocation of specialized OTP complaint PIDs.
   Roles are defined in in the application config for `:beethoven`.
 
