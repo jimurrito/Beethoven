@@ -59,7 +59,12 @@ defmodule Beethoven.DistrServer do
   **-Callback required-**\n
   Entry point for the `DistrServer` process. Similar to `init/1` for GenServers.
   """
-  @callback entry_point(var :: any()) :: {:ok, var :: any()}
+  @callback entry_point(var :: any()) ::
+              {:ok, state :: any()}
+              | {:ok, state :: any(),
+                 timeout() | :hibernate | {:continue, continue_arg :: term()}}
+              | :ignore
+              | {:stop, reason :: term()}
   #
   @doc """
   **-Callback required-**\n
@@ -84,24 +89,11 @@ defmodule Beethoven.DistrServer do
     quote do
       # force this modules behavior
       @behaviour Beethoven.DistrServer
-      # Add CoreServer Callback for node down
-      @behaviour Beethoven.CoreServer
       # Imports GenServer behaviors
       use GenServer
       # Imports mnesiaTools
       import Beethoven.MnesiaTools
       require Logger
-
-      #
-      #
-      #
-      def node_update(nodeName, status) do
-        Logger.error(
-          "The DistrServer invoked called back `node_update/2` is not declared for this module (#{__MODULE__}). Please add this call back before using `alert_me/1` again."
-        )
-      end
-
-      defoverridable node_update: 2
 
       #
       #

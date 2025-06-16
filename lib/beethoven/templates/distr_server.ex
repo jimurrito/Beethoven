@@ -1,4 +1,4 @@
-defmodule Template.DistrServer do
+defmodule Templates.DistrServer do
   @moduledoc """
   """
   alias Beethoven.DistrServer
@@ -54,6 +54,18 @@ defmodule Template.DistrServer do
     Logger.info(status: :startup_complete)
     {:ok, :ok}
   end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Public API functions
+  #
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Internal functions
+  #
 
   #
   #

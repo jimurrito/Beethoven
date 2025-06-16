@@ -1,14 +1,15 @@
-defmodule Templates.GenServer do
+defmodule Templates.Supervisor do
   @moduledoc """
+
   """
 
   require Logger
-  use GenServer
+  use Supervisor
 
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
-  # GenServer callback functions
+  # Supervisor functions
   #
 
   #
@@ -18,7 +19,7 @@ defmodule Templates.GenServer do
   """
   @spec start_link(any()) :: GenServer.on_start()
   def start_link(init_args \\ []) do
-    GenServer.start_link(__MODULE__, init_args, name: __MODULE__)
+    Supervisor.start_link(__MODULE__, init_args, name: __MODULE__)
   end
 
   #
@@ -26,8 +27,9 @@ defmodule Templates.GenServer do
   @impl true
   def init(_init_arg) do
     Logger.info(status: :startup)
-    Logger.info(status: :startup_complete)
-    {:ok, :ok}
+    children = []
+
+    Supervisor.init(children, strategy: :one_for_one)
   end
 
   #

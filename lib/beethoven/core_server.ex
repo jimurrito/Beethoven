@@ -14,6 +14,22 @@ defmodule Beethoven.CoreServer do
   ---
 
   # Listening for cluster node changes
+
+  If you invoke this module via `use`, it will import a specialized version of `alert_me/1` called `alert_me/0`.
+  The only major difference is that the name of the module is input into the first parameter of `alert_me/1`.
+
+  ## Example
+
+      defmodule TestMod do
+        use #{__MODULE__}
+
+        def fun() do
+          :ok = alert_me()
+        end
+
+      end
+
+
   Using `alert_me/1` from a local client, you can tell the CoreServer to call you back when there is a change to a cluster node.
   Ignores changes to itself, only delivers updates of other nodes.
 
@@ -34,15 +50,34 @@ defmodule Beethoven.CoreServer do
 
   #
   #
-  # Callbacks
+  # use Macro
   #
-
   @doc """
-  Callback needed for downlevel services to streamline receiving node down updates.\n
-  **Required if you follow core server for cluster updates via `alert_me/1`**
+  Imports the `alert_me/0` function into the module with special customizations for the declaring module.
   """
-  @callback node_update(nodeName :: node(), status :: nodeStatus()) :: :ok
-  #
+  defmacro __using__(_opt) do
+    quote do
+      #
+      #
+      @doc """
+      # CoreServer
+
+      Tell the local CoreServer that we want to be alerted to changes to cluster node state.
+      Update will be sent in the form of a cast.
+
+      ## Example
+
+          {:node_update, {nodeName, status}}
+
+      """
+      @spec alert_me() :: :ok
+      def alert_me() do
+        Beethoven.CoreServer.alert_me(__MODULE__)
+      end
+
+      #
+    end
+  end
 
   #
   #
@@ -287,6 +322,13 @@ defmodule Beethoven.CoreServer do
   #
   @doc """
   Tell the local CoreServer that we want to be alerted to changes to cluster node state.
+  Update will be sent in the form of a cast.
+
+  ## Example
+
+      {:node_update, {nodeName, status}}
+
+
   """
   @spec alert_me(module()) :: :ok
   def alert_me(module_name) do

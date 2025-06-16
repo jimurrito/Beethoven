@@ -1,38 +1,19 @@
-defmodule Beethoven.RoleUtils do
+defmodule Beethoven.RoleMgmt.Utils do
   @moduledoc false
 
   require Logger
-  alias Beethoven.Utils
 
-  #
-  #
-  @typedoc """
-  Represents a single role definition.
-  Same structure used to define the role within `config.exs`.
-  """
-  @type role() ::
-          {name :: atom(), module :: module(), init_args :: list(any()), inst :: integer()}
-  #
-  #
-  @typedoc """
-  List of roles().
-  """
-  @type roles() :: list(role())
-  #
-  #
-  @typedoc """
-  Role list in the form of a map.
-  """
-  @type roleMap() :: map()
+  alias Beethoven.RoleMgmt.Types
+  alias Beethoven.Utils
 
   #
   #
   #
   #
   @doc """
-  Retrieves roles from config and converts to map.
+  Retrieves roles from `config.exs` and converts to map using `role_list_to_map/1`.
   """
-  @spec get_role_config() :: roleMap()
+  @spec get_role_config() :: Types.roleMap()
   def get_role_config() do
     # get roles from config.exs
     Utils.get_app_env(:roles, [])
@@ -46,8 +27,23 @@ defmodule Beethoven.RoleUtils do
   @doc """
   Creates a map from a list of maps. First element of the map needs to be an atom.
   This same atom will be the key for the rest of the data in the map.
+
+    ## Example
+
+      [
+        {:role_name1, RoleModule1, [], 2},
+        {:role_name2, RoleModule2, [], 3},
+      ]
+
+      # Converts to:
+
+      %{
+        role_name1: {RoleModule1, [], 2},
+        role_name2: {RoleModule2, [], 3}
+      }
+
   """
-  @spec role_list_to_map(roles()) :: roleMap()
+  @spec role_list_to_map([Types.roleRecord()]) :: Types.roleMap()
   def role_list_to_map(role_list) do
     role_list_to_map(role_list, %{})
   end

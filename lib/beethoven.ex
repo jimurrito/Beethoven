@@ -10,7 +10,8 @@ defmodule Beethoven do
   """
 
   alias Beethoven.CoreServer
-  alias Beethoven.RoleServer
+  alias Beethoven.CoreServer.Tracker, as: CoreTracker
+  alias Beethoven.RoleMgmt.Assign.Tracker, as: RoleTracker
 
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -104,7 +105,7 @@ defmodule Beethoven do
   """
   @spec get_active_nodes() :: nodeList()
   def get_active_nodes() do
-    [node() | Node.list()]
+    :mnesia.dirty_select(CoreTracker, [{{CoreTracker, :"$1", :_, :_}, [], [:"$1"]}])
   end
 
   #
@@ -114,12 +115,9 @@ defmodule Beethoven do
   """
   @spec get_cluster_nodes(:detailed) :: nodeStatusMapList()
   def get_cluster_nodes(:detailed) do
-    tableName = CoreServer.Tracker
-    #
-
-    :mnesia.dirty_select(tableName, [
+    :mnesia.dirty_select(CoreTracker, [
       {
-        {tableName, :"$1", :"$2", :"$3"},
+        {CoreTracker, :"$1", :"$2", :"$3"},
         [],
         [%{node: :"$1", status: :"$2", last_change: :"$3"}]
       }
@@ -133,11 +131,9 @@ defmodule Beethoven do
   """
   @spec get_cluster_nodes() :: nodeStatusMapList()
   def get_cluster_nodes() do
-    tableName = CoreServer.Tracker
-
-    :mnesia.dirty_select(tableName, [
+    :mnesia.dirty_select(CoreTracker, [
       {
-        {tableName, :"$1", :_, :_},
+        {CoreTracker, :"$1", :_, :_},
         [],
         [:"$1"]
       }
@@ -151,11 +147,9 @@ defmodule Beethoven do
   """
   @spec get_roles() :: roleList()
   def get_roles() do
-    tableName = RoleServer.Tracker
-    #
-    :mnesia.dirty_select(tableName, [
+    :mnesia.dirty_select(RoleTracker, [
       {
-        {tableName, :"$1", :"$2", :"$3", :"$4", :_},
+        {RoleTracker, :"$1", :"$2", :"$3", :"$4", :_},
         [],
         [%{role: :"$1", count: :"$2", assigned: :"$3", nodes: :"$4"}]
       }

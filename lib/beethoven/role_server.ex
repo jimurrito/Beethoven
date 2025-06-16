@@ -1,17 +1,29 @@
 defmodule Beethoven.RoleServer do
   @moduledoc """
-  Server PID that manages role assignment across the cluster.
-  Leveraging the Mnesia integration with `DistrServer`,
-  these processes will be ephemeral and keep all state within Mnesia.
+  This server is responsible for the management and allocation of specialized OTP complaint PIDs.
+  Roles are defined in in the application config for `:beethoven`.
+
+  ## Example
+
+      config :beethoven,
+        ...
+        roles: [
+          # {<AtomName>, <Module>, <Initial Args>, <InstanceCount>}
+          {:test, Beethoven.TestRole, [arg1: "arg1"], 1}
+        ]
+
+  Based on the definition for each role, the nodes in the `Beethoven` cluster will ensure the required amount of that service is running across the cluster.
+  The number of service instances needed for the role is defined with the `InstanceCount` element in the tuple. These services are spread across the cluster.
+
   """
   require Logger
-  alias Beethoven.Utils
   alias Beethoven.CoreServer
+  alias Beethoven.Utils
   alias Beethoven.DistrServer
-  alias Beethoven.RoleUtils
   alias Beethoven.Signals
 
   use DistrServer, subscribe?: false
+  use CoreServer
 
   alias __MODULE__.Tracker, as: RoleTracker
 
@@ -22,11 +34,6 @@ defmodule Beethoven.RoleServer do
   #
 
   #
-  @typedoc """
-  Alias for `atom()`.
-  """
-  @type roleName :: atom()
-
   #
   @typedoc """
   Simplified type for tracker records.
@@ -35,11 +42,11 @@ defmodule Beethoven.RoleServer do
   @type roleRecord() ::
           {roleName :: atom(), roleModule :: module(), args :: any(), instances :: integer()}
   #
-  @typedoc """
-  List of `roleRecord()` objects.
-  """
-  @type roleRecords() :: list(roleRecord())
   #
+  @typedoc """
+  Role list in the form of a map.
+  """
+  @type roleMap() :: map()
 
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -78,7 +85,7 @@ defmodule Beethoven.RoleServer do
     {:atomic, :ok} =
       fn ->
         # Get Roles from config
-        RoleUtils.get_role_config()
+        get_role_config()
         |> Enum.each(
           # Add roles to table
           fn {name, {_mod, _args, inst}} ->
@@ -98,25 +105,16 @@ defmodule Beethoven.RoleServer do
   def entry_point(_var) do
     Logger.info(status: :startup)
     # get roles from config.exs
-    role_map = RoleUtils.get_role_config()
+    role_map = get_role_config()
     # Start DynamicSupervisor
     {:ok, _pid} = DynamicSupervisor.start_link(name: Beethoven.RoleSupervisor)
     # Subscribe to node change updates from CoreServer
-    :ok = CoreServer.alert_me(__MODULE__)
+    :ok = alert_me()
     # Start assign loop
     :ok = start_assign()
     #
     Logger.info(status: :startup_complete)
     {:ok, role_map}
-  end
-
-  #
-  #
-  #
-  # Called by CoreServer when a node changes state or gets added to the cluster
-  @impl true
-  def node_update(nodeName, status) do
-    DistrServer.cast(__MODULE__, {:node_update, nodeName, status})
   end
 
   #
@@ -196,7 +194,7 @@ defmodule Beethoven.RoleServer do
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
-  # Client functions
+  # Public API functions
   #
 
   #
@@ -207,6 +205,62 @@ defmodule Beethoven.RoleServer do
   @spec start_assign() :: :ok
   def start_assign() do
     DistrServer.cast(__MODULE__, :assign)
+  end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Internal Role utils functions
+  #
+
+  #
+  #
+  #
+  #
+  @doc """
+  Retrieves roles from config and converts to map.
+  """
+  @spec get_role_config() :: roleMap()
+  def get_role_config() do
+    # get roles from config.exs
+    Utils.get_app_env(:roles, [])
+    # converts to map
+    |> role_list_to_map()
+  end
+
+  #
+  #
+  #
+  @doc """
+  Creates a map from a list of maps. First element of the map needs to be an atom.
+  This same atom will be the key for the rest of the data in the map.
+  """
+  @spec role_list_to_map([roleRecord()]) :: roleMap()
+  def role_list_to_map(role_list) do
+    role_list_to_map(role_list, %{})
+  end
+
+  # End loop
+  defp role_list_to_map([], state) do
+    state
+  end
+
+  # Working loop
+  defp role_list_to_map([{role_name, mod, args, inst} | role_list], state)
+       when is_atom(role_name) do
+    state = state |> Map.put(role_name, {mod, args, inst})
+    role_list_to_map(role_list, state)
+  end
+
+  # Working loop - bad syntax for role manifest
+  defp role_list_to_map([role_bad | role_list], state) do
+    Logger.error(
+      "One of the roles provided is not in the proper syntax. This role will be ignored.",
+      expected: "{:role_name, Module, ['args'], 1}",
+      received: role_bad
+    )
+
+    role_list_to_map(role_list, state)
   end
 
   #
@@ -229,7 +283,7 @@ defmodule Beethoven.RoleServer do
   #
   # Start a role under the dynamic role supervisor
   # role_name, {mod, args, inst}
-  @spec start_role(roleName(), RoleUtils.roleMap()) :: :ok
+  @spec start_role(atom(), roleMap()) :: :ok
   defp start_role(roleName, roleMap) do
     # Parse role info from state
     {mod, args, _inst} = Map.get(roleMap, roleName)
@@ -242,7 +296,7 @@ defmodule Beethoven.RoleServer do
   #
   #
   # Assignment function
-  @spec assign() :: {:ok, roleName()} | :noop
+  @spec assign() :: {:ok, atom()} | :noop
   defp assign() do
     #
     fn ->
@@ -279,14 +333,14 @@ defmodule Beethoven.RoleServer do
     end
     #
     |> :mnesia.transaction()
-    # Unwrap {:atomic, roleName() | :noop}
+    # Unwrap {:atomic, atom() | :noop}
     |> elem(1)
   end
 
   #
   #
   # Finds jobs that are not completely fulfilled yet.
-  @spec find_work() :: roleRecords()
+  @spec find_work() :: [roleRecord()]
   defp find_work() do
     fn ->
       :mnesia.select(RoleTracker, [
@@ -334,7 +388,7 @@ defmodule Beethoven.RoleServer do
   #
   # Clears node from role records.
   @spec clear_node(
-          {RoleTracker, roleName(), integer(), integer(), list(node()), DateTime},
+          {RoleTracker, atom(), integer(), integer(), list(node()), DateTime},
           node()
         ) ::
           :ok

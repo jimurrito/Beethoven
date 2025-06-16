@@ -63,6 +63,7 @@ defmodule Beethoven.Allocator do
 
   require Logger
   use DistrServer, subscribe?: false
+  use CoreServer
 
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -77,8 +78,6 @@ defmodule Beethoven.Allocator do
   """
   @spec start_link(any()) :: GenServer.on_start()
   def start_link(init_args) do
-    #
-    # Start GenServer
     DistrServer.start_link(__MODULE__, init_args, name: __MODULE__)
   end
 
@@ -123,16 +122,9 @@ defmodule Beethoven.Allocator do
     opts = [strategy: :one_for_one, name: AllocSupervisor]
     _ = Supervisor.start_link(children, opts)
     # get node alert
-    :ok = CoreServer.alert_me(__MODULE__)
+    :ok = alert_me()
     Logger.info(status: :startup_complete)
     {:ok, :ok}
-  end
-
-  #
-  # Called by CoreServer when a node changes state or gets added to the cluster
-  @impl true
-  def node_update(nodeName, status) do
-    DistrServer.cast(__MODULE__, {:node_update, nodeName, status})
   end
 
   #
@@ -179,12 +171,9 @@ defmodule Beethoven.Allocator do
   def allocate() do
     #
     # Get all records
+    # gets all the records from the table. they come sorted from least-to-most busy.
     {AllocTracker, node, score, _} =
-      :mnesia.dirty_select(AllocTracker, [
-        {:mnesia.table_info(AllocTracker, :wild_pattern), [], [:"$_"]}
-      ])
-      # sort by score
-      |> Enum.sort_by(&elem(&1, 2), :asc)
+      get_all()
       # get only the first
       |> List.first()
 
@@ -197,13 +186,29 @@ defmodule Beethoven.Allocator do
   #
   #
   @doc """
+  Gets all the records from the Allocator table, but returns only the URIs of the nodes..
+  Records come pre-sorted from least-to-most busy.
+  """
+  @spec allocation_list() :: [node()]
+  def allocation_list() do
+    # get all and unwrap each element to just the node
+    get_all()
+    |> Enum.map(&elem(&1, 1))
+  end
+
+  #
+  #
+  @doc """
   Gets all the records from the Allocator table.
+  Records come pre-sorted from least-to-most busy.
   """
   @spec get_all() :: list(tuple())
   def get_all() do
     :mnesia.dirty_select(AllocTracker, [
       {:mnesia.table_info(AllocTracker, :wild_pattern), [], [:"$_"]}
     ])
+    # sort by score
+    |> Enum.sort_by(&elem(&1, 2), :asc)
   end
 
   #

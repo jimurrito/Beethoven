@@ -1,4 +1,4 @@
-defmodule Template.GenServerEts do
+defmodule Templates.GenServerEts do
   @moduledoc """
   """
 
@@ -32,6 +32,18 @@ defmodule Template.GenServerEts do
     Logger.info(status: :startup_complete)
     {:ok, :ok}
   end
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Public API functions
+  #
+
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #
+  # Internal functions
+  #
 
   #
   #
