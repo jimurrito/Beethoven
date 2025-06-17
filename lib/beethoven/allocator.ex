@@ -139,7 +139,7 @@ defmodule Beethoven.Allocator do
       |> case do
         #
         :online ->
-          :mnesia.dirty_read(AllocTracker, nodeName)
+          fetch(nodeName)
           |> case do
             # not found
             [] -> :mnesia.dirty_write({AllocTracker, nodeName, 0.0, now!})
@@ -204,9 +204,7 @@ defmodule Beethoven.Allocator do
   """
   @spec get_all() :: list(tuple())
   def get_all() do
-    :mnesia.dirty_select(AllocTracker, [
-      {:mnesia.table_info(AllocTracker, :wild_pattern), [], [:"$_"]}
-    ])
+    fetch_all()
     # sort by score
     |> Enum.sort_by(&elem(&1, 2), :asc)
   end

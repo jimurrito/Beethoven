@@ -152,7 +152,7 @@ defmodule Beethoven.DistrServer do
             #
             quote do
               result = copy_table(tableName)
-              {:ok, _node} = subscribe(tableName)
+              {:ok, _node} = :mnesia.subscribe({:table, tableName, :detailed})
 
               Logger.info(
                 table: tableName,

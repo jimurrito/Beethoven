@@ -23,7 +23,7 @@ defmodule Beethoven.HwMon do
 
   alias __MODULE__, as: HwMon
 
-  alias __MODULE__.Server.Tracker, as: HwTracker
+  alias __MODULE__.Server, as: HwServer
 
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -40,9 +40,7 @@ defmodule Beethoven.HwMon do
   """
   @spec get_hw_usage() :: [{module(), node(), float(), float(), DateTime.t()}]
   def get_hw_usage() do
-    :mnesia.dirty_select(HwTracker, [
-      {:mnesia.table_info(HwTracker, :wild_pattern), [], [:"$_"]}
-    ])
+    HwServer.fetch_all()
   end
 
   #

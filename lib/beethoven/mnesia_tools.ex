@@ -123,26 +123,4 @@ defmodule Beethoven.MnesiaTools do
 
   #
   #
-  #
-  @doc """
-  Subscribe to changes to a Mnesia table.
-  """
-  @spec subscribe(atom()) :: {:ok, node()} | {:error, reason :: term()}
-  def subscribe(tableName) do
-    # :detailed is used to get the previous version of the record.
-    :mnesia.subscribe({:table, tableName, :detailed})
-  end
-
-  #
-  #
-  @doc """
-  Runs a job within a synchronous transaction
-  """
-  @spec sync_run((-> any())) :: any() | {:error, any()}
-  def sync_run(fun) do
-    :mnesia.sync_transaction(fun)
-  end
-
-  #
-  #
 end
