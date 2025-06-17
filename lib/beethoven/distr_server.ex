@@ -43,10 +43,11 @@ defmodule Beethoven.DistrServer do
         }
 
   #
-  #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
-  # UNIQUE CALL BACKS
+  # CALL BACKS
+  #
+
   #
   #
   @doc """
@@ -54,6 +55,8 @@ defmodule Beethoven.DistrServer do
   `DistrServer` configuration. See `distrConfig()` type for more information on the return.
   """
   @callback config() :: distrConfig()
+
+  #
   #
   @doc """
   **-Callback required-**\n
@@ -65,23 +68,21 @@ defmodule Beethoven.DistrServer do
                  timeout() | :hibernate | {:continue, continue_arg :: term()}}
               | :ignore
               | {:stop, reason :: term()}
+
+  #
   #
   @doc """
   **-Callback required-**\n
   Callback that is triggered when the process creates the Mnesia Table for the cluster.
   """
   @callback create_action(tableConfig :: MnesiaTools.tableConfig()) :: :ok
-  #
-  #
-  # MASKED CALL BACKS
 
-  #
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
   # `USE` MACRO
   #
-  #
+
   @doc false
   defmacro __using__(subscribe?: subscribe) do
     #
@@ -92,7 +93,7 @@ defmodule Beethoven.DistrServer do
       # Imports GenServer behaviors
       use GenServer
       # Imports mnesiaTools
-      import Beethoven.MnesiaTools
+      # import Beethoven.MnesiaTools
       require Logger
 
       #
@@ -178,8 +179,107 @@ defmodule Beethoven.DistrServer do
       end
 
       #
+      # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+      #
+      # Mnesia table tools.
+      #
+
+      #
+      #
+      @doc """
+      Returns the name of the DistrServer `#{__MODULE__}`'s mnesia table.
+      """
+      @spec get_table_name() :: module() | atom()
+      def get_table_name() do
+        config() |> Map.get(:tableName)
+      end
+
+      #
+      #
+      @doc """
+      Subscribes to the table mapped to the DistrServer `#{__MODULE__}`'s mnesia table.
+      """
+      @spec subscribe(:simple | :detailed) :: :ok
+      def subscribe(type \\ :simple) do
+        {:ok, _node} = :mnesia.subscribe({:table, get_table_name(), type})
+        :ok
+      end
+
+      #
+      #
+      @doc """
+      Fetches all records from the DistrServer `#{__MODULE__}`'s mnesia table.
+      """
+      @spec fetch_all() :: list(tuple()) | list()
+      def fetch_all() do
+        tableName = get_table_name()
+
+        :mnesia.dirty_select(tableName, [
+          {:mnesia.table_info(tableName, :wild_pattern), [], [:"$_"]}
+        ])
+      end
+
+      #
+      #
+      @doc """
+      Fetches data from the DistrServer `#{__MODULE__}`'s mnesia table.
+      Uses a record key to query the data. Will return all matching records.
+      """
+      @spec fetch(any()) :: list(tuple()) | list()
+      def fetch(key) do
+        :mnesia.dirty_read(get_table_name(), key)
+      end
+
+      #
+      #
+      @doc """
+      Similar to `:mnesia.dirty_select/2` but only needs the match spec as an argument.
+      The table name of the DistrServer `#{__MODULE__}`'s mnesia table is input automatically as the 1st arity.
+      """
+      @spec dirty_select(:ets.match_spec()) :: list(tuple) | list()
+      def dirty_select(matchSpec) do
+        :mnesia.dirty_select(get_table_name(), matchSpec)
+      end
+
+      #
+      #
+      @doc """
+      Checks if the DistrServer `#{__MODULE__}`'s mnesia table exists.
+      """
+      @spec table_exists?() :: boolean()
+      def table_exists?() do
+        MnesiaTools.table_exists?(get_table_name())
+      end
+
+      #
+      #
+      @doc """
+      Holds the thread until the DistrServer `#{__MODULE__}`'s mnesia table becomes available, or timeout occurs.
+      Defaults to `1_000` milliseconds for timeouts and `15` milliseconds for checking intervals.
+      """
+      @spec until_exists() :: :ok | {:error, :timeout}
+      def until_exists(int \\ 15, timeout \\ 1_000, acc \\ 0) do
+        table_exists?()
+        |> case do
+          true ->
+            :ok
+
+          false ->
+            if acc >= timeout do
+              # acc is larger or equal to the timeout
+              {:error, :timeout}
+            else
+              Process.sleep(int)
+              until_exists(timeout, acc + int)
+            end
+        end
+      end
+
+      #
       #
     end
+
+    #
   end
 
   #
