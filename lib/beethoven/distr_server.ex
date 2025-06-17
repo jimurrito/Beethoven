@@ -93,7 +93,7 @@ defmodule Beethoven.DistrServer do
       # Imports GenServer behaviors
       use GenServer
       # Imports mnesiaTools
-      # import Beethoven.MnesiaTools
+      import Beethoven.MnesiaTools
       require Logger
 
       #
