@@ -198,6 +198,17 @@ defmodule Beethoven.DistrServer do
       #
       @doc """
       Subscribes to the table mapped to the DistrServer `#{__MODULE__}`'s mnesia table.
+
+      # Matches based on subscription
+
+      ## `:simple`
+
+          {:mnesia_table_event, {:atom, record(), _op_data}}
+
+      ## `:detailed`
+
+          {:mnesia_table_event, {:atom, module() | :atom(), record(), [] | [record()], _op_data}}
+
       """
       @spec subscribe(:simple | :detailed) :: :ok
       def subscribe(type \\ :simple) do
