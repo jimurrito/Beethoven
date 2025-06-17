@@ -11,7 +11,6 @@ defmodule Beethoven.RoleMgmt.Assign do
   alias Beethoven.RoleMgmt.Manager
   alias Beethoven.RoleMgmt.Utils
   alias Beethoven.DistrServer
-  alias __MODULE__.Tracker, as: RoleTracker
 
   require Logger
   use DistrServer, subscribe?: true
@@ -74,7 +73,7 @@ defmodule Beethoven.RoleMgmt.Assign do
         # Add roles to table
         fn {name, {_mod, _args, inst}} ->
           # {MNESIA_TABLE, role_name, count, assigned, workers, last_changed}
-          :mnesia.write({RoleTracker, name, inst, 0, [], DateTime.now!("Etc/UTC")})
+          :mnesia.write({get_table_name(), name, inst, 0, [], DateTime.now!("Etc/UTC")})
         end
       )
     end
@@ -97,19 +96,19 @@ defmodule Beethoven.RoleMgmt.Assign do
   @impl true
   def handle_continue(:assign, roleMap) do
     Logger.debug(operation: :assign, status: :startup)
-
+    tableName = get_table_name()
     # Lock table and perform logic
     :ok =
       fn ->
         #
         # Acquire locks
-        _ = :mnesia.lock_table(RoleTracker, :read)
-        _ = :mnesia.lock_table(RoleTracker, :write)
+        _ = :mnesia.lock_table(tableName, :read)
+        _ = :mnesia.lock_table(tableName, :write)
         #
         # Get roles that are not at capacity
-        :mnesia.select(RoleTracker, [
+        :mnesia.select(tableName, [
           {
-            {RoleTracker, :_, :"$1", :"$2", :_, :_},
+            {tableName, :_, :"$1", :"$2", :_, :_},
             [
               # when count is larger then assigned
               {:>, :"$1", :"$2"}
@@ -128,7 +127,7 @@ defmodule Beethoven.RoleMgmt.Assign do
           roles ->
             #
             roles
-            |> Enum.each(fn {RoleTracker, role, count, _assigned, workers, _lc} ->
+            |> Enum.each(fn {^tableName, role, count, _assigned, workers, _lc} ->
               #
               # make new list of workers
               new_workers = [node() | workers]
@@ -137,7 +136,7 @@ defmodule Beethoven.RoleMgmt.Assign do
               #
               # write change to mnesia
               :mnesia.write(
-                {RoleTracker, role, count, length(new_workers), new_workers,
+                {tableName, role, count, length(new_workers), new_workers,
                  DateTime.now!("Etc/UTC")}
               )
             end)

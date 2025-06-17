@@ -9,7 +9,6 @@ defmodule Beethoven.Allocator.Cruncher do
   require Logger
   use GenServer
 
-  alias Beethoven.Allocator.Tracker, as: AllocTracker
   alias Beethoven.Allocator.Ingress.Cache, as: IngressCache
   alias :math, as: Math
 

@@ -27,8 +27,6 @@ defmodule Beethoven.RoleServer do
   use DistrServer, subscribe?: false
   use CoreServer
 
-  alias __MODULE__.Tracker, as: RoleTracker
-
   #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #
@@ -92,7 +90,7 @@ defmodule Beethoven.RoleServer do
           # Add roles to table
           fn {name, {_mod, _args, inst}} ->
             # {MNESIA_TABLE, role_name, count, assigned, workers, last_changed}
-            :mnesia.write({RoleTracker, name, inst, 0, [], DateTime.now!("Etc/UTC")})
+            :mnesia.write({get_table_name(), name, inst, 0, [], DateTime.now!("Etc/UTC")})
           end
         )
       end
@@ -278,7 +276,7 @@ defmodule Beethoven.RoleServer do
   """
   @spec copy_tracker() :: :ok | :already_exists | {:error, any()}
   def copy_tracker() do
-    copy_table(RoleTracker)
+    copy_table(get_table_name())
   end
 
   #
@@ -300,11 +298,12 @@ defmodule Beethoven.RoleServer do
   # Assignment function
   @spec assign() :: {:ok, atom()} | :noop
   defp assign() do
+    tableName = get_table_name()
     #
     fn ->
       # Acquire locks
-      _ = :mnesia.lock_table(RoleTracker, :read)
-      _ = :mnesia.lock_table(RoleTracker, :write)
+      _ = :mnesia.lock_table(tableName, :read)
+      _ = :mnesia.lock_table(tableName, :write)
       # Find work on the table - pick random work
       find_work()
       |> case do
@@ -319,7 +318,7 @@ defmodule Beethoven.RoleServer do
           # increment assigned and add self to workers
           :ok =
             :mnesia.write({
-              RoleTracker,
+              tableName,
               role_name,
               count,
               assigned + 1,
@@ -344,10 +343,12 @@ defmodule Beethoven.RoleServer do
   # Finds jobs that are not completely fulfilled yet.
   @spec find_work() :: [roleRecord()]
   defp find_work() do
+    tableName = get_table_name()
+    #
     fn ->
-      :mnesia.select(RoleTracker, [
+      :mnesia.select(get_table_name(), [
         {
-          {RoleTracker, :"$1", :"$2", :"$3", :"$4", :"$5"},
+          {tableName, :"$1", :"$2", :"$3", :"$4", :"$5"},
           # Finds records where :count is larger then :assigned.
           [{:>, :"$2", :"$3"}],
           [:"$$"]
@@ -370,16 +371,17 @@ defmodule Beethoven.RoleServer do
   # Clears work from a given node
   @spec prune_node(node()) :: :ok
   defp prune_node(nodeName) do
+    tableName = get_table_name()
     # transaction function
     fn ->
       # Acquire locks
-      _ = :mnesia.lock_table(RoleTracker, :read)
-      _ = :mnesia.lock_table(RoleTracker, :write)
+      _ = :mnesia.lock_table(tableName, :read)
+      _ = :mnesia.lock_table(tableName, :write)
       # iterates all rows and removes the downed node.
       :mnesia.foldl(
         fn record, _acc -> clear_node(record, nodeName) end,
         :ok,
-        RoleTracker
+        tableName
       )
     end
     |> :mnesia.transaction()
@@ -398,7 +400,7 @@ defmodule Beethoven.RoleServer do
     if Enum.member?(workers, nodeName) do
       :ok =
         :mnesia.write({
-          RoleTracker,
+          get_table_name(),
           role,
           count,
           assigned - 1,

@@ -46,8 +46,6 @@ defmodule Beethoven.CoreServer do
   require Logger
   use DistrServer, subscribe?: true
 
-  alias __MODULE__.Tracker, as: CoreTracker
-
   #
   #
   # use Macro
@@ -379,7 +377,7 @@ defmodule Beethoven.CoreServer do
   @spec add_node(node()) :: :ok
   defp add_node(nodeName) do
     fn ->
-      :mnesia.write({CoreTracker, nodeName, :online, DateTime.now!("Etc/UTC")})
+      :mnesia.write({get_table_name(), nodeName, :online, DateTime.now!("Etc/UTC")})
     end
     |> :mnesia.transaction()
     # unwrap {:atomic, :ok} -> :ok
@@ -402,14 +400,14 @@ defmodule Beethoven.CoreServer do
     fn ->
       # read the status of the node to ensure it is not already updated on the table.
       # wread/1 ensures we get a `:write` lock on the record when we read it.
-      [{CoreTracker, ^nodeName, old_status, _last_change}] =
-        :mnesia.wread({CoreTracker, nodeName})
+      [{_, ^nodeName, old_status, _last_change}] =
+        :mnesia.wread({get_table_name(), nodeName})
 
       # check status is *not* the desired one.
       :ok =
         if old_status != new_status do
           # write change to mnesia
-          :mnesia.write({CoreTracker, nodeName, new_status, DateTime.now!("Etc/UTC")})
+          :mnesia.write({get_table_name(), nodeName, new_status, DateTime.now!("Etc/UTC")})
         else
           # ignore as the change was already committed to the table.
           :ok

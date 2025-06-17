@@ -212,7 +212,7 @@ defmodule Beethoven.DistrServer do
       """
       @spec subscribe(:simple | :detailed) :: :ok
       def subscribe(type \\ :simple) do
-        {:ok, _node} = :mnesia.subscribe({:table, get_table_name(), type})
+        _ = :mnesia.subscribe({:table, get_table_name(), type})
         :ok
       end
 

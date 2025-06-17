@@ -4,7 +4,6 @@ defmodule Beethoven.HwMon.Server do
   """
 
   alias Beethoven.DistrServer
-  alias __MODULE__.Tracker, as: HwTracker
   alias Beethoven.HwMon.Archive, as: HwArchive
 
   require Logger
@@ -33,7 +32,7 @@ defmodule Beethoven.HwMon.Server do
   @impl true
   def config() do
     %{
-      tableName: HwTracker,
+      tableName: HwMonTracker,
       columns: [:node, :avail_cpu, :core_count, :avail_ram_mb, :total_ram_mb, :last_change],
       indexes: [],
       # :mnesia data types
@@ -99,7 +98,8 @@ defmodule Beethoven.HwMon.Server do
     # Update Mnesia
     :ok =
       :mnesia.dirty_write(
-        {HwTracker, node(), avail_cpu, num_cores, avail_ram, total_ram, DateTime.now!("Etc/UTC")}
+        {get_table_name(), node(), avail_cpu, num_cores, avail_ram, total_ram,
+         DateTime.now!("Etc/UTC")}
       )
 
     #

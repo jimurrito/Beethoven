@@ -58,7 +58,6 @@ defmodule Beethoven.Allocator do
   require Logger
   alias Beethoven.DistrServer
   alias Beethoven.CoreServer
-  alias __MODULE__.Tracker, as: AllocTracker
   alias __MODULE__.Supervisor, as: AllocSupervisor
 
   require Logger
@@ -142,14 +141,14 @@ defmodule Beethoven.Allocator do
           fetch(nodeName)
           |> case do
             # not found
-            [] -> :mnesia.dirty_write({AllocTracker, nodeName, 0.0, now!})
+            [] -> :mnesia.dirty_write({get_table_name(), nodeName, 0.0, now!})
             # found == do nothing
             _ -> :ok
           end
 
         #
         :offline ->
-          :mnesia.dirty_delete(AllocTracker, nodeName)
+          :mnesia.dirty_delete(get_table_name(), nodeName)
       end
 
     {:noreply, state}
@@ -172,7 +171,7 @@ defmodule Beethoven.Allocator do
     #
     # Get all records
     # gets all the records from the table. they come sorted from least-to-most busy.
-    {AllocTracker, node, score, _} =
+    {_, node, score, _} =
       get_all()
       # get only the first
       |> List.first()

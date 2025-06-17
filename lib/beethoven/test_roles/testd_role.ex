@@ -12,7 +12,7 @@ defmodule Beethoven.TestdRole do
   @impl true
   def config() do
     %{
-      tableName: Beethoven.TestdRole.Mnesia,
+      tableName: TestRoleTracker,
       columns: [:name1, :name2],
       indexes: [:name1],
       dataType: :ordered_set,
@@ -32,7 +32,7 @@ defmodule Beethoven.TestdRole do
   @impl true
   def entry_point(init_args) do
     #
-    IO.inspect({:test_distributed_role_running, {TestdRole, [args: init_args]}})
+    IO.inspect({:test_distributed_role_running, {get_table_name(), [args: init_args]}})
 
     #
     {:ok, :ok}
