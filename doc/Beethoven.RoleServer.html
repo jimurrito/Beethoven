@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.37.3">
-    <meta name="project" content="Beethoven v0.3.7">
+    <meta name="project" content="Beethoven v0.3.9">
 
 
-    <title>Beethoven.RoleServer — Beethoven v0.3.7</title>
+    <title>Beethoven.RoleServer — Beethoven v0.3.9</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="dist/sidebar_items-BF9D4A56.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-ALU6OERS.js"></script>
 
@@ -37,7 +37,7 @@
 Beethoven
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.3.7
+          v0.3.9
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@ Beethoven
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Beethoven.RoleServer</span> 
-      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+      <small class="app-vsn" translate="no">(Beethoven v0.3.9)</small>
 
     </h1>
 
@@ -84,9 +84,20 @@ Beethoven
 
 
     <section id="moduledoc">
-<p>Server PID that manages role assignment across the cluster.
-Leveraging the Mnesia integration with <code class="inline">DistrServer</code>,
-these processes will be ephemeral and keep all state within Mnesia.</p>
+<h1>DEPRECATED! Do not use. Use <a href="Beethoven.RoleMgmt.html"><code class="inline">Beethoven.RoleMgmt</code></a> instead.</h1><p>This server is responsible for the management and allocation of specialized OTP complaint PIDs.
+Roles are defined in in the application config for <code class="inline">:beethoven</code>.</p><h2 id="module-example" class="section-heading">
+  <a href="#module-example" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:beethoven</span><span class="p">,</span><span class="w">
+  </span><span class="n">...</span><span class="w">
+  </span><span class="ss">roles</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0247850743-1">[</span><span class="w">
+    </span><span class="c1"># {&lt;AtomName&gt;, &lt;Module&gt;, &lt;Initial Args&gt;, &lt;InstanceCount&gt;}</span><span class="w">
+    </span><span class="p" data-group-id="0247850743-2">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="nc">Beethoven.TestRole</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0247850743-3">[</span><span class="ss">arg1</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;arg1&quot;</span><span class="p" data-group-id="0247850743-3">]</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="0247850743-2">}</span><span class="w">
+  </span><span class="p" data-group-id="0247850743-1">]</span></code></pre><p>Based on the definition for each role, the nodes in the <a href="Beethoven.html"><code class="inline">Beethoven</code></a> cluster will ensure the required amount of that service is running across the cluster.
+The number of service instances needed for the role is defined with the <code class="inline">InstanceCount</code> element in the tuple. These services are spread across the cluster.</p>
     </section>
 
 </div>
@@ -105,11 +116,11 @@ these processes will be ephemeral and keep all state within Mnesia.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:roleName/0" data-no-tooltip="" translate="no">roleName()</a>
+        <a href="#t:roleMap/0" data-no-tooltip="" translate="no">roleMap()</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Alias for <code class="inline">atom()</code>.</p></div>
+        <div class="summary-synopsis"><p>Role list in the form of a map.</p></div>
 
     </div>
 
@@ -124,21 +135,22 @@ Just excludes the table name from the record tuple.</p></div>
 
     </div>
 
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:roleRecords/0" data-no-tooltip="" translate="no">roleRecords()</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>List of <code class="inline">roleRecord()</code> objects.</p></div>
-
-    </div>
-
 </div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
   </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#alert_me/0" data-no-tooltip="" translate="no">alert_me()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><h1>CoreServer</h1><p>Tell the local CoreServer that we want to be alerted to changes to cluster node state.
+Update will be sent in the form of a cast.</p></div>
+
+    </div>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -162,6 +174,69 @@ Just excludes the table name from the record tuple.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#dirty_select/1" data-no-tooltip="" translate="no">dirty_select(matchSpec)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Similar to <a href="https://www.erlang.org/doc/apps/mnesia/mnesia.html#dirty_select/2"><code class="inline">:mnesia.dirty_select/2</code></a> but only needs the match spec as an argument.
+The table name of the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table is input automatically as the 1st arity.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#fetch/1" data-no-tooltip="" translate="no">fetch(key)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Fetches data from the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table.
+Uses a record key to query the data. Will return all matching records.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#fetch_all/0" data-no-tooltip="" translate="no">fetch_all()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Fetches all records from the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_role_config/0" data-no-tooltip="" translate="no">get_role_config()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Retrieves roles from config and converts to map.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_table_name/0" data-no-tooltip="" translate="no">get_table_name()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the name of the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#role_list_to_map/1" data-no-tooltip="" translate="no">role_list_to_map(role_list)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Creates a map from a list of maps. First element of the map needs to be an atom.
+This same atom will be the key for the rest of the data in the map.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#start_assign/0" data-no-tooltip="" translate="no">start_assign()</a>
 
       </div>
@@ -180,6 +255,37 @@ Just excludes the table name from the record tuple.</p></div>
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#subscribe/1" data-no-tooltip="" translate="no">subscribe(type \\ :simple)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Subscribes to the table mapped to the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#table_exists?/0" data-no-tooltip="" translate="no">table_exists?()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Checks if the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table exists.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#until_exists/3" data-no-tooltip="" translate="no">until_exists(int \\ 15, timeout \\ 1000, acc \\ 0)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Holds the thread until the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table becomes available, or timeout occurs.
+Defaults to <code class="inline">1_000</code> milliseconds for timeouts and <code class="inline">15</code> milliseconds for checking intervals.</p></div>
+
+    </div>
+
 </div>
 
   </section>
@@ -193,14 +299,14 @@ Just excludes the table name from the record tuple.</p></div>
       <span class="text">Types</span>
     </h1>
     <div class="types-list">
-<section class="detail" id="t:roleName/0">
+<section class="detail" id="t:roleMap/0">
 
   <div class="detail-header">
-    <a href="#t:roleName/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+    <a href="#t:roleMap/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">roleName()</h1>
+      <h1 class="signature" translate="no">roleMap()</h1>
 
 
     </div>
@@ -210,11 +316,11 @@ Just excludes the table name from the record tuple.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> roleName() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+          <pre translate="no"><span class="attribute">@type</span> roleMap() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()</pre>
 
       </div>
 
-<p>Alias for <code class="inline">atom()</code>.</p>
+<p>Role list in the form of a map.</p>
   </section>
 </section>
 <section class="detail" id="t:roleRecord/0">
@@ -244,30 +350,6 @@ Just excludes the table name from the record tuple.</p></div>
 Just excludes the table name from the record tuple.</p>
   </section>
 </section>
-<section class="detail" id="t:roleRecords/0">
-
-  <div class="detail-header">
-    <a href="#t:roleRecords/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">roleRecords()</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> roleRecords() :: [<a href="#t:roleRecord/0">roleRecord</a>()]</pre>
-
-      </div>
-
-<p>List of <code class="inline">roleRecord()</code> objects.</p>
-  </section>
-</section>
 
     </div>
   </section>
@@ -280,6 +362,37 @@ Just excludes the table name from the record tuple.</p>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="alert_me/0">
+
+  <div class="detail-header">
+    <a href="#alert_me/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">alert_me()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> alert_me() :: :ok</pre>
+
+      </div>
+
+<h1>CoreServer</h1><p>Tell the local CoreServer that we want to be alerted to changes to cluster node state.
+Update will be sent in the form of a cast.</p><h2 id="alert_me/0-example" class="section-heading">
+  <a href="#alert_me/0-example" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2073666372-1">{</span><span class="ss">:node_update</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2073666372-2">{</span><span class="n">nodeName</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p" data-group-id="2073666372-2">}</span><span class="p" data-group-id="2073666372-1">}</span></code></pre>
+  </section>
+</section>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
@@ -320,6 +433,153 @@ Just excludes the table name from the record tuple.</p>
       </div>
 
 <p>Manually copy the tracking DB to the node.</p>
+  </section>
+</section>
+<section class="detail" id="dirty_select/1">
+
+  <div class="detail-header">
+    <a href="#dirty_select/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">dirty_select(matchSpec)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dirty_select(<a href="https://www.erlang.org/doc/apps/stdlib/ets.html#t:match_spec/0">:ets.match_spec</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()] | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
+
+      </div>
+
+<p>Similar to <a href="https://www.erlang.org/doc/apps/mnesia/mnesia.html#dirty_select/2"><code class="inline">:mnesia.dirty_select/2</code></a> but only needs the match spec as an argument.
+The table name of the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table is input automatically as the 1st arity.</p>
+  </section>
+</section>
+<section class="detail" id="fetch/1">
+
+  <div class="detail-header">
+    <a href="#fetch/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">fetch(key)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> fetch(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()] | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
+
+      </div>
+
+<p>Fetches data from the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table.
+Uses a record key to query the data. Will return all matching records.</p>
+  </section>
+</section>
+<section class="detail" id="fetch_all/0">
+
+  <div class="detail-header">
+    <a href="#fetch_all/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">fetch_all()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> fetch_all() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()] | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
+
+      </div>
+
+<p>Fetches all records from the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table.</p>
+  </section>
+</section>
+<section class="detail" id="get_role_config/0">
+
+  <div class="detail-header">
+    <a href="#get_role_config/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_role_config()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_role_config() :: <a href="#t:roleMap/0">roleMap</a>()</pre>
+
+      </div>
+
+<p>Retrieves roles from config and converts to map.</p>
+  </section>
+</section>
+<section class="detail" id="get_table_name/0">
+
+  <div class="detail-header">
+    <a href="#get_table_name/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_table_name()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_table_name() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>Returns the name of the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table.</p>
+  </section>
+</section>
+<section class="detail" id="role_list_to_map/1">
+
+  <div class="detail-header">
+    <a href="#role_list_to_map/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">role_list_to_map(role_list)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> role_list_to_map([<a href="#t:roleRecord/0">roleRecord</a>()]) :: <a href="#t:roleMap/0">roleMap</a>()</pre>
+
+      </div>
+
+<p>Creates a map from a list of maps. First element of the map needs to be an atom.
+This same atom will be the key for the rest of the data in the map.</p>
   </section>
 </section>
 <section class="detail" id="start_assign/0">
@@ -372,6 +632,93 @@ Just excludes the table name from the record tuple.</p>
 <p>Supervisor Entry point.</p>
   </section>
 </section>
+<section class="detail" id="subscribe/1">
+
+    <span id="subscribe/0"></span>
+
+  <div class="detail-header">
+    <a href="#subscribe/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">subscribe(type \\ :simple)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> subscribe(:simple | :detailed) :: :ok</pre>
+
+      </div>
+
+<p>Subscribes to the table mapped to the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table.</p><h1>Matches based on subscription</h1><h2 id="subscribe/1-simple" class="section-heading">
+  <a href="#subscribe/1-simple" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">:simple</code></span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="8620127093-1">{</span><span class="ss">:mnesia_table_event</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8620127093-2">{</span><span class="ss">:atom</span><span class="p">,</span><span class="w"> </span><span class="n">record</span><span class="p" data-group-id="8620127093-3">(</span><span class="p" data-group-id="8620127093-3">)</span><span class="p">,</span><span class="w"> </span><span class="c">_op_data</span><span class="p" data-group-id="8620127093-2">}</span><span class="p" data-group-id="8620127093-1">}</span></code></pre><h2 id="subscribe/1-detailed" class="section-heading">
+  <a href="#subscribe/1-detailed" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">:detailed</code></span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="4017715974-1">{</span><span class="ss">:mnesia_table_event</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4017715974-2">{</span><span class="ss">:atom</span><span class="p">,</span><span class="w"> </span><span class="n">module</span><span class="p" data-group-id="4017715974-3">(</span><span class="p" data-group-id="4017715974-3">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:atom</span><span class="p" data-group-id="4017715974-4">(</span><span class="p" data-group-id="4017715974-4">)</span><span class="p">,</span><span class="w"> </span><span class="n">record</span><span class="p" data-group-id="4017715974-5">(</span><span class="p" data-group-id="4017715974-5">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4017715974-6">[</span><span class="p" data-group-id="4017715974-6">]</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="4017715974-7">[</span><span class="n">record</span><span class="p" data-group-id="4017715974-8">(</span><span class="p" data-group-id="4017715974-8">)</span><span class="p" data-group-id="4017715974-7">]</span><span class="p">,</span><span class="w"> </span><span class="c">_op_data</span><span class="p" data-group-id="4017715974-2">}</span><span class="p" data-group-id="4017715974-1">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="table_exists?/0">
+
+  <div class="detail-header">
+    <a href="#table_exists?/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">table_exists?()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> table_exists?() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Checks if the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table exists.</p>
+  </section>
+</section>
+<section class="detail" id="until_exists/3">
+
+    <span id="until_exists/0"></span>
+
+    <span id="until_exists/1"></span>
+
+    <span id="until_exists/2"></span>
+
+  <div class="detail-header">
+    <a href="#until_exists/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">until_exists(int \\ 15, timeout \\ 1000, acc \\ 0)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Holds the thread until the DistrServer <a href="Beethoven.RoleServer.html"><code class="inline">Elixir.Beethoven.RoleServer</code></a>'s mnesia table becomes available, or timeout occurs.
+Defaults to <code class="inline">1_000</code> milliseconds for timeouts and <code class="inline">15</code> milliseconds for checking intervals.</p>
+  </section>
+</section>
 
     </div>
   </section>
@@ -380,9 +727,9 @@ Just excludes the table name from the record tuple.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/beethoven/0.3.9" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.9">Hex Preview</a>
 
           </span>
 

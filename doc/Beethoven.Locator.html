@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.37.3">
-    <meta name="project" content="Beethoven v0.3.7">
+    <meta name="project" content="Beethoven v0.3.9">
 
 
-    <title>Beethoven.Locator — Beethoven v0.3.7</title>
+    <title>Beethoven.Locator — Beethoven v0.3.9</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="dist/sidebar_items-BF9D4A56.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-ALU6OERS.js"></script>
 
@@ -37,7 +37,7 @@
 Beethoven
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.3.7
+          v0.3.9
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@ Beethoven
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Beethoven.Locator</span> 
-      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+      <small class="app-vsn" translate="no">(Beethoven v0.3.9)</small>
 
     </h1>
 
@@ -87,7 +87,7 @@ Beethoven
 <p>GenServer to handle searching for other Beethoven nodes or clusters.
 This Locator server's goal is to find a BeaconServer on another node.
 Once connected, they will communicate with each other via the <a href="Beethoven.SeekChat.html"><code class="inline">Beethoven.SeekChat</code></a> module.</p><h1>Modes</h1><ul><li><code class="inline">:seeking</code> -&gt; Currently Searching for listening servers.</li><li><code class="inline">:watching</code> -&gt;  (TBD) Slower search to ensure there are no standalone clusters or nodes.</li></ul><hr class="thin"/><h1><code class="inline">:seeking</code></h1><p>Service will start up and perform a seeking operation.
-The locator will start the Core service(s) (via Substrate) once either is met:</p><ul><li>(1). Seeking attempts have become exhausted. [CoreServer &lt;- <code class="inline">:standalone</code>]</li><li>(2). A listener server is found. [CoreServer &lt;- <code class="inline">:clustered</code>]</li></ul><hr class="thin"/><h1><code class="inline">:watching</code></h1><p>Used when the cluster is in standalone mode.
+The locator will start the Core service(s) (via Substrate) once either is met:</p><ul><li>(1). Seeking attempts have become exhausted. [CoreServer &lt;- <code class="inline">:standalone</code>]</li><li>(2). A listener server is found. [CoreServer &lt;- <code class="inline">:clustered</code>]</li></ul><hr class="thin"/><h1><code class="inline">:watching</code> (WIP)</h1><p>Used when the cluster is in standalone mode.
 This mode will continue the scan for other clusters.
 This is needed to ensure there are no other clusters existing at the same time.</p>
     </section>
@@ -189,9 +189,9 @@ This is needed to ensure there are no other clusters existing at the same time.<
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/beethoven/0.3.9" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.9">Hex Preview</a>
 
           </span>
 

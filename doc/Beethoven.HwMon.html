@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.37.3">
-    <meta name="project" content="Beethoven v0.3.7">
+    <meta name="project" content="Beethoven v0.3.9">
 
 
-    <title>Beethoven.HwMon — Beethoven v0.3.7</title>
+    <title>Beethoven.HwMon — Beethoven v0.3.9</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="dist/sidebar_items-BF9D4A56.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-ALU6OERS.js"></script>
 
@@ -37,7 +37,7 @@
 Beethoven
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.3.7
+          v0.3.9
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@ Beethoven
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Beethoven.HwMon</span> 
-      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+      <small class="app-vsn" translate="no">(Beethoven v0.3.9)</small>
 
     </h1>
 
@@ -84,8 +84,10 @@ Beethoven
 
 
     <section id="moduledoc">
-<p>Supervisor for the HwMon stack of PIDs.
-These PIDs log historical hardware consumption and signal changes to <a href="Beethoven.Allocator.Ingress.html"><code class="inline">Beethoven.Allocator.Ingress</code></a>.</p>
+<p>Stack of services to help check system utilization and push sampled data into the <a href="Beethoven.Allocator.html"><code class="inline">Beethoven.Allocator</code></a> stack of services.</p><h1>Public API</h1><ul><li><a href="#get_hw_usage/0"><code class="inline">get_hw_usage/0</code></a> Dumps the entire hardware usage Mnesia table.</li></ul><h1>Readme</h1><p>This module contains 2 primary services:</p><ul><li><code class="inline">Server</code> This service will take samples of system performance and send the data to multiple services within Beethoven.
+The most current data is stored in an Mnesia table.</li><li><code class="inline">Archive</code> Archive hosts historical performance signals.
+Will store up to 100k entries <em>per metric</em>. This is a hard limit. Older logs will be pruned in a FIFO manor.
+This data is stored in an ETS table on the local node.</li></ul>
     </section>
 
 </div>
@@ -109,6 +111,16 @@ These PIDs log historical hardware consumption and signal changes to <a href="Be
       </div>
 
         <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_hw_usage/0" data-no-tooltip="" translate="no">get_hw_usage()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Get Node performance specs from Mnesia.</p></div>
 
     </div>
 
@@ -153,6 +165,30 @@ These PIDs log historical hardware consumption and signal changes to <a href="Be
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
+<section class="detail" id="get_hw_usage/0">
+
+  <div class="detail-header">
+    <a href="#get_hw_usage/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_hw_usage()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_hw_usage() :: [{<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">float</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">float</a>(), <a href="https://hexdocs.pm/elixir/DateTime.html#t:t/0">DateTime.t</a>()}]</pre>
+
+      </div>
+
+<p>Get Node performance specs from Mnesia.</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="7530703822-1">{</span><span class="nc">Beethoven.HwMon.Server.Tracker</span><span class="p">,</span><span class="w"> </span><span class="ss">:node</span><span class="p">,</span><span class="w"> </span><span class="ss">:avail_cpu</span><span class="p">,</span><span class="w"> </span><span class="ss">:avail_ram_gb</span><span class="p">,</span><span class="w"> </span><span class="ss">:last_change</span><span class="p" data-group-id="7530703822-1">}</span></code></pre>
+  </section>
+</section>
 <section class="detail" id="start_link/1">
 
     <span id="start_link/0"></span>
@@ -187,9 +223,9 @@ These PIDs log historical hardware consumption and signal changes to <a href="Be
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/beethoven/0.3.9" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.9">Hex Preview</a>
 
           </span>
 

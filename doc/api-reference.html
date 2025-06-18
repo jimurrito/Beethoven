@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.37.3">
-    <meta name="project" content="Beethoven v0.3.7">
+    <meta name="project" content="Beethoven v0.3.9">
 
 
-    <title>API Reference — Beethoven v0.3.7</title>
+    <title>API Reference — Beethoven v0.3.9</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="dist/sidebar_items-BF9D4A56.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-ALU6OERS.js"></script>
 
@@ -37,7 +37,7 @@
 Beethoven
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.3.7
+          v0.3.9
         </div>
       </div>
     </div>
@@ -74,7 +74,7 @@ Beethoven
 
 <div id="top-content">
   <div class="heading-with-actions top-heading">
-    <h1>API Reference <small class="app-vsn">Beethoven v0.3.7</small></h1>
+    <h1>API Reference <small class="app-vsn">Beethoven v0.3.9</small></h1>
 
 
   </div>
@@ -95,10 +95,8 @@ Beethoven
 
   </div>
 
-    <div class="summary-synopsis"><p>A Decentralized failover and peer-to-peer node finder for Elixir.
-Allows Elixir nodes to find each other automatically.
-Once connected, they can coordinate to delegate roles and tasks between the nodes in the cluster.
-Written using only the Elixir and Erlang standard library.</p></div>
+    <div class="summary-synopsis"><p>A Decentralized failover and peer-to-peer node finding framework for Elixir.
+Using a TCP socket, Elixir nodes running Beethoven can find each other within a pre-defined network range.</p></div>
 
 </div>
 <div class="summary-row">
@@ -148,7 +146,7 @@ Data sent to this Server is pushed into <code class="inline">:ets</code> for use
 
   </div>
 
-    <div class="summary-synopsis"><p>Azure Platform awareness for the node.
+    <div class="summary-synopsis"><h1>WORK IN PROGRESS!</h1><p>Azure Platform awareness for the node.
 If the app is not in Azure, genserver will response <code class="inline">:no_azure</code> to all calls.</p></div>
 
 </div>
@@ -178,10 +176,10 @@ Watches other nodes within the cluster and cascade updates across the beethoven 
 
   </div>
 
-    <div class="summary-synopsis"><p>A modified version of the built-in <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>.
-Specialized for Beethoven's No-Master design; this GenServer will initialize a Mnesia table on creation.
-These tables act as the primary state for the distributed process.
-Supports <em>most</em> GenServer logic and callbacks.</p></div>
+    <div class="summary-synopsis"><p>Distr(ibuted)Server is a modified <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> that allows for seamless integration with a dedicated Mnesia table.
+This was specially built for operation in a Beethoven environment.
+The idea is that the brain of the genserver can be set with mnesia and not the GenServer's internal state.
+This allows for the compute and state of the genserver to be distributed across the Beethoven cluster.</p></div>
 
 </div>
 <div class="summary-row">
@@ -190,8 +188,7 @@ Supports <em>most</em> GenServer logic and callbacks.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>Supervisor for the HwMon stack of PIDs.
-These PIDs log historical hardware consumption and signal changes to <a href="Beethoven.Allocator.Ingress.html"><code class="inline">Beethoven.Allocator.Ingress</code></a>.</p></div>
+    <div class="summary-synopsis"><p>Stack of services to help check system utilization and push sampled data into the <a href="Beethoven.Allocator.html"><code class="inline">Beethoven.Allocator</code></a> stack of services.</p></div>
 
 </div>
 <div class="summary-row">
@@ -200,7 +197,8 @@ These PIDs log historical hardware consumption and signal changes to <a href="Be
 
   </div>
 
-    <div class="summary-synopsis"><p>Tracks historical CPU and RAM usage as sampled by <code class="inline">HwMon.Server</code>.</p></div>
+    <div class="summary-synopsis"><p>Tracks historical CPU and RAM usage as sampled by <code class="inline">HwMon.Server</code>.
+Each metric will only cache up to 100k entries. Entries are pruned via FIFO.</p></div>
 
 </div>
 <div class="summary-row">
@@ -253,13 +251,56 @@ Usually just called from RoleServer when it has ran out of work.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Beethoven.RoleMgmt.html" translate="no">Beethoven.RoleMgmt</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The RoleMgmt stack is a collective of servers responsible for the management and allocation of specialized OTP complaint PIDs.
+These specialized PIDs are referred to as roles.
+Roles are defined in in the application config for <code class="inline">:beethoven</code>.
+To understand compatibility for using a module as a Beethoven role, please see the below section on <strong>Role Compatibility</strong>.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Beethoven.RoleMgmt.Assign.html" translate="no">Beethoven.RoleMgmt.Assign</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Server to track nodes and their role assignments.
+Once boot, the service will assign one of each open roles to itself.
+These roles are cast to the <code class="inline">Manager</code> service to spawn the roles.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Beethoven.RoleMgmt.Failover.html" translate="no">Beethoven.RoleMgmt.Failover</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Failover monitor for roles.
+Listens for updates from <a href="Beethoven.CoreServer.html"><code class="inline">Beethoven.CoreServer</code></a> and will reassign work on the <code class="inline">RoleMgmt.Assign.Tracker</code>.
+Will reassign using <a href="Beethoven.Allocator.html"><code class="inline">Beethoven.Allocator</code></a>.
+The update to mnesia will be monitored by <code class="inline">Assign</code> who will handle the assignment to self.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Beethoven.RoleMgmt.Manager.html" translate="no">Beethoven.RoleMgmt.Manager</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Dynamic supervisor that manages the specialized role PIDs.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Beethoven.RoleServer.html" translate="no">Beethoven.RoleServer</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>Server PID that manages role assignment across the cluster.
-Leveraging the Mnesia integration with <code class="inline">DistrServer</code>,
-these processes will be ephemeral and keep all state within Mnesia.</p></div>
+    <div class="summary-synopsis"><h1>DEPRECATED! Do not use. Use <a href="Beethoven.RoleMgmt.html"><code class="inline">Beethoven.RoleMgmt</code></a> instead.</h1><p>This server is responsible for the management and allocation of specialized OTP complaint PIDs.
+Roles are defined in in the application config for <code class="inline">:beethoven</code>.</p></div>
 
 </div>
 <div class="summary-row">
@@ -319,7 +360,7 @@ These are the services that need to start once Locator has determined the cluste
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Template.DistrServer.html" translate="no">Template.DistrServer</a>
+    <a href="Templates.DistrServer.html" translate="no">Templates.DistrServer</a>
 
   </div>
 
@@ -328,7 +369,7 @@ These are the services that need to start once Locator has determined the cluste
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Template.GenServer.html" translate="no">Template.GenServer</a>
+    <a href="Templates.GenServer.html" translate="no">Templates.GenServer</a>
 
   </div>
 
@@ -337,7 +378,16 @@ These are the services that need to start once Locator has determined the cluste
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Template.GenServerEts.html" translate="no">Template.GenServerEts</a>
+    <a href="Templates.GenServerEts.html" translate="no">Templates.GenServerEts</a>
+
+  </div>
+
+    <div class="summary-synopsis"></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Templates.Supervisor.html" translate="no">Templates.Supervisor</a>
 
   </div>
 
@@ -363,9 +413,9 @@ These are the services that need to start once Locator has determined the cluste
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/beethoven/0.3.9" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.9">Hex Preview</a>
 
           </span>
 

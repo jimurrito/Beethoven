@@ -14,6 +14,10 @@ Beethoven.Ipv4.html
 Beethoven.Locator.html
 Beethoven.MnesiaTools.html
 Beethoven.Ready.html
+Beethoven.RoleMgmt.Assign.html
+Beethoven.RoleMgmt.Failover.html
+Beethoven.RoleMgmt.Manager.html
+Beethoven.RoleMgmt.html
 Beethoven.RoleServer.html
 Beethoven.SeekChat.html
 Beethoven.Signals.html
@@ -22,9 +26,10 @@ Beethoven.TestRole.html
 Beethoven.TestdRole.html
 Beethoven.Utils.html
 Beethoven.html
-Template.DistrServer.html
-Template.GenServer.html
-Template.GenServerEts.html
+Templates.DistrServer.html
+Templates.GenServer.html
+Templates.GenServerEts.html
+Templates.Supervisor.html
 api-reference.html
 dist/html-ALU6OERS.js
 dist/html-elixir-6X3L5KMG.css
@@ -33,7 +38,7 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-1891B5DA.js
-dist/sidebar_items-E12A1300.js
+dist/search_data-158E1AE0.js
+dist/sidebar_items-BF9D4A56.js
 index.html
 search.html

@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.37.3">
-    <meta name="project" content="Beethoven v0.3.7">
+    <meta name="project" content="Beethoven v0.3.9">
 
 
-    <title>Beethoven.HwMon.Server — Beethoven v0.3.7</title>
+    <title>Beethoven.HwMon.Server — Beethoven v0.3.9</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="dist/sidebar_items-BF9D4A56.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-ALU6OERS.js"></script>
 
@@ -37,7 +37,7 @@
 Beethoven
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.3.7
+          v0.3.9
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@ Beethoven
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Beethoven.HwMon.Server</span> 
-      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+      <small class="app-vsn" translate="no">(Beethoven v0.3.9)</small>
 
     </h1>
 
@@ -113,6 +113,48 @@ Beethoven
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#dirty_select/1" data-no-tooltip="" translate="no">dirty_select(matchSpec)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Similar to <a href="https://www.erlang.org/doc/apps/mnesia/mnesia.html#dirty_select/2"><code class="inline">:mnesia.dirty_select/2</code></a> but only needs the match spec as an argument.
+The table name of the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table is input automatically as the 1st arity.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#fetch/1" data-no-tooltip="" translate="no">fetch(key)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Fetches data from the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table.
+Uses a record key to query the data. Will return all matching records.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#fetch_all/0" data-no-tooltip="" translate="no">fetch_all()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Fetches all records from the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_table_name/0" data-no-tooltip="" translate="no">get_table_name()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the name of the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#handle_cast/2" data-no-tooltip="" translate="no">handle_cast(msg, state)</a>
 
       </div>
@@ -123,21 +165,42 @@ Beethoven
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#node_update/2" data-no-tooltip="" translate="no">node_update(nodeName, status)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="Beethoven.CoreServer.html#c:node_update/2"><code class="inline">Beethoven.CoreServer.node_update/2</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#start_link/1" data-no-tooltip="" translate="no">start_link(init_args \\ [])</a>
 
       </div>
 
         <div class="summary-synopsis"><p>Supervisor Entry point.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#subscribe/1" data-no-tooltip="" translate="no">subscribe(type \\ :simple)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Subscribes to the table mapped to the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#table_exists?/0" data-no-tooltip="" translate="no">table_exists?()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Checks if the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table exists.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#until_exists/3" data-no-tooltip="" translate="no">until_exists(int \\ 15, timeout \\ 1000, acc \\ 0)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Holds the thread until the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table becomes available, or timeout occurs.
+Defaults to <code class="inline">1_000</code> milliseconds for timeouts and <code class="inline">15</code> milliseconds for checking intervals.</p></div>
 
     </div>
 
@@ -172,6 +235,104 @@ Beethoven
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
+<section class="detail" id="dirty_select/1">
+
+  <div class="detail-header">
+    <a href="#dirty_select/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">dirty_select(matchSpec)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dirty_select(<a href="https://www.erlang.org/doc/apps/stdlib/ets.html#t:match_spec/0">:ets.match_spec</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()] | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
+
+      </div>
+
+<p>Similar to <a href="https://www.erlang.org/doc/apps/mnesia/mnesia.html#dirty_select/2"><code class="inline">:mnesia.dirty_select/2</code></a> but only needs the match spec as an argument.
+The table name of the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table is input automatically as the 1st arity.</p>
+  </section>
+</section>
+<section class="detail" id="fetch/1">
+
+  <div class="detail-header">
+    <a href="#fetch/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">fetch(key)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> fetch(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()] | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
+
+      </div>
+
+<p>Fetches data from the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table.
+Uses a record key to query the data. Will return all matching records.</p>
+  </section>
+</section>
+<section class="detail" id="fetch_all/0">
+
+  <div class="detail-header">
+    <a href="#fetch_all/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">fetch_all()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> fetch_all() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()] | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
+
+      </div>
+
+<p>Fetches all records from the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table.</p>
+  </section>
+</section>
+<section class="detail" id="get_table_name/0">
+
+  <div class="detail-header">
+    <a href="#get_table_name/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_table_name()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_table_name() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>Returns the name of the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table.</p>
+  </section>
+</section>
 <section class="detail" id="handle_cast/2">
 
   <div class="detail-header">
@@ -188,24 +349,6 @@ Beethoven
   <section class="docstring">
 
 <p>  #</p><h1>PERCENTAGE FORMAT</h1><p>#</p><h1>YES -&gt; 4% =&gt; 4.0 | 61% =&gt; 61.0</h1><h1>NO  -&gt; 4% =&gt; 0.04 | 61% =&gt; 0.61</h1>
-  </section>
-</section>
-<section class="detail" id="node_update/2">
-
-  <div class="detail-header">
-    <a href="#node_update/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">node_update(nodeName, status)</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="Beethoven.CoreServer.html#c:node_update/2"><code class="inline">Beethoven.CoreServer.node_update/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -234,6 +377,93 @@ Beethoven
 <p>Supervisor Entry point.</p>
   </section>
 </section>
+<section class="detail" id="subscribe/1">
+
+    <span id="subscribe/0"></span>
+
+  <div class="detail-header">
+    <a href="#subscribe/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">subscribe(type \\ :simple)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> subscribe(:simple | :detailed) :: :ok</pre>
+
+      </div>
+
+<p>Subscribes to the table mapped to the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table.</p><h1>Matches based on subscription</h1><h2 id="subscribe/1-simple" class="section-heading">
+  <a href="#subscribe/1-simple" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">:simple</code></span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="9994449378-1">{</span><span class="ss">:mnesia_table_event</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9994449378-2">{</span><span class="ss">:atom</span><span class="p">,</span><span class="w"> </span><span class="n">record</span><span class="p" data-group-id="9994449378-3">(</span><span class="p" data-group-id="9994449378-3">)</span><span class="p">,</span><span class="w"> </span><span class="c">_op_data</span><span class="p" data-group-id="9994449378-2">}</span><span class="p" data-group-id="9994449378-1">}</span></code></pre><h2 id="subscribe/1-detailed" class="section-heading">
+  <a href="#subscribe/1-detailed" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">:detailed</code></span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="9944577624-1">{</span><span class="ss">:mnesia_table_event</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9944577624-2">{</span><span class="ss">:atom</span><span class="p">,</span><span class="w"> </span><span class="n">module</span><span class="p" data-group-id="9944577624-3">(</span><span class="p" data-group-id="9944577624-3">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:atom</span><span class="p" data-group-id="9944577624-4">(</span><span class="p" data-group-id="9944577624-4">)</span><span class="p">,</span><span class="w"> </span><span class="n">record</span><span class="p" data-group-id="9944577624-5">(</span><span class="p" data-group-id="9944577624-5">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9944577624-6">[</span><span class="p" data-group-id="9944577624-6">]</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="9944577624-7">[</span><span class="n">record</span><span class="p" data-group-id="9944577624-8">(</span><span class="p" data-group-id="9944577624-8">)</span><span class="p" data-group-id="9944577624-7">]</span><span class="p">,</span><span class="w"> </span><span class="c">_op_data</span><span class="p" data-group-id="9944577624-2">}</span><span class="p" data-group-id="9944577624-1">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="table_exists?/0">
+
+  <div class="detail-header">
+    <a href="#table_exists?/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">table_exists?()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> table_exists?() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Checks if the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table exists.</p>
+  </section>
+</section>
+<section class="detail" id="until_exists/3">
+
+    <span id="until_exists/0"></span>
+
+    <span id="until_exists/1"></span>
+
+    <span id="until_exists/2"></span>
+
+  <div class="detail-header">
+    <a href="#until_exists/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">until_exists(int \\ 15, timeout \\ 1000, acc \\ 0)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Holds the thread until the DistrServer <a href="Beethoven.HwMon.Server.html"><code class="inline">Elixir.Beethoven.HwMon.Server</code></a>'s mnesia table becomes available, or timeout occurs.
+Defaults to <code class="inline">1_000</code> milliseconds for timeouts and <code class="inline">15</code> milliseconds for checking intervals.</p>
+  </section>
+</section>
 
     </div>
   </section>
@@ -242,9 +472,9 @@ Beethoven
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/beethoven/0.3.9" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.9">Hex Preview</a>
 
           </span>
 

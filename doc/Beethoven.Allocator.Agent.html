@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.37.3">
-    <meta name="project" content="Beethoven v0.3.7">
+    <meta name="project" content="Beethoven v0.3.9">
 
 
-    <title>Beethoven.Allocator.Agent — Beethoven v0.3.7</title>
+    <title>Beethoven.Allocator.Agent — Beethoven v0.3.9</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="dist/sidebar_items-BF9D4A56.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-ALU6OERS.js"></script>
 
@@ -37,7 +37,7 @@
 Beethoven
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.3.7
+          v0.3.9
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@ Beethoven
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Beethoven.Allocator.Agent</span> 
-      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+      <small class="app-vsn" translate="no">(Beethoven v0.3.9)</small>
 
     </h1>
 
@@ -91,17 +91,17 @@ This data is aggregated and used to generate a busy-score for a node.</p><h1>Typ
 One to increment the counter, the other to decrement it. Both modify the counter by <code class="inline">+/-1.0</code>.
 The counter will never be lower then <code class="inline">0</code>.</p></li><li><p><code class="inline">:percent</code> Represents a float between 0.0 and &gt;100.0. This generates 1 function.
 This function allows you to set a float payload in the signal.
-This value must be a positive float.</p></li></ul><h1>Examples</h1><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Signals</span><span class="w"> </span><span class="k" data-group-id="4965010010-1">do</span><span class="w">
+This value must be a positive float.</p></li></ul><h1>Examples</h1><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Signals</span><span class="w"> </span><span class="k" data-group-id="5345357969-1">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Beethoven.Allocator.Agent</span><span class="w">
 
-  </span><span class="n">signal</span><span class="p" data-group-id="4965010010-2">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:ram</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="4965010010-2">)</span><span class="w">
-  </span><span class="n">signal</span><span class="p" data-group-id="4965010010-3">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:http_requests</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:count</span><span class="p" data-group-id="4965010010-3">)</span><span class="w">
-</span><span class="k" data-group-id="4965010010-1">end</span><span class="w">
+  </span><span class="n">signal</span><span class="p" data-group-id="5345357969-2">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:ram</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="5345357969-2">)</span><span class="w">
+  </span><span class="n">signal</span><span class="p" data-group-id="5345357969-3">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:http_requests</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:count</span><span class="p" data-group-id="5345357969-3">)</span><span class="w">
+</span><span class="k" data-group-id="5345357969-1">end</span><span class="w">
 
 </span><span class="c1"># Generates</span><span class="w">
-</span><span class="nc">Signals</span><span class="o">.</span><span class="n">percent_ram</span><span class="p" data-group-id="4965010010-4">(</span><span class="n">data</span><span class="p" data-group-id="4965010010-4">)</span><span class="w"> </span><span class="c1"># Data is now the value of the metric in `:ets`</span><span class="w">
-</span><span class="nc">Signals</span><span class="o">.</span><span class="n">increment_http_requests_count</span><span class="p" data-group-id="4965010010-5">(</span><span class="p" data-group-id="4965010010-5">)</span><span class="w"> </span><span class="c1"># +1.0</span><span class="w">
-</span><span class="nc">Signals</span><span class="o">.</span><span class="n">decrement_http_requests_count</span><span class="p" data-group-id="4965010010-6">(</span><span class="p" data-group-id="4965010010-6">)</span><span class="w"> </span><span class="c1"># -1.0</span></code></pre><p>See <a href="Beethoven.Allocator.Cruncher.html"><code class="inline">Beethoven.Allocator.Cruncher</code></a> for information on how the signals are aggregated.</p>
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">percent_ram</span><span class="p" data-group-id="5345357969-4">(</span><span class="n">data</span><span class="p" data-group-id="5345357969-4">)</span><span class="w"> </span><span class="c1"># Data is now the value of the metric in `:ets`</span><span class="w">
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">increment_http_requests_count</span><span class="p" data-group-id="5345357969-5">(</span><span class="p" data-group-id="5345357969-5">)</span><span class="w"> </span><span class="c1"># +1.0</span><span class="w">
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">decrement_http_requests_count</span><span class="p" data-group-id="5345357969-6">(</span><span class="p" data-group-id="5345357969-6">)</span><span class="w"> </span><span class="c1"># -1.0</span></code></pre><p>See <a href="Beethoven.Allocator.Cruncher.html"><code class="inline">Beethoven.Allocator.Cruncher</code></a> for information on how the signals are aggregated.</p>
     </section>
 
 </div>
@@ -329,7 +329,7 @@ This data is aggregated and used to generate a busy-score for a node.</p></div>
 
       </div>
 
-<p><strong>DO NOT USE THIS DIRECTLY.  Please utilize the <code class="inline">signal()</code> macro within the <a href="Beethoven.Allocator.Agent.html"><code class="inline">Beethoven.Allocator.Agent</code></a> module.</strong></p><p>Sends a signal message to <code class="inline">Allocator.Ingress</code>.</p><h1>Payload schema</h1><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="0760109956-1">{</span><span class="n">header</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="0760109956-2">{</span><span class="n">name</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">atom</span><span class="p" data-group-id="0760109956-3">(</span><span class="p" data-group-id="0760109956-3">)</span><span class="p">,</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">integer</span><span class="p" data-group-id="0760109956-4">(</span><span class="p" data-group-id="0760109956-4">)</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">atom</span><span class="p" data-group-id="0760109956-5">(</span><span class="p" data-group-id="0760109956-5">)</span><span class="p" data-group-id="0760109956-2">}</span><span class="p">,</span><span class="w"> </span><span class="n">payload</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">signal_payload</span><span class="p" data-group-id="0760109956-6">(</span><span class="p" data-group-id="0760109956-6">)</span><span class="p" data-group-id="0760109956-1">}</span></code></pre>
+<p><strong>DO NOT USE THIS DIRECTLY.  Please utilize the <code class="inline">signal()</code> macro within the <a href="Beethoven.Allocator.Agent.html"><code class="inline">Beethoven.Allocator.Agent</code></a> module.</strong></p><p>Sends a signal message to <code class="inline">Allocator.Ingress</code>.</p><h1>Payload schema</h1><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3421291012-1">{</span><span class="n">header</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="3421291012-2">{</span><span class="n">name</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">atom</span><span class="p" data-group-id="3421291012-3">(</span><span class="p" data-group-id="3421291012-3">)</span><span class="p">,</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">integer</span><span class="p" data-group-id="3421291012-4">(</span><span class="p" data-group-id="3421291012-4">)</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">atom</span><span class="p" data-group-id="3421291012-5">(</span><span class="p" data-group-id="3421291012-5">)</span><span class="p" data-group-id="3421291012-2">}</span><span class="p">,</span><span class="w"> </span><span class="n">payload</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">signal_payload</span><span class="p" data-group-id="3421291012-6">(</span><span class="p" data-group-id="3421291012-6">)</span><span class="p" data-group-id="3421291012-1">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="signal/1">
@@ -362,17 +362,17 @@ This data is aggregated and used to generate a busy-score for a node.</p><h1>Typ
 One to increment the counter, the other to decrement it. Both modify the counter by <code class="inline">+/-1.0</code>.
 The counter will never be lower then <code class="inline">0</code>.</p></li><li><p><code class="inline">:percent</code> Represents a float between 0.0 and &gt;100.0. This generates 1 function.
 This function allows you to set a float payload in the signal.
-This value must be a positive float.</p></li></ul><h1>Examples</h1><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Signals</span><span class="w"> </span><span class="k" data-group-id="4927389895-1">do</span><span class="w">
+This value must be a positive float.</p></li></ul><h1>Examples</h1><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Signals</span><span class="w"> </span><span class="k" data-group-id="5009516664-1">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Beethoven.Allocator.Agent</span><span class="w">
 
-  </span><span class="n">signal</span><span class="p" data-group-id="4927389895-2">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:ram</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="4927389895-2">)</span><span class="w">
-  </span><span class="n">signal</span><span class="p" data-group-id="4927389895-3">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:http_requests</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:count</span><span class="p" data-group-id="4927389895-3">)</span><span class="w">
-</span><span class="k" data-group-id="4927389895-1">end</span><span class="w">
+  </span><span class="n">signal</span><span class="p" data-group-id="5009516664-2">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:ram</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="5009516664-2">)</span><span class="w">
+  </span><span class="n">signal</span><span class="p" data-group-id="5009516664-3">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:http_requests</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:count</span><span class="p" data-group-id="5009516664-3">)</span><span class="w">
+</span><span class="k" data-group-id="5009516664-1">end</span><span class="w">
 
 </span><span class="c1"># Generates</span><span class="w">
-</span><span class="nc">Signals</span><span class="o">.</span><span class="n">percent_ram</span><span class="p" data-group-id="4927389895-4">(</span><span class="n">data</span><span class="p" data-group-id="4927389895-4">)</span><span class="w"> </span><span class="c1"># Data is now the value of the metric in `:ets`</span><span class="w">
-</span><span class="nc">Signals</span><span class="o">.</span><span class="n">increment_http_requests_count</span><span class="p" data-group-id="4927389895-5">(</span><span class="p" data-group-id="4927389895-5">)</span><span class="w"> </span><span class="c1"># +1.0</span><span class="w">
-</span><span class="nc">Signals</span><span class="o">.</span><span class="n">decrement_http_requests_count</span><span class="p" data-group-id="4927389895-6">(</span><span class="p" data-group-id="4927389895-6">)</span><span class="w"> </span><span class="c1"># -1.0</span></code></pre><p>See <a href="Beethoven.Allocator.Cruncher.html"><code class="inline">Beethoven.Allocator.Cruncher</code></a> for information on how the signals are aggregated.</p>
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">percent_ram</span><span class="p" data-group-id="5009516664-4">(</span><span class="n">data</span><span class="p" data-group-id="5009516664-4">)</span><span class="w"> </span><span class="c1"># Data is now the value of the metric in `:ets`</span><span class="w">
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">increment_http_requests_count</span><span class="p" data-group-id="5009516664-5">(</span><span class="p" data-group-id="5009516664-5">)</span><span class="w"> </span><span class="c1"># +1.0</span><span class="w">
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">decrement_http_requests_count</span><span class="p" data-group-id="5009516664-6">(</span><span class="p" data-group-id="5009516664-6">)</span><span class="w"> </span><span class="c1"># -1.0</span></code></pre><p>See <a href="Beethoven.Allocator.Cruncher.html"><code class="inline">Beethoven.Allocator.Cruncher</code></a> for information on how the signals are aggregated.</p>
   </section>
 </section>
 
@@ -383,9 +383,9 @@ This value must be a positive float.</p></li></ul><h1>Examples</h1><pre><code cl
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/beethoven/0.3.9" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.9">Hex Preview</a>
 
           </span>
 

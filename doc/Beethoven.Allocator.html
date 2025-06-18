@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.37.3">
-    <meta name="project" content="Beethoven v0.3.7">
+    <meta name="project" content="Beethoven v0.3.9">
 
 
-    <title>Beethoven.Allocator — Beethoven v0.3.7</title>
+    <title>Beethoven.Allocator — Beethoven v0.3.9</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="dist/sidebar_items-BF9D4A56.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-ALU6OERS.js"></script>
 
@@ -37,7 +37,7 @@
 Beethoven
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.3.7
+          v0.3.9
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@ Beethoven
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Beethoven.Allocator</span> 
-      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+      <small class="app-vsn" translate="no">(Beethoven v0.3.9)</small>
 
     </h1>
 
@@ -85,8 +85,45 @@ Beethoven
 
     <section id="moduledoc">
 <p>Allocator is a stack of processes that facilitate the aggregation of telemetry signals
-to determine how busy a given <a href="Beethoven.html"><code class="inline">Beethoven</code></a> node is.</p><h1>Public API</h1><ul><li><a href="#allocate/0"><code class="inline">allocate/0</code></a> Provides the URI of the least-busy node in the cluster.</li></ul><p>The busyness of nodes is determined via signals.
-Refer to the documentation for <a href="Beethoven.Allocator.Agent.html"><code class="inline">Beethoven.Allocator.Agent</code></a> for more information on creating signals.</p>
+to determine how busy a given <a href="Beethoven.html"><code class="inline">Beethoven</code></a> node is.</p><h1>Public API</h1><ul><li><a href="#allocate/0"><code class="inline">allocate/0</code></a> Provides the name of the least-busy node in the cluster.</li><li><a href="#allocation_list/0"><code class="inline">allocation_list/0</code></a> Provides a sorted list of all the nodes in the mnesia cluster. Nodes sorted from least-to-most busy.</li><li><a href="#get_all/0"><code class="inline">get_all/0</code></a> Dumps a sorted list of all records from the <code class="inline">AllocTracker</code> mnesia table. Records sorted from least-to-most busy.</li></ul><h1>Readme</h1><p>The busyness of nodes is determined via signals.
+A signal is defined via the <code class="inline">signal/1</code> macro in <a href="Beethoven.Allocator.Agent.html"><code class="inline">Elixir.Beethoven.Allocator.Agent</code></a></p><h2 id="module-example" class="section-heading">
+  <a href="#module-example" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">HttpSignal</span><span class="w"> </span><span class="k" data-group-id="9877039321-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">Elixir.Beethoven.Allocator.Agent</span><span class="w">
+  </span><span class="n">signal</span><span class="p" data-group-id="9877039321-2">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:http_connections</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:count</span><span class="p" data-group-id="9877039321-2">)</span><span class="w">
+</span><span class="k" data-group-id="9877039321-1">end</span></code></pre><p>This creates a function on compile time that is used to send the signal to the Allocator.</p><h2 id="module-example-for-count-type-signals" class="section-heading">
+  <a href="#module-example-for-count-type-signals" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example for <code class="inline">:count</code> type signals</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="c1"># Increases the internal count by 1</span><span class="w">
+  </span><span class="nc">HttpSignal</span><span class="o">.</span><span class="n">increment_http_connections_count</span><span class="o">/</span><span class="mi">0</span><span class="w">
+
+  </span><span class="c1"># Decreases the internal count by 1</span><span class="w">
+  </span><span class="nc">HttpSignal</span><span class="o">.</span><span class="n">decrement_http_connections_count</span><span class="o">/</span><span class="mi">0</span></code></pre><h1>Signal types</h1><ul><li><code class="inline">:count</code> -&gt; Controls a counter for a given metric.
+Creates 2 functions. <code class="inline">increment_{:name}_count/0</code></li><li><code class="inline">:percent</code> -&gt; Represents a percent value.
+Creates 1 function. <code class="inline">percent_{:name}/1</code></li><li><code class="inline">:pre_processed</code> -&gt; Represents an abstract value.
+Creates 1 function. <code class="inline">pre_processed_{:name}/1</code></li></ul><h1>Signal handling</h1><h2 id="module-ingress" class="section-heading">
+  <a href="#module-ingress" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Ingress</span>
+</h2>
+<p>Once the signals are sent via the generated function, they are casted to a local instance of <a href="Beethoven.Allocator.Ingress.html"><code class="inline">Elixir.Beethoven.Allocator.Ingress</code></a>.
+This service will normalize the data from the function and save to ETS. Once saved, it will signal <a href="Beethoven.Allocator.Cruncher.html"><code class="inline">Elixir.Beethoven.Allocator.Cruncher</code></a> to check the new data.</p><h2 id="module-cruncher" class="section-heading">
+  <a href="#module-cruncher" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Cruncher</span>
+</h2>
+<p>Once signaled, this service will call the ETS table shared with <a href="Beethoven.Allocator.Ingress.html"><code class="inline">Elixir.Beethoven.Allocator.Ingress</code></a> and grab all the current signal data.
+Using the weight and data payload for the signal, a busy score is generated. This score is stored in an Mnesia table for all other nodes to access.
+This flow allows other PIDs to call the public API for <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a> and get the nodeURI for the node with the least amount of work on it.</p>
     </section>
 
 </div>
@@ -105,12 +142,34 @@ Refer to the documentation for <a href="Beethoven.Allocator.Agent.html"><code cl
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#alert_me/0" data-no-tooltip="" translate="no">alert_me()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><h1>CoreServer</h1><p>Tell the local CoreServer that we want to be alerted to changes to cluster node state.
+Update will be sent in the form of a cast.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#allocate/0" data-no-tooltip="" translate="no">allocate()</a>
 
       </div>
 
         <div class="summary-synopsis"><p>Provides the URI of the least-busy node in the cluster.
 Using this function has no side effects so discarding the output without using it will not cause issues.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#allocation_list/0" data-no-tooltip="" translate="no">allocation_list()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Gets all the records from the Allocator table, but returns only the URIs of the nodes..
+Records come pre-sorted from least-to-most busy.</p></div>
 
     </div>
 
@@ -126,11 +185,95 @@ Using this function has no side effects so discarding the output without using i
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#dirty_select/1" data-no-tooltip="" translate="no">dirty_select(matchSpec)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Similar to <a href="https://www.erlang.org/doc/apps/mnesia/mnesia.html#dirty_select/2"><code class="inline">:mnesia.dirty_select/2</code></a> but only needs the match spec as an argument.
+The table name of the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table is input automatically as the 1st arity.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#fetch/1" data-no-tooltip="" translate="no">fetch(key)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Fetches data from the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table.
+Uses a record key to query the data. Will return all matching records.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#fetch_all/0" data-no-tooltip="" translate="no">fetch_all()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Fetches all records from the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_all/0" data-no-tooltip="" translate="no">get_all()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Gets all the records from the Allocator table.
+Records come pre-sorted from least-to-most busy.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_table_name/0" data-no-tooltip="" translate="no">get_table_name()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the name of the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#start_link/1" data-no-tooltip="" translate="no">start_link(init_args)</a>
 
       </div>
 
         <div class="summary-synopsis"><p>Supervisor Entry point.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#subscribe/1" data-no-tooltip="" translate="no">subscribe(type \\ :simple)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Subscribes to the table mapped to the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#table_exists?/0" data-no-tooltip="" translate="no">table_exists?()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Checks if the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table exists.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#until_exists/3" data-no-tooltip="" translate="no">until_exists(int \\ 15, timeout \\ 1000, acc \\ 0)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Holds the thread until the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table becomes available, or timeout occurs.
+Defaults to <code class="inline">1_000</code> milliseconds for timeouts and <code class="inline">15</code> milliseconds for checking intervals.</p></div>
 
     </div>
 
@@ -147,6 +290,37 @@ Using this function has no side effects so discarding the output without using i
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="alert_me/0">
+
+  <div class="detail-header">
+    <a href="#alert_me/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">alert_me()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> alert_me() :: :ok</pre>
+
+      </div>
+
+<h1>CoreServer</h1><p>Tell the local CoreServer that we want to be alerted to changes to cluster node state.
+Update will be sent in the form of a cast.</p><h2 id="alert_me/0-example" class="section-heading">
+  <a href="#alert_me/0-example" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="9740701796-1">{</span><span class="ss">:node_update</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9740701796-2">{</span><span class="n">nodeName</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p" data-group-id="9740701796-2">}</span><span class="p" data-group-id="9740701796-1">}</span></code></pre>
+  </section>
+</section>
 <section class="detail" id="allocate/0">
 
   <div class="detail-header">
@@ -172,6 +346,31 @@ Using this function has no side effects so discarding the output without using i
 Using this function has no side effects so discarding the output without using it will not cause issues.</p>
   </section>
 </section>
+<section class="detail" id="allocation_list/0">
+
+  <div class="detail-header">
+    <a href="#allocation_list/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">allocation_list()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> allocation_list() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>()]</pre>
+
+      </div>
+
+<p>Gets all the records from the Allocator table, but returns only the URIs of the nodes..
+Records come pre-sorted from least-to-most busy.</p>
+  </section>
+</section>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
@@ -188,6 +387,129 @@ Using this function has no side effects so discarding the output without using i
   <section class="docstring">
 
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="dirty_select/1">
+
+  <div class="detail-header">
+    <a href="#dirty_select/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">dirty_select(matchSpec)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dirty_select(<a href="https://www.erlang.org/doc/apps/stdlib/ets.html#t:match_spec/0">:ets.match_spec</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()] | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
+
+      </div>
+
+<p>Similar to <a href="https://www.erlang.org/doc/apps/mnesia/mnesia.html#dirty_select/2"><code class="inline">:mnesia.dirty_select/2</code></a> but only needs the match spec as an argument.
+The table name of the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table is input automatically as the 1st arity.</p>
+  </section>
+</section>
+<section class="detail" id="fetch/1">
+
+  <div class="detail-header">
+    <a href="#fetch/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">fetch(key)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> fetch(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()] | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
+
+      </div>
+
+<p>Fetches data from the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table.
+Uses a record key to query the data. Will return all matching records.</p>
+  </section>
+</section>
+<section class="detail" id="fetch_all/0">
+
+  <div class="detail-header">
+    <a href="#fetch_all/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">fetch_all()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> fetch_all() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()] | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
+
+      </div>
+
+<p>Fetches all records from the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table.</p>
+  </section>
+</section>
+<section class="detail" id="get_all/0">
+
+  <div class="detail-header">
+    <a href="#get_all/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_all()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_all() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()]</pre>
+
+      </div>
+
+<p>Gets all the records from the Allocator table.
+Records come pre-sorted from least-to-most busy.</p>
+  </section>
+</section>
+<section class="detail" id="get_table_name/0">
+
+  <div class="detail-header">
+    <a href="#get_table_name/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_table_name()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_table_name() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>Returns the name of the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table.</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -214,6 +536,93 @@ Using this function has no side effects so discarding the output without using i
 <p>Supervisor Entry point.</p>
   </section>
 </section>
+<section class="detail" id="subscribe/1">
+
+    <span id="subscribe/0"></span>
+
+  <div class="detail-header">
+    <a href="#subscribe/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">subscribe(type \\ :simple)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> subscribe(:simple | :detailed) :: :ok</pre>
+
+      </div>
+
+<p>Subscribes to the table mapped to the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table.</p><h1>Matches based on subscription</h1><h2 id="subscribe/1-simple" class="section-heading">
+  <a href="#subscribe/1-simple" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">:simple</code></span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2428984989-1">{</span><span class="ss">:mnesia_table_event</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2428984989-2">{</span><span class="ss">:atom</span><span class="p">,</span><span class="w"> </span><span class="n">record</span><span class="p" data-group-id="2428984989-3">(</span><span class="p" data-group-id="2428984989-3">)</span><span class="p">,</span><span class="w"> </span><span class="c">_op_data</span><span class="p" data-group-id="2428984989-2">}</span><span class="p" data-group-id="2428984989-1">}</span></code></pre><h2 id="subscribe/1-detailed" class="section-heading">
+  <a href="#subscribe/1-detailed" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">:detailed</code></span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="4627998171-1">{</span><span class="ss">:mnesia_table_event</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4627998171-2">{</span><span class="ss">:atom</span><span class="p">,</span><span class="w"> </span><span class="n">module</span><span class="p" data-group-id="4627998171-3">(</span><span class="p" data-group-id="4627998171-3">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:atom</span><span class="p" data-group-id="4627998171-4">(</span><span class="p" data-group-id="4627998171-4">)</span><span class="p">,</span><span class="w"> </span><span class="n">record</span><span class="p" data-group-id="4627998171-5">(</span><span class="p" data-group-id="4627998171-5">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4627998171-6">[</span><span class="p" data-group-id="4627998171-6">]</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="4627998171-7">[</span><span class="n">record</span><span class="p" data-group-id="4627998171-8">(</span><span class="p" data-group-id="4627998171-8">)</span><span class="p" data-group-id="4627998171-7">]</span><span class="p">,</span><span class="w"> </span><span class="c">_op_data</span><span class="p" data-group-id="4627998171-2">}</span><span class="p" data-group-id="4627998171-1">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="table_exists?/0">
+
+  <div class="detail-header">
+    <a href="#table_exists?/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">table_exists?()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> table_exists?() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Checks if the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table exists.</p>
+  </section>
+</section>
+<section class="detail" id="until_exists/3">
+
+    <span id="until_exists/0"></span>
+
+    <span id="until_exists/1"></span>
+
+    <span id="until_exists/2"></span>
+
+  <div class="detail-header">
+    <a href="#until_exists/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">until_exists(int \\ 15, timeout \\ 1000, acc \\ 0)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Holds the thread until the DistrServer <a href="Beethoven.Allocator.html"><code class="inline">Elixir.Beethoven.Allocator</code></a>'s mnesia table becomes available, or timeout occurs.
+Defaults to <code class="inline">1_000</code> milliseconds for timeouts and <code class="inline">15</code> milliseconds for checking intervals.</p>
+  </section>
+</section>
 
     </div>
   </section>
@@ -222,9 +631,9 @@ Using this function has no side effects so discarding the output without using i
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/beethoven/0.3.9" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.9">Hex Preview</a>
 
           </span>
 

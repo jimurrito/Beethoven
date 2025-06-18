@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.37.3">
-    <meta name="project" content="Beethoven v0.3.7">
+    <meta name="project" content="Beethoven v0.3.9">
 
 
-    <title>Beethoven — Beethoven v0.3.7</title>
+    <title>Beethoven — Beethoven v0.3.9</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="dist/sidebar_items-BF9D4A56.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-ALU6OERS.js"></script>
 
@@ -37,7 +37,7 @@
 Beethoven
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.3.7
+          v0.3.9
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@ Beethoven
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Beethoven</span> 
-      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+      <small class="app-vsn" translate="no">(Beethoven v0.3.9)</small>
 
     </h1>
 
@@ -84,11 +84,62 @@ Beethoven
 
 
     <section id="moduledoc">
-<p>A Decentralized failover and peer-to-peer node finder for Elixir.
-Allows Elixir nodes to find each other automatically.
-Once connected, they can coordinate to delegate roles and tasks between the nodes in the cluster.
-Written using only the Elixir and Erlang standard library.</p><p>This module acts as the unified client for interacting with beethoven as an external client.
-Avoid using the other modules for external PID calls to beethoven services.</p>
+<p>A Decentralized failover and peer-to-peer node finding framework for Elixir.
+Using a TCP socket, Elixir nodes running Beethoven can find each other within a pre-defined network range.</p><h1>Public API</h1><ul><li><p><a href="#ready?/0"><code class="inline">ready?/0</code></a> -&gt; Returns true if Beethoven has fully initialized. False if not.
+  Fully initialized is determined when the RoleMgmt Assigns server.</p></li><li><p><a href="#until_ready/1"><code class="inline">until_ready/1</code></a> -&gt; Holds the thread until Beethoven has fully initialized, or provided timeout value has become exhausted.
+  Default timeout value is <code class="inline">5_000</code> milliseconds.</p></li><li><p><a href="#get_node_status/0"><code class="inline">get_node_status/0</code></a> -&gt; Returns the status of the node within the Beethoven cluster.
+  Possible returns are: <code class="inline">:standalone</code> &amp; <code class="inline">:clustered</code>.</p></li><li><p><a href="#get_cluster_nodes/0"><code class="inline">get_cluster_nodes/0</code></a> -&gt; Returns a list of all the nodes have have joined the Beethoven cluster.</p></li><li><p><a href="#get_active_cluster_nodes/0"><code class="inline">get_active_cluster_nodes/0</code></a> -&gt; Similar to <a href="#get_cluster_nodes/0"><code class="inline">get_cluster_nodes/0</code></a>, but only provides nodes that are active/online.</p></li><li><p><a href="#get_detailed_cluster_nodes/0"><code class="inline">get_detailed_cluster_nodes/0</code></a> -&gt; Detailed list of all the nodes that have joined the Beethoven cluster + associated metadata.</p></li><li><p><a href="#get_roles/0"><code class="inline">get_roles/0</code></a> -&gt; Returns all Beethoven hosted roles with their associated metadata.</p></li><li><p><code class="inline">whois_hosting/0</code> -&gt; Looks up, and returns a list of nodes that host a given Beethoven role.</p></li><li><p><a href="#allocate/0"><code class="inline">allocate/0</code></a> -&gt; Wrapper for <a href="Beethoven.Allocator.html#allocate/0"><code class="inline">Beethoven.Allocator.allocate/0</code></a>.</p></li></ul><hr class="thin"/><h1>Architecture</h1><p>Beethoven is made of multiple smaller services that provide a depth of failover and loadbalancing functionality.</p><h2 id="module-coreserver" class="section-heading">
+  <a href="#module-coreserver" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">CoreServer</code></span>
+</h2>
+<p>Monitors nodes in the Mnesia cluster.
+The server provides a behaviour that allows for PIDs to request a callback in the event of a node status change.
+The callback is called <code class="inline">alert_me/0</code>. This function is available to any module using <code class="inline">CoreServer</code>.
+Once used, the caller will be sent a GenServer cast containing the updated information.</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="6079269103-1">{</span><span class="ss">:node_update</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6079269103-2">{</span><span class="n">nodeName</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p" data-group-id="6079269103-2">}</span><span class="p" data-group-id="6079269103-1">}</span></code></pre><p>Where status can be <code class="inline">:offline</code> or <code class="inline">:online</code>, and nodeName is the URI of the node.
+CoreServer manages the monitoring and de-monitoring nodes in Beethoven as they go through their lifecycle.</p><hr class="thin"/><h2 id="module-rolemgmt" class="section-heading">
+  <a href="#module-rolemgmt" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">RoleMgmt</code></span>
+</h2>
+<p>A framework for distributing work across a Beethoven cluster.
+Roles are defined in the <code class="inline">:beethoven</code> application configuration.
+These roles are hosted on the nodes that come into the cluster, and redistributed when they fail.</p><p>For more information on using RoleMgmt, please see the module's documentation.</p><hr class="thin"/><h2 id="module-allocator" class="section-heading">
+  <a href="#module-allocator" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">Allocator</code></span>
+</h2>
+<p>A signal based work allocator that helps determine how busy a given Beethoven cluster node is.
+Using these signals, it determines how busy a node is, and assigns a float.
+The smaller the float, the less busy a node is considered.</p><p>Using <a href="Beethoven.Allocator.Agent.html"><code class="inline">Beethoven.Allocator.Agent</code></a>, you gain access to the <code class="inline">signal()</code> macro.</p><pre><code class="makeup elixir" translate="no"><span class="n">signal</span><span class="p" data-group-id="7903274343-1">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:http_connections</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:count</span><span class="p" data-group-id="7903274343-1">)</span></code></pre><p>This allows you to create your own signals to feed into the allocator.
+This method allows the allocator to be flexible, and signals to be declared and used as needed.</p><p>Calling <a href="Beethoven.Allocator.html#allocate/0"><code class="inline">Beethoven.Allocator.allocate/0</code></a> will check the Mnesia table used by the Allocator, and return the lest-busy node.</p><hr class="thin"/><h2 id="module-beaconserver" class="section-heading">
+  <a href="#module-beaconserver" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">BeaconServer</code></span>
+</h2>
+<p>This PID runs a TCP-Socket server to help new Beethoven nodes find each other.
+The port for listener can be set in the application configuration for <a href="Beethoven.html"><code class="inline">Beethoven</code></a>.
+Using this port, the <code class="inline">Locator</code> service within the other nodes can attempt to find each other.</p><p>This module utilizes <a href="Beethoven.SeekChat.html"><code class="inline">Beethoven.SeekChat</code></a> for (de)serialization of TCP calls.</p><hr class="thin"/><h2 id="module-locator" class="section-heading">
+  <a href="#module-locator" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">Locator</code></span>
+</h2>
+<p>This PID will enumerate all IPs within a given subnet; checking if they are running an instance of <code class="inline">BeaconServer</code>.
+This PID will enumerate the IPs 3 times.
+If nothing is found after the 3rd attempt, the cluster start as-is in :standalone mode.</p><p>This module utilizes <a href="Beethoven.SeekChat.html"><code class="inline">Beethoven.SeekChat</code></a> for (de)serialization of TCP calls.</p><hr class="thin"/><h2 id="module-hwmon" class="section-heading">
+  <a href="#module-hwmon" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text"><code class="inline">HwMon</code></span>
+</h2>
+<p>Set of PIDs to monitor and record historical hardware consumption.
+Will sample CPU and RAM usage every 5 seconds and save up to 100k samples per metric.
+When resources are sampled, a signal to <code class="inline">Allocator</code> is called and the utilization is logged.</p>
     </section>
 
 </div>
@@ -137,7 +188,7 @@ Avoid using the other modules for external PID calls to beethoven services.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:role/0" data-no-tooltip="" translate="no">role()</a>
+        <a href="#t:role_definition/0" data-no-tooltip="" translate="no">role_definition()</a>
 
       </div>
 
@@ -147,7 +198,7 @@ Avoid using the other modules for external PID calls to beethoven services.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:roleList/0" data-no-tooltip="" translate="no">roleList()</a>
+        <a href="#t:roleDefinitionList/0" data-no-tooltip="" translate="no">roleDefinitionList()</a>
 
       </div>
 
@@ -163,18 +214,37 @@ Avoid using the other modules for external PID calls to beethoven services.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_active_nodes/0" data-no-tooltip="" translate="no">get_active_nodes()</a>
+        <a href="#allocate/0" data-no-tooltip="" translate="no">allocate()</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns all active cluster nodes by their Node name URI.
-Returns an empty list if this node is in <code class="inline">:standalone</code>.</p></div>
+        <div class="summary-synopsis"><p>Returns the least-busy node from the Allocator's Mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_active_cluster_nodes/0" data-no-tooltip="" translate="no">get_active_cluster_nodes()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns all active cluster nodes by their Node URI.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#get_cluster_nodes/0" data-no-tooltip="" translate="no">get_cluster_nodes()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the Node URIs of all nodes that have joined the Beethoven Cluster</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_detailed_cluster_nodes/0" data-no-tooltip="" translate="no">get_detailed_cluster_nodes()</a>
 
       </div>
 
@@ -199,7 +269,7 @@ Return will only be <code class="inline">:clustered</code> or <code class="inlin
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns all roles hosted in Beethoven.</p></div>
+        <div class="summary-synopsis"><p>Returns all Beethoven hosted roles with their associated metadata.</p></div>
 
     </div>
 
@@ -221,6 +291,16 @@ Return will only be <code class="inline">:clustered</code> or <code class="inlin
 
         <div class="summary-synopsis"><p>Similar to <code class="inline">ready?()</code> but will block until the service is ready.
 Defaults to 5_000 milliseconds.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#whois_hosting/1" data-no-tooltip="" translate="no">whois_hosting(role)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns what nodes host a given role.</p></div>
 
     </div>
 
@@ -313,14 +393,14 @@ Defaults to 5_000 milliseconds.</p></div>
 <p>List of <code class="inline">nodeStatus()</code> objects.</p>
   </section>
 </section>
-<section class="detail" id="t:role/0">
+<section class="detail" id="t:role_definition/0">
 
   <div class="detail-header">
-    <a href="#t:role/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+    <a href="#t:role_definition/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">role()</h1>
+      <h1 class="signature" translate="no">role_definition()</h1>
 
 
     </div>
@@ -330,7 +410,7 @@ Defaults to 5_000 milliseconds.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> role() :: %{
+          <pre translate="no"><span class="attribute">@type</span> role_definition() :: %{
   role: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
   count: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
   assigned: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
@@ -342,14 +422,14 @@ Defaults to 5_000 milliseconds.</p></div>
 <p>Role data structure.</p>
   </section>
 </section>
-<section class="detail" id="t:roleList/0">
+<section class="detail" id="t:roleDefinitionList/0">
 
   <div class="detail-header">
-    <a href="#t:roleList/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+    <a href="#t:roleDefinitionList/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">roleList()</h1>
+      <h1 class="signature" translate="no">roleDefinitionList()</h1>
 
 
     </div>
@@ -359,7 +439,7 @@ Defaults to 5_000 milliseconds.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> roleList() :: [<a href="#t:role/0">role</a>()]</pre>
+          <pre translate="no"><span class="attribute">@type</span> roleDefinitionList() :: [<a href="#t:role_definition/0">role_definition</a>()]</pre>
 
       </div>
 
@@ -378,14 +458,14 @@ Defaults to 5_000 milliseconds.</p></div>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="get_active_nodes/0">
+<section class="detail" id="allocate/0">
 
   <div class="detail-header">
-    <a href="#get_active_nodes/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#allocate/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">get_active_nodes()</h1>
+      <h1 class="signature" translate="no">allocate()</h1>
 
 
     </div>
@@ -395,12 +475,35 @@ Defaults to 5_000 milliseconds.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_active_nodes() :: <a href="#t:nodeList/0">nodeList</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> allocate() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>()</pre>
 
       </div>
 
-<p>Returns all active cluster nodes by their Node name URI.
-Returns an empty list if this node is in <code class="inline">:standalone</code>.</p>
+<p>Returns the least-busy node from the Allocator's Mnesia table.</p><p>Wrapper for <a href="Beethoven.Allocator.html#allocate/0"><code class="inline">Beethoven.Allocator.allocate/0</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="get_active_cluster_nodes/0">
+
+  <div class="detail-header">
+    <a href="#get_active_cluster_nodes/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_active_cluster_nodes()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_active_cluster_nodes() :: <a href="#t:nodeList/0">nodeList</a>()</pre>
+
+      </div>
+
+<p>Returns all active cluster nodes by their Node URI.</p>
   </section>
 </section>
 <section class="detail" id="get_cluster_nodes/0">
@@ -420,11 +523,35 @@ Returns an empty list if this node is in <code class="inline">:standalone</code>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_cluster_nodes() :: <a href="#t:nodeStatusMapList/0">nodeStatusMapList</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> get_cluster_nodes() :: <a href="#t:nodeList/0">nodeList</a>()</pre>
 
       </div>
 
-<p>Returns all cluster nodes and their state.</p>
+<p>Returns the Node URIs of all nodes that have joined the Beethoven Cluster</p>
+  </section>
+</section>
+<section class="detail" id="get_detailed_cluster_nodes/0">
+
+  <div class="detail-header">
+    <a href="#get_detailed_cluster_nodes/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_detailed_cluster_nodes()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_detailed_cluster_nodes() :: <a href="#t:nodeStatusMapList/0">nodeStatusMapList</a>()</pre>
+
+      </div>
+
+<p>Returns all cluster nodes and their state.</p><h1>Example</h1><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="5339079910-1">[</span><span class="p" data-group-id="5339079910-2">%{</span><span class="ss">node</span><span class="p">:</span><span class="w"> </span><span class="n">node</span><span class="p" data-group-id="5339079910-3">(</span><span class="p" data-group-id="5339079910-3">)</span><span class="p">,</span><span class="w"> </span><span class="ss">status</span><span class="p">:</span><span class="w"> </span><span class="ss">:online</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:offline</span><span class="p">,</span><span class="w"> </span><span class="ss">last_change</span><span class="p">:</span><span class="w"> </span><span class="nc">DateTime</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5339079910-4">(</span><span class="p" data-group-id="5339079910-4">)</span><span class="p" data-group-id="5339079910-2">}</span><span class="p" data-group-id="5339079910-1">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="get_node_status/0">
@@ -469,11 +596,11 @@ Return will only be <code class="inline">:clustered</code> or <code class="inlin
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_roles() :: <a href="#t:roleList/0">roleList</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> get_roles() :: <a href="#t:roleDefinitionList/0">roleDefinitionList</a>()</pre>
 
       </div>
 
-<p>Returns all roles hosted in Beethoven.</p>
+<p>Returns all Beethoven hosted roles with their associated metadata.</p>
   </section>
 </section>
 <section class="detail" id="ready?/0">
@@ -527,6 +654,30 @@ Return will only be <code class="inline">:clustered</code> or <code class="inlin
 Defaults to 5_000 milliseconds.</p><p>Wrapper for <a href="Beethoven.Ready.html#until_ready/1"><code class="inline">Beethoven.Ready.until_ready/1</code></a>.</p>
   </section>
 </section>
+<section class="detail" id="whois_hosting/1">
+
+  <div class="detail-header">
+    <a href="#whois_hosting/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">whois_hosting(role)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> whois_hosting(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="#t:nodeList/0">nodeList</a>()</pre>
+
+      </div>
+
+<p>Returns what nodes host a given role.</p>
+  </section>
+</section>
 
     </div>
   </section>
@@ -535,9 +686,9 @@ Defaults to 5_000 milliseconds.</p><p>Wrapper for <a href="Beethoven.Ready.html#
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/beethoven/0.3.9" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.9">Hex Preview</a>
 
           </span>
 

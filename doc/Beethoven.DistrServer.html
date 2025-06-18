@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.37.3">
-    <meta name="project" content="Beethoven v0.3.7">
+    <meta name="project" content="Beethoven v0.3.9">
 
 
-    <title>Beethoven.DistrServer — Beethoven v0.3.7</title>
+    <title>Beethoven.DistrServer — Beethoven v0.3.9</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="dist/sidebar_items-BF9D4A56.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-ALU6OERS.js"></script>
 
@@ -37,7 +37,7 @@
 Beethoven
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.3.7
+          v0.3.9
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@ Beethoven
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Beethoven.DistrServer</span> <small>behaviour</small>
-      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+      <small class="app-vsn" translate="no">(Beethoven v0.3.9)</small>
 
     </h1>
 
@@ -84,10 +84,74 @@ Beethoven
 
 
     <section id="moduledoc">
-<p>A modified version of the built-in <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>.
-Specialized for Beethoven's No-Master design; this GenServer will initialize a Mnesia table on creation.
-These tables act as the primary state for the distributed process.
-Supports <em>most</em> GenServer logic and callbacks.</p>
+<p>Distr(ibuted)Server is a modified <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> that allows for seamless integration with a dedicated Mnesia table.
+This was specially built for operation in a Beethoven environment.
+The idea is that the brain of the genserver can be set with mnesia and not the GenServer's internal state.
+This allows for the compute and state of the genserver to be distributed across the Beethoven cluster.</p><p>Supports all GenServer logic and callbacks except for <code class="inline">init/1</code>.
+Use of this callback directly will cause unexpected errors and behaviour.
+The entry point for the DistrServer is <code class="inline">entry_point/1</code>.
+<code class="inline">entry_point/1</code> is identical to <code class="inline">init/1</code> in terms of both input and return types.</p><h1>Example</h1><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Test</span><span class="w"> </span><span class="k" data-group-id="3942079550-1">do</span><span class="w">
+
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">DistrServer</span><span class="p">,</span><span class="w"> </span><span class="ss">subscribe?</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="w">
+
+  </span><span class="c1"># Standard OTP entry point for starting the PID.</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">start_link</span><span class="p" data-group-id="3942079550-2">(</span><span class="n">init_args</span><span class="p" data-group-id="3942079550-2">)</span><span class="w"> </span><span class="k" data-group-id="3942079550-3">do</span><span class="w">
+    </span><span class="nc">DistrServer</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="3942079550-4">(</span><span class="bp">__MODULE__</span><span class="p">,</span><span class="w"> </span><span class="n">init_args</span><span class="p">,</span><span class="w"> </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="bp">__MODULE__</span><span class="p" data-group-id="3942079550-4">)</span><span class="w">
+  </span><span class="k" data-group-id="3942079550-3">end</span><span class="w">
+
+  </span><span class="c1"># The configuration for the DistrServer&#39;s Mnesia table.</span><span class="w">
+  </span><span class="na">@impl</span><span class="w"> </span><span class="no">true</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">config</span><span class="p" data-group-id="3942079550-5">(</span><span class="p" data-group-id="3942079550-5">)</span><span class="w"> </span><span class="k" data-group-id="3942079550-6">do</span><span class="w">
+    </span><span class="p" data-group-id="3942079550-7">%{</span><span class="w">
+      </span><span class="ss">tableName</span><span class="p">:</span><span class="w"> </span><span class="nc">TestTracker</span><span class="p">,</span><span class="w">
+      </span><span class="ss">columns</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3942079550-8">[</span><span class="ss">:col1</span><span class="p">,</span><span class="w"> </span><span class="ss">:col2</span><span class="p">,</span><span class="w"> </span><span class="ss">:last_change</span><span class="p" data-group-id="3942079550-8">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">indexes</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3942079550-9">[</span><span class="p" data-group-id="3942079550-9">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">dataType</span><span class="p">:</span><span class="w"> </span><span class="ss">:set</span><span class="p">,</span><span class="w">
+      </span><span class="ss">copyType</span><span class="p">:</span><span class="w"> </span><span class="ss">:multi</span><span class="w">
+    </span><span class="p" data-group-id="3942079550-7">}</span><span class="w">
+  </span><span class="k" data-group-id="3942079550-6">end</span><span class="w">
+
+  </span><span class="c1"># This is ran when the table is newly created.</span><span class="w">
+  </span><span class="na">@impl</span><span class="w"> </span><span class="no">true</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">create_action</span><span class="p" data-group-id="3942079550-10">(</span><span class="c">_tableConfig</span><span class="p" data-group-id="3942079550-10">)</span><span class="w"> </span><span class="k" data-group-id="3942079550-11">do</span><span class="w">
+    </span><span class="n">...</span><span class="w">
+    </span><span class="ss">:ok</span><span class="w">
+  </span><span class="k" data-group-id="3942079550-11">end</span><span class="w">
+
+  </span><span class="c1"># Similar to GenServer.init/1.</span><span class="w">
+  </span><span class="na">@impl</span><span class="w"> </span><span class="no">true</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">entry_point</span><span class="p" data-group-id="3942079550-12">(</span><span class="c">_init_args</span><span class="p" data-group-id="3942079550-12">)</span><span class="w"> </span><span class="k" data-group-id="3942079550-13">do</span><span class="w">
+    </span><span class="n">...</span><span class="w">
+    </span><span class="p" data-group-id="3942079550-14">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:ok</span><span class="p" data-group-id="3942079550-14">}</span><span class="w"> </span><span class="c1"># all init/1 returns are supported.</span><span class="w">
+  </span><span class="k" data-group-id="3942079550-13">end</span><span class="w">
+
+</span><span class="k" data-group-id="3942079550-1">end</span></code></pre><hr class="thin"/><h1>Breakdown</h1><ul><li><p><code class="inline">use DistrServer, subscribe?: boolean()</code> -&gt; This implements the DistrServer behaviour and mnesia tool functions.</p><ul><li><code class="inline">:subscribe?</code> Utilizing this required parameter will tell the compiler if the DistrServer should automatically subscribe to the Mnesia table it is entangled with.
+  Subscribing to the table <strong>will</strong> copy it to the local memory of the node running this DistrServer.</li></ul></li><li><p><code class="inline">DistrServer.start_link/1</code> -&gt; Similar to <code class="inline">GenServer.start_link/1</code>. Supports all the same arguments and arty.</p></li><li><p><strong>Callback:</strong> <code class="inline">config/0</code> -&gt; Provides the configuration that will be used by the DistrServer's Mnesia table.
+  See the section below on <code class="inline">config/0</code> for more information</p></li><li><p><strong>Callback:</strong> <code class="inline">create_action/1</code> -&gt; Logic ran if the DistrServer has to create the Mnesia table.
+  This callback is optional, but with it, you can pre-fill the mnesia table with data as needed.
+  If the DistrServer boots and the table already exists in the cluster, this function will not be called.</p></li><li><p><strong>Callback:</strong> <code class="inline">entry_point/1</code> -&gt; Similar to <code class="inline">GenServer.init/1</code>. Supports all the same arguments and arty.
+  With DistrServer, the <code class="inline">init/1</code> callback for GenServers is used in the creation of the Mnesia table.</p></li></ul><hr class="thin"/><h1><code class="inline">config/0</code></h1><p><code class="inline">config/0</code> is a callback that requires the returns of a specific map.</p><h1>Example</h1><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="kd">def</span><span class="w"> </span><span class="nf">config</span><span class="p" data-group-id="2639142180-1">(</span><span class="p" data-group-id="2639142180-1">)</span><span class="w"> </span><span class="k" data-group-id="2639142180-2">do</span><span class="w">
+  </span><span class="p" data-group-id="2639142180-3">%{</span><span class="w">
+    </span><span class="ss">tableName</span><span class="p">:</span><span class="w"> </span><span class="n">module</span><span class="p" data-group-id="2639142180-4">(</span><span class="p" data-group-id="2639142180-4">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">atom</span><span class="p" data-group-id="2639142180-5">(</span><span class="p" data-group-id="2639142180-5">)</span><span class="p">,</span><span class="w">
+    </span><span class="ss">columns</span><span class="p">:</span><span class="w"> </span><span class="n">list</span><span class="p" data-group-id="2639142180-6">(</span><span class="n">atom</span><span class="p" data-group-id="2639142180-7">(</span><span class="p" data-group-id="2639142180-7">)</span><span class="p" data-group-id="2639142180-6">)</span><span class="p">,</span><span class="w">
+    </span><span class="ss">indexes</span><span class="p">:</span><span class="w"> </span><span class="n">list</span><span class="p" data-group-id="2639142180-8">(</span><span class="n">atom</span><span class="p" data-group-id="2639142180-9">(</span><span class="p" data-group-id="2639142180-9">)</span><span class="p" data-group-id="2639142180-8">)</span><span class="p">,</span><span class="w">
+    </span><span class="ss">dataType</span><span class="p">:</span><span class="w"> </span><span class="ss">:set</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:ordered_set</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:bag</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:duplicate_bag</span><span class="p">,</span><span class="w">
+    </span><span class="ss">copyType</span><span class="p">:</span><span class="w"> </span><span class="ss">:multi</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:local</span><span class="w">
+  </span><span class="p" data-group-id="2639142180-3">}</span><span class="w">
+</span><span class="k" data-group-id="2639142180-2">end</span></code></pre><ul><li><p><code class="inline">:tableName</code> The name that will be used when creating the Mnesia table.</p></li><li><p><code class="inline">:columns</code> The columns that will be used to create the Mnesia table.
+  The first item in the list will be considered the <code class="inline">key</code> for the record</p></li><li><p><code class="inline">:indexes</code> Defines additional columns that need to be indexed.
+  By default, the key for the record is indexed.
+  Adding the key column to the list will result in an error for Mnesia.</p></li><li><p><code class="inline">:dataType</code> This is the type of Mnesia table we are creating.
+  The types allowed are the same ones supported by Mnesia.</p></li><li><p><code class="inline">:copyType</code> This defines if the DistrServer should copy the table to the local memory of the node.
+  By default, if the DistrServer creates the Mnesia table, it will always be saved to memory.
+  This option comes into effect when the DistrServer is joining an existing cluster where this role is already hosted.
+  If your DistrServer is set to subscribe to the mnesia table, it will be copied to memory as is required by Mnesia.
+  If you are not subscribing, your options are <code class="inline">:local</code> and <code class="inline">:multi</code>.</p><ul><li><p><code class="inline">:local</code> will only keep the table in the memory of the original node.
+This mode is dangerous as losing the original node will result in both data loss, and potential corruption.
+In the event of a failover in this mode, the failing over DistrServer will <strong>not</strong> run <code class="inline">create_action/1</code> as the table will be marked as created.</p></li><li><p><code class="inline">:multi</code> will copy the table to the local memory of any node running the DistrServer.
+This mode is recommended for most use cases.
+Please check into how Mnesia operations (transaction or dirty) work so you use this most efficiently.
+Failure to do so may lead to poor write performance.</p></li></ul></li></ul>
     </section>
 
 </div>
@@ -354,7 +418,12 @@ but make read operations consistent regardless of the table's size.</li><li><cod
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@callback</span> entry_point(var :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: {:ok, var :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@callback</span> entry_point(var :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) ::
+  {:ok, state :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}
+  | {:ok, state :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(),
+     <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">timeout</a>() | :hibernate | {:continue, continue_arg :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}}
+  | :ignore
+  | {:stop, reason :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
 
       </div>
 
@@ -483,9 +552,9 @@ Similar to <a href="https://hexdocs.pm/elixir/GenServer.html#start_link/2"><code
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/beethoven/0.3.9" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.9">Hex Preview</a>
 
           </span>
 
