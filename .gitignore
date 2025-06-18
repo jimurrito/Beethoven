@@ -21,3 +21,9 @@ beethoven-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+._runbook.bash
+
+TODO
+
+.elixir_ls
