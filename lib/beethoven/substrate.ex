@@ -8,7 +8,7 @@ defmodule Beethoven.Substrate do
   - `Beethoven.HwMon` Hardware monitor stack. Tracks hardware resource consumption and both stores the data historically and sends signals to `Allocator`.
   - `Beethoven.CoreServer` Node monitoring service. Can send signals to callers when node state changes.
   - `Beethoven.BeaconServer` TCP server for Beethoven instances to find each other. This interacts with the `Locator` service on other nodes.
-  - `Beethoven.RoleServer` Role management and allocation service that can host roles defined in config.ex.
+  - `Beethoven.RoleMgmt` Role management and allocation service that can host roles defined in config.ex.
   """
 
   require Logger

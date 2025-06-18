@@ -9,12 +9,12 @@ defmodule Beethoven.Utils do
   #
   #
   @doc """
-  Fn to simplify calling named Processes on other nodes... and getting a call back.
+  Fn to streamline execution of functions on other nodes in the cluster.
   """
   @spec remote_call((-> any()), node(), integer()) :: any() | {:error, :timeout}
   def remote_call(fun, host, timeout \\ 1_000) do
-    # generate seed for tracking (100_000-999_9999)
-    seed = :rand.uniform(900_000) + 99_999
+    # generate seed for tracking
+    seed = :crypto.strong_rand_bytes(16)
     # ownPID
     ownPid = self()
     #

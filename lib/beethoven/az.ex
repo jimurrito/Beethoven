@@ -1,5 +1,8 @@
 defmodule Beethoven.Az do
   @moduledoc """
+
+  # WORK IN PROGRESS!
+
   Azure Platform awareness for the node.
   If the app is not in Azure, genserver will response `:no_azure` to all calls.
 

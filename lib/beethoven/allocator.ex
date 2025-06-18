@@ -5,8 +5,9 @@ defmodule Beethoven.Allocator do
 
   # Public API
 
-  - `allocate/0` Provides the URI of the least-busy node in the cluster.
-  - `get_all/0` Dumps all records from the `#{__MODULE__}.Tracker` mnesia table.
+  - `allocate/0` Provides the name of the least-busy node in the cluster.
+  - `allocation_list/0` Provides a sorted list of all the nodes in the mnesia cluster. Nodes sorted from least-to-most busy.
+  - `get_all/0` Dumps a sorted list of all records from the `AllocTracker` mnesia table. Records sorted from least-to-most busy.
 
   # Readme
 

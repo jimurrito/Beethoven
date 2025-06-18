@@ -18,7 +18,7 @@ defmodule Beethoven.Locator do
 
   ---
 
-  # `:watching`
+  # `:watching` (WIP)
   Used when the cluster is in standalone mode.
   This mode will continue the scan for other clusters.
   This is needed to ensure there are no other clusters existing at the same time.
