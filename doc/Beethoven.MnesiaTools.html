@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.37.3">
+    <meta name="project" content="Beethoven v0.3.7">
+
+
+    <title>Beethoven.MnesiaTools — Beethoven v0.3.7</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
+
+    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-ALU6OERS.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="api-reference.html" class="sidebar-projectName" translate="no">
+Beethoven
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.3.7
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-module" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Beethoven</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">Beethoven.MnesiaTools</span> 
+      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+
+    </h1>
+
+  </div>
+
+
+    <section id="moduledoc">
+<p>Generic Library to simplify certain Mnesia tasks.</p>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:tableConfig/0" data-no-tooltip="" translate="no">tableConfig()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>TableConfig contains the payload needed to create the state table needed by the process.</p></div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#copy_table/1" data-no-tooltip="" translate="no">copy_table(table)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Copies a replica of a desired table to local node memory.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_table_ifnot_exist/1" data-no-tooltip="" translate="no">create_table_ifnot_exist(tableConfig)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Creates table if it does not already exist.
+Applies indexes on creation.
+Will</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#delete_copy/1" data-no-tooltip="" translate="no">delete_copy(table)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Removes the replica of a desired table from local memory.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#subscribe/1" data-no-tooltip="" translate="no">subscribe(tableName)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Subscribe to changes to a Mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sync_run/1" data-no-tooltip="" translate="no">sync_run(fun)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Runs a job within a synchronous transaction</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#table_exists?/1" data-no-tooltip="" translate="no">table_exists?(table)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Check if a Mnesia table exists in the cluster.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:tableConfig/0">
+
+  <div class="detail-header">
+    <a href="#t:tableConfig/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">tableConfig()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> tableConfig() ::
+  {tableName :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), columns :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()], indexes :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()],
+   dataType :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), copyType :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+
+      </div>
+
+<p>TableConfig contains the payload needed to create the state table needed by the process.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="copy_table/1">
+
+  <div class="detail-header">
+    <a href="#copy_table/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">copy_table(table)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> copy_table(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: :ok | :already_exists | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p>Copies a replica of a desired table to local node memory.</p><p>The table may already exist in memory for the following reasons:</p><ul><li>The table was created for all nodes, and this node was already in the cluster.</li><li>The table was initialized on this node.</li><li>A node with the same name was successfully joined the cluster in the past, and power-cycled.</li></ul>
+  </section>
+</section>
+<section class="detail" id="create_table_ifnot_exist/1">
+
+  <div class="detail-header">
+    <a href="#create_table_ifnot_exist/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">create_table_ifnot_exist(tableConfig)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_table_ifnot_exist(<a href="#t:tableConfig/0">tableConfig</a>()) :: :ok | :already_exists</pre>
+
+      </div>
+
+<p>Creates table if it does not already exist.
+Applies indexes on creation.
+Will</p>
+  </section>
+</section>
+<section class="detail" id="delete_copy/1">
+
+  <div class="detail-header">
+    <a href="#delete_copy/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">delete_copy(table)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> delete_copy(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Removes the replica of a desired table from local memory.</p>
+  </section>
+</section>
+<section class="detail" id="subscribe/1">
+
+  <div class="detail-header">
+    <a href="#subscribe/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">subscribe(tableName)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> subscribe(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>()} | {:error, reason :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+<p>Subscribe to changes to a Mnesia table.</p>
+  </section>
+</section>
+<section class="detail" id="sync_run/1">
+
+  <div class="detail-header">
+    <a href="#sync_run/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">sync_run(fun)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sync_run((-&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>())) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>() | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p>Runs a job within a synchronous transaction</p>
+  </section>
+</section>
+<section class="detail" id="table_exists?/1">
+
+  <div class="detail-header">
+    <a href="#table_exists?/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">table_exists?(table)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> table_exists?(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Check if a Mnesia table exists in the cluster.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Beethoven.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.37.3) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

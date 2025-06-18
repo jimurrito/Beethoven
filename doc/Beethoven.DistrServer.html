@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.37.3">
+    <meta name="project" content="Beethoven v0.3.7">
+
+
+    <title>Beethoven.DistrServer — Beethoven v0.3.7</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
+
+    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-ALU6OERS.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="api-reference.html" class="sidebar-projectName" translate="no">
+Beethoven
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.3.7
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-behaviour" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Beethoven</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">Beethoven.DistrServer</span> <small>behaviour</small>
+      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+
+    </h1>
+
+  </div>
+
+
+    <section id="moduledoc">
+<p>A modified version of the built-in <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>.
+Specialized for Beethoven's No-Master design; this GenServer will initialize a Mnesia table on creation.
+These tables act as the primary state for the distributed process.
+Supports <em>most</em> GenServer logic and callbacks.</p>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:copyTypes/0" data-no-tooltip="" translate="no">copyTypes()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Copy options for the Mnesia table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:distrConfig/0" data-no-tooltip="" translate="no">distrConfig()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Configuration for the <code class="inline">DistrServer</code> instance.</p></div>
+
+    </div>
+
+</div>
+<div class="summary-callbacks summary">
+  <h2>
+    <a href="#callbacks">Callbacks</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:config/0" data-no-tooltip="" translate="no">config()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p><strong>-Callback required-</strong></p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:create_action/1" data-no-tooltip="" translate="no">create_action(tableConfig)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p><strong>-Callback required-</strong></p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:entry_point/1" data-no-tooltip="" translate="no">entry_point(var)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p><strong>-Callback required-</strong></p></div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#call/3" data-no-tooltip="" translate="no">call(server, request, timeout \\ 5000)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Sends a cast to the provided <code class="inline">DistrServer</code>.
+Similar to <a href="https://hexdocs.pm/elixir/GenServer.html#call/2"><code class="inline">GenServer.call/2</code></a> and <a href="https://hexdocs.pm/elixir/GenServer.html#call/3"><code class="inline">GenServer.call/3</code></a></p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#cast/2" data-no-tooltip="" translate="no">cast(server, request)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Sends a cast to the provided <code class="inline">DistrServer</code>. Similar to <a href="https://hexdocs.pm/elixir/GenServer.html#cast/2"><code class="inline">GenServer.cast/2</code></a></p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#distr_to_table_conf/1" data-no-tooltip="" translate="no">distr_to_table_conf(distrConfig)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Converts the <code class="inline">DistrConfig()</code> into the <code class="inline">tableConfig()</code> type.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_link/3" data-no-tooltip="" translate="no">start_link(module, init_args, options \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Starts a <code class="inline">DistrServer</code> process under the supervisor tree.
+Similar to <a href="https://hexdocs.pm/elixir/GenServer.html#start_link/2"><code class="inline">GenServer.start_link/2</code></a> and <a href="https://hexdocs.pm/elixir/GenServer.html#start_link/3"><code class="inline">GenServer.start_link/3</code></a></p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:copyTypes/0">
+
+  <div class="detail-header">
+    <a href="#t:copyTypes/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">copyTypes()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> copyTypes() :: :local | :multi</pre>
+
+      </div>
+
+<p>Copy options for the Mnesia table.</p><ul><li><code class="inline">:local</code> -&gt; Copies are only on the table-creating-node.</li><li><code class="inline">:multi</code> -&gt; Copies are pushed to ALL nodes in the cluster.</li></ul>
+  </section>
+</section>
+<section class="detail" id="t:distrConfig/0">
+
+  <div class="detail-header">
+    <a href="#t:distrConfig/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">distrConfig()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> distrConfig() :: %{
+  tableName: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+  columns: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()],
+  indexes: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()],
+  dataType: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+  copyType: <a href="#t:copyTypes/0">copyTypes</a>()
+}</pre>
+
+      </div>
+
+<p>Configuration for the <code class="inline">DistrServer</code> instance.</p><ul><li><code class="inline">:tableName</code> -&gt; Atomic name for the table.</li><li><code class="inline">:columns</code> -&gt; List of atoms representing the names of columns in the name.</li><li><code class="inline">:indexes</code> -&gt; List of table columns that should be indexed.
+<strong>Note:</strong> Indexing a column will slow writes to it,
+but make read operations consistent regardless of the table's size.</li><li><code class="inline">:dataType</code> -&gt; Data type for the Mnesia table.</li><li><code class="inline">:copyType</code> -&gt; How the new table will be copied across the Beethoven cluster.</li></ul>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="callbacks" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#callbacks">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Callbacks</span>
+    </h1>
+    <div class="callbacks-list">
+<section class="detail" id="c:config/0">
+
+  <div class="detail-header">
+    <a href="#c:config/0" class="detail-link" data-no-tooltip="" aria-label="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">config()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> config() :: <a href="#t:distrConfig/0">distrConfig</a>()</pre>
+
+      </div>
+
+<p><strong>-Callback required-</strong></p><p><code class="inline">DistrServer</code> configuration. See <code class="inline">distrConfig()</code> type for more information on the return.</p>
+  </section>
+</section>
+<section class="detail" id="c:create_action/1">
+
+  <div class="detail-header">
+    <a href="#c:create_action/1" class="detail-link" data-no-tooltip="" aria-label="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">create_action(tableConfig)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> create_action(tableConfig :: <a href="Beethoven.MnesiaTools.html#t:tableConfig/0">Beethoven.MnesiaTools.tableConfig</a>()) :: :ok</pre>
+
+      </div>
+
+<p><strong>-Callback required-</strong></p><p>Callback that is triggered when the process creates the Mnesia Table for the cluster.</p>
+  </section>
+</section>
+<section class="detail" id="c:entry_point/1">
+
+  <div class="detail-header">
+    <a href="#c:entry_point/1" class="detail-link" data-no-tooltip="" aria-label="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">entry_point(var)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> entry_point(var :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: {:ok, var :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p><strong>-Callback required-</strong></p><p>Entry point for the <code class="inline">DistrServer</code> process. Similar to <code class="inline">init/1</code> for GenServers.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="call/3">
+
+    <span id="call/2"></span>
+
+  <div class="detail-header">
+    <a href="#call/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">call(server, request, timeout \\ 5000)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> call(<a href="https://hexdocs.pm/elixir/GenServer.html#t:server/0">GenServer.server</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">timeout</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>Sends a cast to the provided <code class="inline">DistrServer</code>.
+Similar to <a href="https://hexdocs.pm/elixir/GenServer.html#call/2"><code class="inline">GenServer.call/2</code></a> and <a href="https://hexdocs.pm/elixir/GenServer.html#call/3"><code class="inline">GenServer.call/3</code></a></p>
+  </section>
+</section>
+<section class="detail" id="cast/2">
+
+  <div class="detail-header">
+    <a href="#cast/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">cast(server, request)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cast(<a href="https://hexdocs.pm/elixir/GenServer.html#t:server/0">GenServer.server</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Sends a cast to the provided <code class="inline">DistrServer</code>. Similar to <a href="https://hexdocs.pm/elixir/GenServer.html#cast/2"><code class="inline">GenServer.cast/2</code></a></p>
+  </section>
+</section>
+<section class="detail" id="distr_to_table_conf/1">
+
+  <div class="detail-header">
+    <a href="#distr_to_table_conf/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">distr_to_table_conf(distrConfig)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> distr_to_table_conf(<a href="#t:distrConfig/0">distrConfig</a>()) :: <a href="Beethoven.MnesiaTools.html#t:tableConfig/0">Beethoven.MnesiaTools.tableConfig</a>()</pre>
+
+      </div>
+
+<p>Converts the <code class="inline">DistrConfig()</code> into the <code class="inline">tableConfig()</code> type.</p>
+  </section>
+</section>
+<section class="detail" id="start_link/3">
+
+    <span id="start_link/2"></span>
+
+  <div class="detail-header">
+    <a href="#start_link/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">start_link(module, init_args, options \\ [])</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_link(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/GenServer.html#t:options/0">GenServer.options</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+
+      </div>
+
+<p>Starts a <code class="inline">DistrServer</code> process under the supervisor tree.
+Similar to <a href="https://hexdocs.pm/elixir/GenServer.html#start_link/2"><code class="inline">GenServer.start_link/2</code></a> and <a href="https://hexdocs.pm/elixir/GenServer.html#start_link/3"><code class="inline">GenServer.start_link/3</code></a></p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Beethoven.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.37.3) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

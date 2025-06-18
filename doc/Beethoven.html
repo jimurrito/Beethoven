@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.37.3">
+    <meta name="project" content="Beethoven v0.3.7">
+
+
+    <title>Beethoven — Beethoven v0.3.7</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
+
+    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-ALU6OERS.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="api-reference.html" class="sidebar-projectName" translate="no">
+Beethoven
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.3.7
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-module" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Beethoven</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">Beethoven</span> 
+      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+
+    </h1>
+
+  </div>
+
+
+    <section id="moduledoc">
+<p>A Decentralized failover and peer-to-peer node finder for Elixir.
+Allows Elixir nodes to find each other automatically.
+Once connected, they can coordinate to delegate roles and tasks between the nodes in the cluster.
+Written using only the Elixir and Erlang standard library.</p><p>This module acts as the unified client for interacting with beethoven as an external client.
+Avoid using the other modules for external PID calls to beethoven services.</p>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:nodeList/0" data-no-tooltip="" translate="no">nodeList()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>List of node names.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:nodeStatusMap/0" data-no-tooltip="" translate="no">nodeStatusMap()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Status of a Beethoven cluster node.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:nodeStatusMapList/0" data-no-tooltip="" translate="no">nodeStatusMapList()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>List of <code class="inline">nodeStatus()</code> objects.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:role/0" data-no-tooltip="" translate="no">role()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Role data structure.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:roleList/0" data-no-tooltip="" translate="no">roleList()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>List of <code class="inline">role()</code>.</p></div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_active_nodes/0" data-no-tooltip="" translate="no">get_active_nodes()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns all active cluster nodes by their Node name URI.
+Returns an empty list if this node is in <code class="inline">:standalone</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_cluster_nodes/0" data-no-tooltip="" translate="no">get_cluster_nodes()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns all cluster nodes and their state.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_node_status/0" data-no-tooltip="" translate="no">get_node_status()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns state of this node within the Beethoven cluster.
+Return will only be <code class="inline">:clustered</code> or <code class="inline">:standalone</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_roles/0" data-no-tooltip="" translate="no">get_roles()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns all roles hosted in Beethoven.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#ready?/0" data-no-tooltip="" translate="no">ready?()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Gets the current ready state for Beethoven.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#until_ready/1" data-no-tooltip="" translate="no">until_ready(timeout \\ 5000)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Similar to <code class="inline">ready?()</code> but will block until the service is ready.
+Defaults to 5_000 milliseconds.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:nodeList/0">
+
+  <div class="detail-header">
+    <a href="#t:nodeList/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">nodeList()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> nodeList() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>()]</pre>
+
+      </div>
+
+<p>List of node names.</p>
+  </section>
+</section>
+<section class="detail" id="t:nodeStatusMap/0">
+
+  <div class="detail-header">
+    <a href="#t:nodeStatusMap/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">nodeStatusMap()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> nodeStatusMap() :: %{
+  node: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>(),
+  status: <a href="Beethoven.CoreServer.html#t:nodeStatus/0">Beethoven.CoreServer.nodeStatus</a>(),
+  last_change: <a href="https://hexdocs.pm/elixir/DateTime.html#t:t/0">DateTime.t</a>()
+}</pre>
+
+      </div>
+
+<p>Status of a Beethoven cluster node.</p>
+  </section>
+</section>
+<section class="detail" id="t:nodeStatusMapList/0">
+
+  <div class="detail-header">
+    <a href="#t:nodeStatusMapList/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">nodeStatusMapList()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> nodeStatusMapList() :: [<a href="#t:nodeStatusMap/0">nodeStatusMap</a>()]</pre>
+
+      </div>
+
+<p>List of <code class="inline">nodeStatus()</code> objects.</p>
+  </section>
+</section>
+<section class="detail" id="t:role/0">
+
+  <div class="detail-header">
+    <a href="#t:role/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">role()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> role() :: %{
+  role: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+  count: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
+  assigned: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
+  nodes: <a href="#t:nodeList/0">nodeList</a>()
+}</pre>
+
+      </div>
+
+<p>Role data structure.</p>
+  </section>
+</section>
+<section class="detail" id="t:roleList/0">
+
+  <div class="detail-header">
+    <a href="#t:roleList/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">roleList()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> roleList() :: [<a href="#t:role/0">role</a>()]</pre>
+
+      </div>
+
+<p>List of <code class="inline">role()</code>.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="get_active_nodes/0">
+
+  <div class="detail-header">
+    <a href="#get_active_nodes/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_active_nodes()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_active_nodes() :: <a href="#t:nodeList/0">nodeList</a>()</pre>
+
+      </div>
+
+<p>Returns all active cluster nodes by their Node name URI.
+Returns an empty list if this node is in <code class="inline">:standalone</code>.</p>
+  </section>
+</section>
+<section class="detail" id="get_cluster_nodes/0">
+
+  <div class="detail-header">
+    <a href="#get_cluster_nodes/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_cluster_nodes()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_cluster_nodes() :: <a href="#t:nodeStatusMapList/0">nodeStatusMapList</a>()</pre>
+
+      </div>
+
+<p>Returns all cluster nodes and their state.</p>
+  </section>
+</section>
+<section class="detail" id="get_node_status/0">
+
+  <div class="detail-header">
+    <a href="#get_node_status/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_node_status()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_node_status() :: <a href="Beethoven.CoreServer.html#t:serverStatus/0">Beethoven.CoreServer.serverStatus</a>()</pre>
+
+      </div>
+
+<p>Returns state of this node within the Beethoven cluster.
+Return will only be <code class="inline">:clustered</code> or <code class="inline">:standalone</code>.</p><p>Wrapper for <a href="Beethoven.CoreServer.html#get_mode/0"><code class="inline">Beethoven.CoreServer.get_mode/0</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="get_roles/0">
+
+  <div class="detail-header">
+    <a href="#get_roles/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_roles()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_roles() :: <a href="#t:roleList/0">roleList</a>()</pre>
+
+      </div>
+
+<p>Returns all roles hosted in Beethoven.</p>
+  </section>
+</section>
+<section class="detail" id="ready?/0">
+
+  <div class="detail-header">
+    <a href="#ready?/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">ready?()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> ready?() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Gets the current ready state for Beethoven.</p><p>Wrapper for <a href="Beethoven.Ready.html#ready?/0"><code class="inline">Beethoven.Ready.ready?/0</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="until_ready/1">
+
+    <span id="until_ready/0"></span>
+
+  <div class="detail-header">
+    <a href="#until_ready/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">until_ready(timeout \\ 5000)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> until_ready(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: :ok | :timeout</pre>
+
+      </div>
+
+<p>Similar to <code class="inline">ready?()</code> but will block until the service is ready.
+Defaults to 5_000 milliseconds.</p><p>Wrapper for <a href="Beethoven.Ready.html#until_ready/1"><code class="inline">Beethoven.Ready.until_ready/1</code></a>.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Beethoven.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.37.3) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.37.3">
+    <meta name="project" content="Beethoven v0.3.7">
+
+
+    <title>Beethoven.CoreServer — Beethoven v0.3.7</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
+
+    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-ALU6OERS.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="api-reference.html" class="sidebar-projectName" translate="no">
+Beethoven
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.3.7
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-behaviour" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Beethoven</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">Beethoven.CoreServer</span> <small>behaviour</small>
+      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+
+    </h1>
+
+  </div>
+
+
+    <section id="moduledoc">
+<p>Core Service for Beethoven.
+Watches other nodes within the cluster and cascade updates across the beethoven PIDs as needed.</p><hr class="thin"/><h1>External API calls</h1><p>These are calls that can be made from external servers</p><ul><li><a href="#alert_me/1"><code class="inline">alert_me/1</code></a> -&gt; Alerts the caller on cluster node changes. (see 'Listening for cluster node changes' for more info.)</li><li><a href="#new_node/1"><code class="inline">new_node/1</code></a> -&gt; Adds node to CoreServer state mnesia table. (Should be called by the <code class="inline">Listener</code> server)</li><li><p><a href="#get_mode/0"><code class="inline">get_mode/0</code></a> -&gt; Returns the mode of the CoreServer. (:standalone | :clustered)</p></li></ul><hr class="thin"/><h1>Listening for cluster node changes</h1><p>Using <a href="#alert_me/1"><code class="inline">alert_me/1</code></a> from a local client, you can tell the CoreServer to call you back when there is a change to a cluster node.
+Ignores changes to itself, only delivers updates of other nodes.</p><p>To use this, the caller <em>must</em> implement the <code class="inline">CoreServer</code> behavior and callback <a href="#node_update/2"><code class="inline">node_update/2</code></a>.
+Once a change occurs, the CoreServer will call the callback function for the following module/process.
+<a href="#node_update/2"><code class="inline">node_update/2</code></a> should contain the logic needed when a node changes state.</p>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:nodeStatus/0" data-no-tooltip="" translate="no">nodeStatus()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Possible status(s) for nodes within Beethoven.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:serverStatus/0" data-no-tooltip="" translate="no">serverStatus()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Possible statuses for CoreServer</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:trackerEvent/0" data-no-tooltip="" translate="no">trackerEvent()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Single tracker event from the Mnesia table</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:trackerRow/0" data-no-tooltip="" translate="no">trackerRow()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>A single row in the CoreServer tracker.</p></div>
+
+    </div>
+
+</div>
+<div class="summary-callbacks summary">
+  <h2>
+    <a href="#callbacks">Callbacks</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:node_update/2" data-no-tooltip="" translate="no">node_update(nodeName, status)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback needed for downlevel services to streamline receiving node down updates.</p></div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_node_to_mnesia/1" data-no-tooltip="" translate="no">add_node_to_mnesia(nodeName)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Adds a node to Mnesia cluster</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#alert_me/1" data-no-tooltip="" translate="no">alert_me(module_name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Tell the local CoreServer that we want to be alerted to changes to cluster node state.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#child_spec/1" data-no-tooltip="" translate="no">child_spec(init_arg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#entry_point/1" data-no-tooltip="" translate="no">entry_point(mode)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback for entry when we are in :standalone or :clustered mode</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_mode/0" data-no-tooltip="" translate="no">get_mode()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Gets mode from the CoreServer.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#handle_cast/2" data-no-tooltip="" translate="no">handle_cast(msg, state)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback to handle casts for services that need updates on node state.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new_node/1" data-no-tooltip="" translate="no">new_node(nodeName)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Add a node to the Cluster Node tracker.
+If node is already tracked, it will be marked as <code class="inline">:online</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#node_update/2" data-no-tooltip="" translate="no">node_update(nodeName, status)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="#c:node_update/2"><code class="inline">Beethoven.CoreServer.node_update/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_link/1" data-no-tooltip="" translate="no">start_link(init_args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Supervisor Entry point.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:nodeStatus/0">
+
+  <div class="detail-header">
+    <a href="#t:nodeStatus/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">nodeStatus()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> nodeStatus() :: :online | :offline</pre>
+
+      </div>
+
+<p>Possible status(s) for nodes within Beethoven.</p><h1>Options</h1><ul><li><code class="inline">:online</code></li><li><code class="inline">:offline</code></li></ul>
+  </section>
+</section>
+<section class="detail" id="t:serverStatus/0">
+
+  <div class="detail-header">
+    <a href="#t:serverStatus/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">serverStatus()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> serverStatus() :: :standalone | :clustered</pre>
+
+      </div>
+
+<p>Possible statuses for CoreServer</p>
+  </section>
+</section>
+<section class="detail" id="t:trackerEvent/0">
+
+  <div class="detail-header">
+    <a href="#t:trackerEvent/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">trackerEvent()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> trackerEvent() ::
+  {opType :: :write | :delete, mod :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), new_row :: <a href="#t:trackerRow/0">trackerRow</a>(),
+   old_rows :: [<a href="#t:trackerRow/0">trackerRow</a>()], pid_struct :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p>Single tracker event from the Mnesia table</p>
+  </section>
+</section>
+<section class="detail" id="t:trackerRow/0">
+
+  <div class="detail-header">
+    <a href="#t:trackerRow/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">trackerRow()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> trackerRow() ::
+  {mod :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), nodeName :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>(), status :: <a href="#t:nodeStatus/0">nodeStatus</a>(),
+   lastChange :: <a href="https://hexdocs.pm/elixir/DateTime.html#t:t/0">DateTime.t</a>()}</pre>
+
+      </div>
+
+<p>A single row in the CoreServer tracker.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="callbacks" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#callbacks">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Callbacks</span>
+    </h1>
+    <div class="callbacks-list">
+<section class="detail" id="c:node_update/2">
+
+  <div class="detail-header">
+    <a href="#c:node_update/2" class="detail-link" data-no-tooltip="" aria-label="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">node_update(nodeName, status)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> node_update(nodeName :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>(), status :: <a href="#t:nodeStatus/0">nodeStatus</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Callback needed for downlevel services to streamline receiving node down updates.</p><p><strong>Required if you follow core server for cluster updates via <a href="#alert_me/1"><code class="inline">alert_me/1</code></a></strong></p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="add_node_to_mnesia/1">
+
+  <div class="detail-header">
+    <a href="#add_node_to_mnesia/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_node_to_mnesia(nodeName)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_node_to_mnesia(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Adds a node to Mnesia cluster</p>
+  </section>
+</section>
+<section class="detail" id="alert_me/1">
+
+  <div class="detail-header">
+    <a href="#alert_me/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">alert_me(module_name)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> alert_me(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Tell the local CoreServer that we want to be alerted to changes to cluster node state.</p>
+  </section>
+</section>
+<section class="detail" id="child_spec/1">
+
+  <div class="detail-header">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">child_spec(init_arg)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="entry_point/1">
+
+  <div class="detail-header">
+    <a href="#entry_point/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">entry_point(mode)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Callback for entry when we are in :standalone or :clustered mode</p>
+  </section>
+</section>
+<section class="detail" id="get_mode/0">
+
+  <div class="detail-header">
+    <a href="#get_mode/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_mode()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_mode() :: <a href="#t:serverStatus/0">serverStatus</a>()</pre>
+
+      </div>
+
+<p>Gets mode from the CoreServer.</p>
+  </section>
+</section>
+<section class="detail" id="handle_cast/2">
+
+  <div class="detail-header">
+    <a href="#handle_cast/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">handle_cast(msg, state)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Callback to handle casts for services that need updates on node state.</p>
+  </section>
+</section>
+<section class="detail" id="new_node/1">
+
+  <div class="detail-header">
+    <a href="#new_node/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">new_node(nodeName)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new_node(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Add a node to the Cluster Node tracker.
+If node is already tracked, it will be marked as <code class="inline">:online</code>.</p>
+  </section>
+</section>
+<section class="detail" id="node_update/2">
+
+  <div class="detail-header">
+    <a href="#node_update/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">node_update(nodeName, status)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Callback implementation for <a href="#c:node_update/2"><code class="inline">Beethoven.CoreServer.node_update/2</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="start_link/1">
+
+  <div class="detail-header">
+    <a href="#start_link/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">start_link(init_args)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_link(<a href="#t:serverStatus/0">serverStatus</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+
+      </div>
+
+<p>Supervisor Entry point.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Beethoven.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.37.3) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

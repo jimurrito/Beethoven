@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.37.3">
+    <meta name="project" content="Beethoven v0.3.7">
+
+
+    <title>Beethoven.SeekChat — Beethoven v0.3.7</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
+
+    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-ALU6OERS.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="api-reference.html" class="sidebar-projectName" translate="no">
+Beethoven
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.3.7
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-module" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Beethoven</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">Beethoven.SeekChat</span> 
+      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+
+    </h1>
+
+  </div>
+
+
+    <section id="moduledoc">
+<p>Module to simplify the interface between nodes during the locator Seeking flow.</p>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:msg/0" data-no-tooltip="" translate="no">msg()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Type for sending messages between Locator and Listening Servers.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:payload/0" data-no-tooltip="" translate="no">payload()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Message payload.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:type/0" data-no-tooltip="" translate="no">type()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Request type for a node seeking message.</p></div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#decode/1" data-no-tooltip="" translate="no">decode(msg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Deserializes a binary into <code class="inline">msg()</code> type.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#encode/1" data-no-tooltip="" translate="no">encode(msg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Serializes a <code class="inline">msg()</code> object into a binary.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new_msg/2" data-no-tooltip="" translate="no">new_msg(type, payload)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Creates a new msg, in the form of <code class="inline">msg()</code>.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:msg/0">
+
+  <div class="detail-header">
+    <a href="#t:msg/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">msg()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> msg() :: %{sender: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>(), type: <a href="#t:type/0">type</a>(), payload: <a href="#t:payload/0">payload</a>()}</pre>
+
+      </div>
+
+<p>Type for sending messages between Locator and Listening Servers.</p>
+  </section>
+</section>
+<section class="detail" id="t:payload/0">
+
+  <div class="detail-header">
+    <a href="#t:payload/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">payload()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> payload() ::
+  :join
+  | :check
+  | :self
+  | [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">node</a>()]
+  | :standalone
+  | :joined
+  | :join_failed
+  | :error</pre>
+
+      </div>
+
+<p>Message payload.</p><h1>Options:</h1><ul><li><code class="inline">:join</code> --&gt; (CLIENT) Seeking to join a cluster.</li><li><code class="inline">:check</code> --&gt; (CLIENT) Client is watching, and wants to know if we are in a cluster.</li><li><code class="inline">:self</code> --&gt; (SERVER) When client calls its own listener.</li><li><code class="inline">list(node())</code> --&gt; (SERVER) When client is watching, and server is in a cluster.</li><li><code class="inline">:standalone</code> --&gt; (SERVER) When client is watching, and the server is in standalone mode.</li><li><code class="inline">:joined</code> --&gt; (SERVER) Client request to join was successful.</li><li><code class="inline">:join_failed</code> --&gt; (SERVER) Client request to join failed.</li><li><code class="inline">:error</code> --&gt; (SERVER) Generic error occurred.</li></ul>
+  </section>
+</section>
+<section class="detail" id="t:type/0">
+
+  <div class="detail-header">
+    <a href="#t:type/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">type()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> type() :: :seeking | :watching | :reply</pre>
+
+      </div>
+
+<p>Request type for a node seeking message.</p><h1>Client Options</h1><ul><li><code class="inline">:seeking</code> --&gt; Client looking to join.</li><li><code class="inline">:watching</code> --&gt; Client checking if anything else is listening.</li></ul><h1>Server Options</h1><ul><li><code class="inline">:reply</code> --&gt; Server response to either message</li></ul>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="decode/1">
+
+  <div class="detail-header">
+    <a href="#decode/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">decode(msg)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> decode(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: <a href="#t:msg/0">msg</a>()</pre>
+
+      </div>
+
+<p>Deserializes a binary into <code class="inline">msg()</code> type.</p>
+  </section>
+</section>
+<section class="detail" id="encode/1">
+
+  <div class="detail-header">
+    <a href="#encode/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">encode(msg)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> encode(<a href="#t:msg/0">msg</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+
+      </div>
+
+<p>Serializes a <code class="inline">msg()</code> object into a binary.</p>
+  </section>
+</section>
+<section class="detail" id="new_msg/2">
+
+  <div class="detail-header">
+    <a href="#new_msg/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">new_msg(type, payload)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new_msg(<a href="#t:type/0">type</a>(), <a href="#t:payload/0">payload</a>()) :: <a href="#t:msg/0">msg</a>()</pre>
+
+      </div>
+
+<p>Creates a new msg, in the form of <code class="inline">msg()</code>.</p><h1><code class="inline">type()</code></h1><ul><li><code class="inline">:seeking</code> --&gt; (CLIENT) Client looking to join.</li><li><code class="inline">:watching</code> --&gt; (CLIENT) Client checking if anything else is listening.</li><li><code class="inline">:reply</code> --&gt; (SERVER) Server response to either message</li></ul><hr class="thin"/><h1><code class="inline">payload()</code>:</h1><ul><li><code class="inline">:join</code> --&gt; (CLIENT) Seeking to join a cluster.</li><li><code class="inline">:check</code> --&gt; (CLIENT) Client is watching, and wants to know if we are in a cluster.</li><li><code class="inline">:self</code> --&gt; (SERVER) When client calls its own listener.</li><li><code class="inline">list(node())</code> --&gt; (SERVER) When client is watching, and server is in a cluster.</li><li><code class="inline">:standalone</code> --&gt; (SERVER) When client is watching, and the server is in standalone mode.</li><li><code class="inline">:joined</code> --&gt; (SERVER) Client request to join was successful.</li><li><code class="inline">:join_failed</code> --&gt; (SERVER) Client request to join failed.</li><li><code class="inline">:error</code> --&gt; (SERVER) Generic error occurred.</li></ul>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Beethoven.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.37.3) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

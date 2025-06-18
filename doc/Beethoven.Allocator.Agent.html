@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.37.3">
+    <meta name="project" content="Beethoven v0.3.7">
+
+
+    <title>Beethoven.Allocator.Agent — Beethoven v0.3.7</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
+
+    <script defer src="dist/sidebar_items-E12A1300.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-ALU6OERS.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="api-reference.html" class="sidebar-projectName" translate="no">
+Beethoven
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.3.7
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-module" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Beethoven</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">Beethoven.Allocator.Agent</span> 
+      <small class="app-vsn" translate="no">(Beethoven v0.3.7)</small>
+
+    </h1>
+
+  </div>
+
+
+    <section id="moduledoc">
+<p>Behaviour to define signals via the <code class="inline">signal()</code> macro.</p><p>This macro defines a signal that can be sent to the <a href="Beethoven.Allocator.html"><code class="inline">Beethoven.Allocator</code></a> stack.
+Once defined, this module will have compile-time created functions to streamline the use of the signal.
+Each signal has an atomic name, priority weight, and type defined in it.
+This data is aggregated and used to generate a busy-score for a node.</p><h1>Types</h1><ul><li><p><code class="inline">:count</code> Counts the number of a given thing. Generates 2 functions.
+One to increment the counter, the other to decrement it. Both modify the counter by <code class="inline">+/-1.0</code>.
+The counter will never be lower then <code class="inline">0</code>.</p></li><li><p><code class="inline">:percent</code> Represents a float between 0.0 and &gt;100.0. This generates 1 function.
+This function allows you to set a float payload in the signal.
+This value must be a positive float.</p></li></ul><h1>Examples</h1><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Signals</span><span class="w"> </span><span class="k" data-group-id="4965010010-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">Beethoven.Allocator.Agent</span><span class="w">
+
+  </span><span class="n">signal</span><span class="p" data-group-id="4965010010-2">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:ram</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="4965010010-2">)</span><span class="w">
+  </span><span class="n">signal</span><span class="p" data-group-id="4965010010-3">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:http_requests</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:count</span><span class="p" data-group-id="4965010010-3">)</span><span class="w">
+</span><span class="k" data-group-id="4965010010-1">end</span><span class="w">
+
+</span><span class="c1"># Generates</span><span class="w">
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">percent_ram</span><span class="p" data-group-id="4965010010-4">(</span><span class="n">data</span><span class="p" data-group-id="4965010010-4">)</span><span class="w"> </span><span class="c1"># Data is now the value of the metric in `:ets`</span><span class="w">
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">increment_http_requests_count</span><span class="p" data-group-id="4965010010-5">(</span><span class="p" data-group-id="4965010010-5">)</span><span class="w"> </span><span class="c1"># +1.0</span><span class="w">
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">decrement_http_requests_count</span><span class="p" data-group-id="4965010010-6">(</span><span class="p" data-group-id="4965010010-6">)</span><span class="w"> </span><span class="c1"># -1.0</span></code></pre><p>See <a href="Beethoven.Allocator.Cruncher.html"><code class="inline">Beethoven.Allocator.Cruncher</code></a> for information on how the signals are aggregated.</p>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:signal_definition/0" data-no-tooltip="" translate="no">signal_definition()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Defines a single signal. Commonly used as an input for the <code class="inline">signal()</code> macro.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:signal_message/0" data-no-tooltip="" translate="no">signal_message()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Message wrapper for sending payload to <a href="Beethoven.Allocator.Ingress.html"><code class="inline">Beethoven.Allocator.Ingress</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:signal_message_header/0" data-no-tooltip="" translate="no">signal_message_header()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Header for the signal metadata; when sending a signal to <a href="Beethoven.Allocator.Ingress.html"><code class="inline">Beethoven.Allocator.Ingress</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:signal_type/0" data-no-tooltip="" translate="no">signal_type()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Defines types of signal that can be used.</p></div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#send_signal/1" data-no-tooltip="" translate="no">send_signal(signal)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p><strong>DO NOT USE THIS DIRECTLY.  Please utilize the <code class="inline">signal()</code> macro within the <a href="Beethoven.Allocator.Agent.html"><code class="inline">Beethoven.Allocator.Agent</code></a> module.</strong></p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#signal/1" data-no-tooltip="" translate="no">signal(list)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>This macro defines a signal that can be sent to the <a href="Beethoven.Allocator.html"><code class="inline">Beethoven.Allocator</code></a> stack.
+Once defined, this module will have compile-time created functions to streamline the use of the signal.
+Each signal has an atomic name, priority weight, and type defined in it.
+This data is aggregated and used to generate a busy-score for a node.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:signal_definition/0">
+
+  <div class="detail-header">
+    <a href="#t:signal_definition/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">signal_definition()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> signal_definition() :: Beethoven.Allocator.Types.signal_definition()</pre>
+
+      </div>
+
+<p>Defines a single signal. Commonly used as an input for the <code class="inline">signal()</code> macro.</p>
+  </section>
+</section>
+<section class="detail" id="t:signal_message/0">
+
+  <div class="detail-header">
+    <a href="#t:signal_message/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">signal_message()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> signal_message() :: Beethoven.Allocator.Types.signal_message()</pre>
+
+      </div>
+
+<p>Message wrapper for sending payload to <a href="Beethoven.Allocator.Ingress.html"><code class="inline">Beethoven.Allocator.Ingress</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="t:signal_message_header/0">
+
+  <div class="detail-header">
+    <a href="#t:signal_message_header/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">signal_message_header()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> signal_message_header() :: Beethoven.Allocator.Types.signal_message_header()</pre>
+
+      </div>
+
+<p>Header for the signal metadata; when sending a signal to <a href="Beethoven.Allocator.Ingress.html"><code class="inline">Beethoven.Allocator.Ingress</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="t:signal_type/0">
+
+  <div class="detail-header">
+    <a href="#t:signal_type/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">signal_type()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> signal_type() :: Beethoven.Allocator.Types.signal_type()</pre>
+
+      </div>
+
+<p>Defines types of signal that can be used.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="send_signal/1">
+
+  <div class="detail-header">
+    <a href="#send_signal/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">send_signal(signal)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> send_signal(<a href="#t:signal_message/0">signal_message</a>()) :: :ok</pre>
+
+      </div>
+
+<p><strong>DO NOT USE THIS DIRECTLY.  Please utilize the <code class="inline">signal()</code> macro within the <a href="Beethoven.Allocator.Agent.html"><code class="inline">Beethoven.Allocator.Agent</code></a> module.</strong></p><p>Sends a signal message to <code class="inline">Allocator.Ingress</code>.</p><h1>Payload schema</h1><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="0760109956-1">{</span><span class="n">header</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="0760109956-2">{</span><span class="n">name</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">atom</span><span class="p" data-group-id="0760109956-3">(</span><span class="p" data-group-id="0760109956-3">)</span><span class="p">,</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">integer</span><span class="p" data-group-id="0760109956-4">(</span><span class="p" data-group-id="0760109956-4">)</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">atom</span><span class="p" data-group-id="0760109956-5">(</span><span class="p" data-group-id="0760109956-5">)</span><span class="p" data-group-id="0760109956-2">}</span><span class="p">,</span><span class="w"> </span><span class="n">payload</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="n">signal_payload</span><span class="p" data-group-id="0760109956-6">(</span><span class="p" data-group-id="0760109956-6">)</span><span class="p" data-group-id="0760109956-1">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="signal/1">
+
+  <div class="detail-header">
+    <a href="#signal/1" class="detail-link" data-no-tooltip="" aria-label="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">signal(list)</h1>
+
+        <span class="note">(macro)</span>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> signal(name: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), weight: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">float</a>(), type: :count | :percent) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">tuple</a>()</pre>
+
+      </div>
+
+<p>This macro defines a signal that can be sent to the <a href="Beethoven.Allocator.html"><code class="inline">Beethoven.Allocator</code></a> stack.
+Once defined, this module will have compile-time created functions to streamline the use of the signal.
+Each signal has an atomic name, priority weight, and type defined in it.
+This data is aggregated and used to generate a busy-score for a node.</p><h1>Types</h1><ul><li><p><code class="inline">:count</code> Counts the number of a given thing. Generates 2 functions.
+One to increment the counter, the other to decrement it. Both modify the counter by <code class="inline">+/-1.0</code>.
+The counter will never be lower then <code class="inline">0</code>.</p></li><li><p><code class="inline">:percent</code> Represents a float between 0.0 and &gt;100.0. This generates 1 function.
+This function allows you to set a float payload in the signal.
+This value must be a positive float.</p></li></ul><h1>Examples</h1><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Signals</span><span class="w"> </span><span class="k" data-group-id="4927389895-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">Beethoven.Allocator.Agent</span><span class="w">
+
+  </span><span class="n">signal</span><span class="p" data-group-id="4927389895-2">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:ram</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="4927389895-2">)</span><span class="w">
+  </span><span class="n">signal</span><span class="p" data-group-id="4927389895-3">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:http_requests</span><span class="p">,</span><span class="w"> </span><span class="ss">weight</span><span class="p">:</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:count</span><span class="p" data-group-id="4927389895-3">)</span><span class="w">
+</span><span class="k" data-group-id="4927389895-1">end</span><span class="w">
+
+</span><span class="c1"># Generates</span><span class="w">
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">percent_ram</span><span class="p" data-group-id="4927389895-4">(</span><span class="n">data</span><span class="p" data-group-id="4927389895-4">)</span><span class="w"> </span><span class="c1"># Data is now the value of the metric in `:ets`</span><span class="w">
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">increment_http_requests_count</span><span class="p" data-group-id="4927389895-5">(</span><span class="p" data-group-id="4927389895-5">)</span><span class="w"> </span><span class="c1"># +1.0</span><span class="w">
+</span><span class="nc">Signals</span><span class="o">.</span><span class="n">decrement_http_requests_count</span><span class="p" data-group-id="4927389895-6">(</span><span class="p" data-group-id="4927389895-6">)</span><span class="w"> </span><span class="c1"># -1.0</span></code></pre><p>See <a href="Beethoven.Allocator.Cruncher.html"><code class="inline">Beethoven.Allocator.Cruncher</code></a> for information on how the signals are aggregated.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/beethoven/0.3.7" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/beethoven/0.3.7">Hex Preview</a>
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Beethoven.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.37.3) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>
