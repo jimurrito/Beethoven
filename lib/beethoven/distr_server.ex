@@ -84,7 +84,7 @@ defmodule Beethoven.DistrServer do
           columns: list(atom()),
           indexes: list(atom()),
           dataType: :set | :ordered_set | :bag | :duplicate_bag,
-          copyType: :multi | :local
+          copyType: :multi | :single
         }
       end
 
@@ -104,9 +104,9 @@ defmodule Beethoven.DistrServer do
       By default, if the DistrServer creates the Mnesia table, it will always be saved to memory.
       This option comes into effect when the DistrServer is joining an existing cluster where this role is already hosted.
       If your DistrServer is set to subscribe to the mnesia table, it will be copied to memory as is required by Mnesia.
-      If you are not subscribing, your options are `:local` and `:multi`.
+      If you are not subscribing, your options are `:single` and `:multi`.
 
-      - `:local` will only keep the table in the memory of the original node.
+      - `:single` will only keep the table in the memory of the original node.
       This mode is dangerous as losing the original node will result in both data loss, and potential corruption.
       In the event of a failover in this mode, the failing over DistrServer will **not** run `create_action/1` as the table will be marked as created.
 
@@ -129,10 +129,10 @@ defmodule Beethoven.DistrServer do
   #
   @typedoc """
   Copy options for the Mnesia table.
-  - `:local` -> Copies are only on the table-creating-node.
+  - `:single` -> Copies are only on the table-creating-node.
   - `:multi` -> Copies are pushed to ALL nodes in the cluster.
   """
-  @type copyTypes() :: :local | :multi
+  @type copyTypes() :: :single | :multi
   #
   #
   @typedoc """
@@ -216,7 +216,7 @@ defmodule Beethoven.DistrServer do
           columns: [:col0, :col1, :col2],
           indexes: [],
           dataType: :set,
-          copyType: :local
+          copyType: :single
         }
       end
 

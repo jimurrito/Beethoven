@@ -38,7 +38,7 @@ defmodule Beethoven.MnesiaTools do
     #
     ram_copies =
       case copy_type do
-        :local -> [node()]
+        :single -> [node()]
         :multi -> [node() | Node.list()]
       end
 

@@ -55,7 +55,7 @@ defmodule Beethoven.RoleMgmt.Assign do
       indexes: [],
       # :mnesia data types
       dataType: :ordered_set,
-      # :local | :multi
+      # :single | :multi
       copyType: :multi
     }
   end

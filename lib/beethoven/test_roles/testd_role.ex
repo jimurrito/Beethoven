@@ -16,7 +16,7 @@ defmodule Beethoven.TestdRole do
       columns: [:name1, :name2],
       indexes: [:name1],
       dataType: :ordered_set,
-      copyType: :local
+      copyType: :single
     }
   end
 

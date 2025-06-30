@@ -37,7 +37,7 @@ defmodule Beethoven.HwMon.Server do
       indexes: [],
       # :mnesia data types
       dataType: :set,
-      # :local | :multi
+      # :single | :multi
       copyType: :multi
     }
   end

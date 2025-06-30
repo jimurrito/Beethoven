@@ -2,7 +2,6 @@ defmodule Templates.DistrServer do
   @moduledoc """
   """
   alias Beethoven.DistrServer
-  alias __MODULE__, as: Tracker
 
   require Logger
   use DistrServer, subscribe?: true
@@ -33,7 +32,7 @@ defmodule Templates.DistrServer do
       indexes: [],
       # :mnesia data types
       dataType: :set,
-      # :local | :multi
+      # :single | :multi
       copyType: :multi
     }
   end
